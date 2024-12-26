@@ -1,0 +1,5 @@
+speedtest-cli
+ping3
+Pillow
+flask
+flask-cors

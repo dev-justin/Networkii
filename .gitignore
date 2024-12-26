@@ -1,0 +1,7 @@
+# Python
+.env
+venv
+__pycache__
+
+# Project specific
+network_settings.json
