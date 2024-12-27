@@ -133,7 +133,7 @@ class Display:
                 
                 # Initialize display
                 self.disp.reset()
-                self.disp.init()
+                self.disp._init()
                 
             except ImportError as e:
                 print(f"Error importing st7789: {e}")
