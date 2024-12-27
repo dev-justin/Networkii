@@ -134,25 +134,6 @@ class Display:
                 # Rotate display 180 degrees
                 self.disp.st7789._rotation = 2  # 0=0°, 1=90°, 2=180°, 3=270°
                 
-                # Test display with simple message
-                font = ImageFont.load_default()
-                message = "Hello!"
-                # Get text size to center it
-                text_bbox = self.draw.textbbox((0, 0), message, font=font)
-                text_width = text_bbox[2] - text_bbox[0]
-                text_height = text_bbox[3] - text_bbox[1]
-                # Calculate center position
-                x = (320 - text_width) // 2
-                y = (240 - text_height) // 2
-                # Draw text in white
-                self.draw.text((x, y), message, font=font, fill=(255, 255, 255))
-                
-                # Update display using ST7789 controller
-                self.disp.st7789.set_window()
-                self.disp.st7789.display(self.image)
-                
-                time.sleep(2)  # Show test message for 2 seconds
-                
             except ImportError as e:
                 print(f"Error importing displayhatmini: {e}")
                 print("Running in test mode instead")
@@ -164,58 +145,102 @@ class Display:
         except:
             self.font = ImageFont.load_default()
 
+        # Network health indicators with cute faces
+        self.network_states = {
+            'excellent': '(◕‿◕)',  # Happy face with sparkly eyes
+            'good':      '(｡◕‿◕｡)', # Happy face with rosy cheeks
+            'fair':      '(･‿･)',   # Simple happy face
+            'poor':      '(；一_一)', # Worried/concerned face
+            'critical':  '(╥﹏╥)'    # Crying face
+        }
+        
+    def calculate_network_health(self, stats: NetworkStats) -> str:
+        """Calculate network health based on ping, jitter, and packet loss"""
+        score = 100
+        
+        # Ping scoring (0-40 points)
+        if stats.ping < 20:
+            score -= 0
+        elif stats.ping < 50:
+            score -= 10
+        elif stats.ping < 100:
+            score -= 20
+        else:
+            score -= 40
+            
+        # Jitter scoring (0-30 points)
+        if stats.jitter < 5:
+            score -= 0
+        elif stats.jitter < 10:
+            score -= 10
+        elif stats.jitter < 20:
+            score -= 20
+        else:
+            score -= 30
+            
+        # Packet loss scoring (0-30 points)
+        if stats.packet_loss == 0:
+            score -= 0
+        elif stats.packet_loss < 1:
+            score -= 10
+        elif stats.packet_loss < 5:
+            score -= 20
+        else:
+            score -= 30
+            
+        # Determine health state based on score
+        if score >= 90:
+            return 'excellent'
+        elif score >= 70:
+            return 'good'
+        elif score >= 50:
+            return 'fair'
+        elif score >= 30:
+            return 'poor'
+        else:
+            return 'critical'
+
     def update(self, stats: NetworkStats):
         """Update the display with network metrics"""
         # Clear the image
         self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
         
-        # Draw title and last update time
-        self.draw.text((10, 10), "Network Monitor", font=self.font, fill=(255, 255, 255))
-        last_update = time.strftime('%H:%M:%S', time.localtime(stats.timestamp))
-        self.draw.text((10, 35), f"Last Update: {last_update}", font=self.font, fill=(255, 255, 255))
+        # Calculate network health and get corresponding symbol
+        health_state = self.calculate_network_health(stats)
+        symbol = self.network_states[health_state]
         
-        # Draw current metrics
-        y_offset = 70
-        self.draw.text((10, y_offset), f"Ping: {stats.ping:.1f} ms", font=self.font, fill=(255, 255, 255))
-        self.draw.text((10, y_offset + 40), f"Jitter: {stats.jitter:.1f} ms", font=self.font, fill=(255, 255, 255))
-        self.draw.text((10, y_offset + 80), f"Packet Loss: {stats.packet_loss}%", font=self.font, fill=(255, 255, 255))
+        # Draw the network health symbol in the center
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
+        text_bbox = self.draw.textbbox((0, 0), symbol, font=font_large)
+        symbol_width = text_bbox[2] - text_bbox[0]
+        symbol_height = text_bbox[3] - text_bbox[1]
+        x = (self.width - symbol_width) // 2
+        y = (self.height - symbol_height) // 2 - 20  # Slightly above center
         
-        # Draw historical stats
-        y_offset += 120
-        self.draw.text((10, y_offset), "Historical Stats:", font=self.font, fill=(255, 255, 255))
-        y_offset += 30
+        # Draw symbol with color based on health
+        symbol_colors = {
+            'excellent': (0, 255, 0),    # Green
+            'good':     (144, 238, 144), # Light green
+            'fair':     (255, 255, 0),   # Yellow
+            'poor':     (255, 165, 0),   # Orange
+            'critical': (255, 0, 0)      # Red
+        }
+        self.draw.text((x, y), symbol, font=font_large, fill=symbol_colors[health_state])
         
-        # Ping history
-        self.draw.text((10, y_offset), "Ping (min/max/avg):", font=self.font, fill=(255, 255, 255))
-        self.draw.text((10, y_offset + 25), f"{stats.min_ping:.1f}/{stats.max_ping:.1f}/{stats.avg_ping:.1f} ms", font=self.font, fill=(255, 255, 255))
-        
-        # Jitter history
-        self.draw.text((10, y_offset + 50), "Jitter (min/max/avg):", font=self.font, fill=(255, 255, 255))
-        self.draw.text((10, y_offset + 75), f"{stats.min_jitter:.1f}/{stats.max_jitter:.1f}/{stats.avg_jitter:.1f} ms", font=self.font, fill=(255, 255, 255))
-        
-        # Packet loss history
-        self.draw.text((10, y_offset + 100), "Loss % (min/max/avg):", font=self.font, fill=(255, 255, 255))
-        self.draw.text((10, y_offset + 125), f"{stats.min_loss:.1f}/{stats.max_loss:.1f}/{stats.avg_loss:.1f}%", font=self.font, fill=(255, 255, 255))
+        # Draw ping below the symbol
+        ping_text = f"{stats.ping:.1f} ms"
+        text_bbox = self.draw.textbbox((0, 0), ping_text, font=self.font)
+        text_width = text_bbox[2] - text_bbox[0]
+        x = (self.width - text_width) // 2
+        self.draw.text((x, y + symbol_height + 20), ping_text, font=self.font, fill=(255, 255, 255))
         
         if self.test_mode:
             # Test mode console output
             print("\033c", end="")
-            print("=== Network Monitor Stats ===")
-            print(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(stats.timestamp))}")
+            print("=== Network Monitor ===")
+            print(f"Health: {health_state.upper()} {symbol}")
+            print(f"Ping: {stats.ping:.1f} ms")
             print("-" * 30)
-            print(f"Ping:        {stats.ping:.1f} ms")
-            print(f"Jitter:      {stats.jitter:.1f} ms")
-            print(f"Packet Loss: {stats.packet_loss}%")
-            print("-" * 30)
-            print("Historical Stats:")
-            print(f"Ping min/max/avg:  {stats.min_ping:.1f}/{stats.max_ping:.1f}/{stats.avg_ping:.1f} ms")
-            print(f"Jitter min/max/avg: {stats.min_jitter:.1f}/{stats.max_jitter:.1f}/{stats.avg_jitter:.1f} ms")
-            print(f"Loss % min/max/avg: {stats.min_loss:.1f}/{stats.max_loss:.1f}/{stats.avg_loss:.1f}%")
-            print("-" * 30)
-        else:
-            # Update physical display using ST7789 controller
-            self.disp.st7789.set_window()
-            self.disp.st7789.display(self.image)
 
 def main():
     parser = argparse.ArgumentParser(description='Network Monitor')
