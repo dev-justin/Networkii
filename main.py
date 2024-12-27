@@ -1,398 +1,224 @@
 import time
-import speedtest
-from ping3 import ping
-from PIL import Image, ImageDraw, ImageFont
-import threading
+import subprocess
+import statistics
 import argparse
-import config
+from PIL import Image, ImageDraw, ImageFont
+from dataclasses import dataclass
 from collections import deque
-from config import get  # Add this import
 
-# Try to import ST7789, but don't fail if not available
-try:
-    import ST7789
-    ST7789_AVAILABLE = True
-except ImportError:
-    ST7789_AVAILABLE = False
+@dataclass
+class NetworkStats:
+    ping: float
+    jitter: float
+    packet_loss: float
+    min_ping: float
+    max_ping: float
+    avg_ping: float
+    min_jitter: float
+    max_jitter: float
+    avg_jitter: float
+    min_loss: float
+    max_loss: float
+    avg_loss: float
+    timestamp: float
 
-# Add argument parser for test mode
-parser = argparse.ArgumentParser()
-parser.add_argument('--test', action='store_true', help='Run in test mode with console output')
-args = parser.parse_args()
-
-# Force test mode if ST7789 is not available
-if not ST7789_AVAILABLE and not args.test:
-    print("Warning: ST7789 library not available. Forcing test mode.")
-    args.test = True
-
-class DisplayOutput:
-    def reinit_display(self):
-        """Reinitialize the display with new settings"""
-        if not self.test_mode:
-            self.disp = ST7789.ST7789(
-                height=get('display_height'),
-                width=get('display_width'),
-                rotation=get('display_rotation'),
-                port=0,
-                cs=1,
-                dc=9,
-                backlight=13,
-                spi_speed_hz=60 * 1000 * 1000,
-                offset_left=0,
-                offset_top=0
+class NetworkMonitor:
+    def __init__(self, target_host: str = "1.1.1.1"):
+        self.target_host = target_host
+        self.ping_history = deque(maxlen=500)
+        self.jitter_history = deque(maxlen=500)
+        self.packet_loss_history = deque(maxlen=500)
+        
+    def update_history(self, ping: float, jitter: float, packet_loss: float):
+        """Update history and calculate statistics for all metrics"""
+        if ping > 0:
+            self.ping_history.append(ping)
+        if jitter >= 0:
+            self.jitter_history.append(jitter)
+        self.packet_loss_history.append(packet_loss)
+        
+        # Calculate stats for ping
+        ping_stats = (
+            min(self.ping_history) if self.ping_history else 0,
+            max(self.ping_history) if self.ping_history else 0,
+            sum(self.ping_history) / len(self.ping_history) if self.ping_history else 0
+        )
+        
+        # Calculate stats for jitter
+        jitter_stats = (
+            min(self.jitter_history) if self.jitter_history else 0,
+            max(self.jitter_history) if self.jitter_history else 0,
+            sum(self.jitter_history) / len(self.jitter_history) if self.jitter_history else 0
+        )
+        
+        # Calculate stats for packet loss
+        loss_stats = (
+            min(self.packet_loss_history) if self.packet_loss_history else 0,
+            max(self.packet_loss_history) if self.packet_loss_history else 0,
+            sum(self.packet_loss_history) / len(self.packet_loss_history) if self.packet_loss_history else 0
+        )
+        
+        return ping_stats, jitter_stats, loss_stats
+        
+    def get_stats(self, count=3) -> NetworkStats:
+        """Execute ping command and return network statistics"""
+        try:
+            cmd = ['ping', '-c', str(count), self.target_host]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            # Initialize variables
+            times = []
+            packets_received = 0
+            
+            # Parse the ping output
+            for line in result.stdout.splitlines():
+                if 'time=' in line:
+                    time_str = line.split('time=')[1].split()[0]
+                    times.append(float(time_str))
+                    packets_received += 1
+            
+            # Calculate packet loss percentage
+            packet_loss = ((count - packets_received) / count) * 100
+            
+            # Calculate current ping and jitter
+            if times:
+                avg_ping = sum(times) / len(times)
+                jitter = statistics.stdev(times) if len(times) > 1 else 0
+            else:
+                avg_ping = 0
+                jitter = 0
+            
+            # Update history and get historical stats
+            ping_stats, jitter_stats, loss_stats = self.update_history(avg_ping, jitter, packet_loss)
+            
+            return NetworkStats(
+                ping=avg_ping,
+                jitter=jitter,
+                packet_loss=packet_loss,
+                min_ping=ping_stats[0],
+                max_ping=ping_stats[1],
+                avg_ping=ping_stats[2],
+                min_jitter=jitter_stats[0],
+                max_jitter=jitter_stats[1],
+                avg_jitter=jitter_stats[2],
+                min_loss=loss_stats[0],
+                max_loss=loss_stats[1],
+                avg_loss=loss_stats[2],
+                timestamp=time.time()
             )
-            self.disp.begin()
+            
+        except Exception as e:
+            print(f"Error during ping: {e}")
+            return NetworkStats(
+                ping=0, jitter=0, packet_loss=100,
+                min_ping=0, max_ping=0, avg_ping=0,
+                timestamp=time.time()
+            )
 
-    def __init__(self, test_mode=False):
+class Display:
+    def __init__(self, test_mode: bool = False):
         self.test_mode = test_mode
-        self.last_print_time = 0
+        
         if not test_mode:
-            self.reinit_display()
-            # Register callbacks for display settings
-            config.config.register_callback('display_width', lambda x: self.reinit_display())
-            config.config.register_callback('display_height', lambda x: self.reinit_display())
-            config.config.register_callback('display_rotation', lambda x: self.reinit_display())
+            try:
+                from ST7789 import ST7789
+                self.disp = ST7789(
+                    port=0,
+                    cs=1,
+                    dc=9,
+                    backlight=13,
+                    rotation=270,
+                    spi_speed_hz=80 * 1000 * 1000
+                )
+            except ImportError as e:
+                print(f"Error importing ST7789: {e}")
+                print("Running in test mode instead")
+                self.test_mode = True
+        
+        # Display dimensions
+        self.width = 240
+        self.height = 320
+        
+        # Create initial black canvas
+        self.image = Image.new('RGB', (self.width, self.height), (0, 0, 0))
+        self.draw = ImageDraw.Draw(self.image)
+        
+        # Try to load a font
+        try:
+            self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+        except:
+            self.font = ImageFont.load_default()
 
-    def display(self, image, stats):
+    def update(self, stats: NetworkStats):
+        """Update the display with network metrics"""
+        # Clear the image
+        self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
+        
+        # Draw title and last update time
+        self.draw.text((10, 10), "Network Monitor", font=self.font, fill=(255, 255, 255))
+        last_update = time.strftime('%H:%M:%S', time.localtime(stats.timestamp))
+        self.draw.text((10, 35), f"Last Update: {last_update}", font=self.font, fill=(255, 255, 255))
+        
+        # Draw current metrics
+        y_offset = 70  # Adjusted to make room for timestamp
+        self.draw.text((10, y_offset), f"Ping: {stats.ping:.1f} ms", font=self.font, fill=(255, 255, 255))
+        self.draw.text((10, y_offset + 40), f"Jitter: {stats.jitter:.1f} ms", font=self.font, fill=(255, 255, 255))
+        self.draw.text((10, y_offset + 80), f"Packet Loss: {stats.packet_loss}%", font=self.font, fill=(255, 255, 255))
+        
+        # Draw historical stats
+        y_offset += 120
+        self.draw.text((10, y_offset), "Historical Stats:", font=self.font, fill=(255, 255, 255))
+        y_offset += 30
+        
+        # Ping history
+        self.draw.text((10, y_offset), "Ping (min/max/avg):", font=self.font, fill=(255, 255, 255))
+        self.draw.text((10, y_offset + 25), f"{stats.min_ping:.1f}/{stats.max_ping:.1f}/{stats.avg_ping:.1f} ms", font=self.font, fill=(255, 255, 255))
+        
+        # Jitter history
+        self.draw.text((10, y_offset + 50), "Jitter (min/max/avg):", font=self.font, fill=(255, 255, 255))
+        self.draw.text((10, y_offset + 75), f"{stats.min_jitter:.1f}/{stats.max_jitter:.1f}/{stats.avg_jitter:.1f} ms", font=self.font, fill=(255, 255, 255))
+        
+        # Packet loss history
+        self.draw.text((10, y_offset + 100), "Loss % (min/max/avg):", font=self.font, fill=(255, 255, 255))
+        self.draw.text((10, y_offset + 125), f"{stats.min_loss:.1f}/{stats.max_loss:.1f}/{stats.avg_loss:.1f}%", font=self.font, fill=(255, 255, 255))
+        
         if self.test_mode:
-            current_time = time.time()
-            if current_time - self.last_print_time >= get('display_refresh'):
-                print("\033[2J\033[H")  # Clear screen and move cursor to top
-                print("=== Network Monitor ===")
-                print(f"Download: {stats['download']:.1f} Mbps")
-                print(f"Upload: {stats['upload']:.1f} Mbps")
-                print(f"Ping: {stats['ping']:.0f} ms")
-                print(f"Packet Loss: {stats['packet_loss']:.1f}%")
-                print("=====================")
-                self.last_print_time = current_time
+            # Clear display
+            print("\033c", end="")
+            print("=== Network Monitor Stats ===")
+            print(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(stats.timestamp))}")
+            print("-" * 30)
+            print(f"Ping:        {stats.ping:.1f} ms")
+            print(f"Jitter:      {stats.jitter:.1f} ms")
+            print(f"Packet Loss: {stats.packet_loss}%")
+            print("-" * 30)
+            print("Historical Stats:")
+            print(f"Ping min/max/avg:  {stats.min_ping:.1f}/{stats.max_ping:.1f}/{stats.avg_ping:.1f} ms")
+            print(f"Jitter min/max/avg: {stats.min_jitter:.1f}/{stats.max_jitter:.1f}/{stats.avg_jitter:.1f} ms")
+            print(f"Loss % min/max/avg: {stats.min_loss:.1f}/{stats.max_loss:.1f}/{stats.avg_loss:.1f}%")
+            print("-" * 30)
         else:
-            self.disp.display(image)
-
-# Initialize display based on mode
-display_output = DisplayOutput(test_mode=args.test)
-
-# Global variables to store network metrics
-network_stats = {
-    'download': 0,
-    'upload': 0,
-    'ping': 0,
-    'packet_loss': 0,
-    'jitter': 0,
-    'connection_quality': 'Unknown',
-    'external_ip': 'Checking...'
-}
-
-# Add ping history storage
-def reinit_ping_history(new_size):
-    """Reinitialize ping history with new size"""
-    global ping_history
-    try:
-        print(f"Reinitializing ping history with size {new_size}")  # Debug
-        old_data = list(ping_history)
-        ping_history = deque(maxlen=new_size)
-        # Preserve as much old data as possible
-        for item in old_data[-new_size:]:
-            ping_history.append(item)
-        print("Ping history reinitialized successfully")  # Debug
-    except Exception as e:
-        print(f"Error reinitializing ping history: {e}")
-
-# Register callbacks for initialization-dependent values
-config.config.register_callback('graph_duration', reinit_ping_history)
-
-# Initialize with current values
-ping_history = deque(maxlen=get('graph_duration'))
-
-def reinit_ping_deque(new_size):
-    """Reinitialize ping tracking deque"""
-    global last_pings
-    try:
-        print(f"Reinitializing ping deque with size {new_size}")  # Debug
-        if 'last_pings' in globals():  # Check if last_pings exists
-            old_data = list(last_pings)
-            last_pings = deque(maxlen=new_size)
-            # Preserve as much old data as possible
-            for item in old_data[-new_size:]:
-                last_pings.append(item)
-        else:
-            last_pings = deque(maxlen=new_size)
-        print("Ping deque reinitialized successfully")  # Debug
-    except Exception as e:
-        print(f"Error reinitializing ping deque: {e}")
-
-# Register callbacks for initialization-dependent values
-config.config.register_callback('ping_count', reinit_ping_deque)
-
-def run_speed_test():
-    """Run speed test and update global network_stats"""
-    while True:
-        try:
-            interval = get('speedtest_interval')  # Get current interval each time
-            print("Starting speed test...")
-            st = speedtest.Speedtest()
-            network_stats['download'] = st.download() / 1_000_000
-            network_stats['upload'] = st.upload() / 1_000_000
-            print("Speed test completed")
-        except Exception as e:
-            print(f"Speed test error: {e}")
-        time.sleep(interval)  # Use current interval
-
-def draw_ping_graph(draw, font):
-    """Draw the ping graph with grid lines"""
-    # Draw graph border
-    draw.rectangle(
-        [10, 170,  # Using fixed values for GRAPH_X and GRAPH_Y 
-         10 + 300, # Using fixed width
-         170 + 60], # Using fixed height
-        outline=config.GRAPH_GRID_COLOR
-    )
-    
-    # Draw horizontal grid lines
-    for i in range(1, 4):  # Draw 3 horizontal lines
-        y = 170 + (i * (60 / 4))  # Using fixed height
-        draw.line(
-            [10, y, 10 + 300, y],  # Using fixed width
-            fill=config.GRAPH_GRID_COLOR
-        )
-        # Draw ping values on grid lines
-        ping_value = get('graph_max_ping') - (i * (get('graph_max_ping') / 4))
-        draw.text(
-            (10 - 8, y - 6),
-            f"{int(ping_value)}",
-            font=font,
-            fill=config.GRAPH_GRID_COLOR,
-            anchor="rm"
-        )
-    
-    # Draw the ping history line
-    if len(ping_history) > 1:
-        points = []
-        for i, ping_value in enumerate(ping_history):
-            x = 10 + (i * (300 / get('graph_duration')))
-            # Scale ping value to graph height
-            scaled_ping = max(min(ping_value, get('graph_max_ping')), 0)
-            y = 170 + 60 - (
-                (scaled_ping - 0) * 
-                60 / (get('graph_max_ping') - 0)
-            )
-            points.append((x, y))
-        
-        # Draw lines connecting the points
-        for i in range(len(points) - 1):
-            draw.line([points[i], points[i + 1]], fill=config.GRAPH_COLOR)
-
-def calculate_connection_quality(ping, jitter, packet_loss):
-    """Calculate connection quality based on ping, jitter, and packet loss"""
-    # Start with maximum score of 100
-    score = 100
-    
-    # Ping scoring
-    if ping <= get('ping_excellent'):
-        score -= 0
-    elif ping <= get('ping_good'):
-        score -= 10
-    elif ping <= get('ping_fair'):
-        score -= 20
-    else:
-        score -= 30
-
-    # Jitter scoring
-    if jitter <= get('jitter_excellent'):
-        score -= 0
-    elif jitter <= get('jitter_good'):
-        score -= 10
-    elif jitter <= get('jitter_fair'):
-        score -= 20
-    else:
-        score -= 30
-
-    # Packet loss scoring
-    if packet_loss <= get('loss_excellent'):
-        score -= 0
-    elif packet_loss <= get('loss_good'):
-        score -= 10
-    elif packet_loss <= get('loss_fair'):
-        score -= 20
-    else:
-        score -= 30
-
-    # Determine quality label and color
-    if score >= 90:     
-        return 'Excellent', config.COLOR_EXCELLENT
-    elif score >= 75:
-        return 'Good', config.COLOR_GOOD
-    elif score >= 60:
-        return 'Fair', config.COLOR_FAIR
-    else:
-        return 'Poor', config.COLOR_POOR
-
-def check_ping_and_packet_loss():
-    """Check ping and packet loss to configured target"""
-    while True:
-        try:
-            ping_times = []
-            lost_packets = 0
-            current_count = get('ping_count')  # Get current count each time
-            
-            for _ in range(current_count):
-                result = ping(get('ping_target'), timeout=get('ping_timeout'))
-                if result is None:
-                    lost_packets += 1
-                else:
-                    ping_time = result * 1000
-                    ping_times.append(ping_time)
-                    if 'last_pings' in globals():  # Check if last_pings exists
-                        last_pings.append(ping_time)
-                time.sleep(0.1)
-            
-            if ping_times:  # Only update if we have valid pings
-                avg_ping = sum(ping_times) / len(ping_times)
-                packet_loss = (lost_packets / current_count) * 100
-                
-                network_stats['ping'] = avg_ping
-                network_stats['packet_loss'] = packet_loss
-                
-                if len(ping_times) >= 2:
-                    differences = [abs(ping_times[i] - ping_times[i-1]) for i in range(1, len(ping_times))]
-                    network_stats['jitter'] = sum(differences) / len(differences)
-                
-                quality, _ = calculate_connection_quality(avg_ping, network_stats['jitter'], packet_loss)
-                network_stats['connection_quality'] = quality
-                
-                ping_history.append(avg_ping)
-            
-        except Exception as e:
-            print(f"Ping test error: {e}")
-        
-        time.sleep(get('ping_interval'))
-
-def check_external_ip():
-    """Check external IP address periodically using speedtest"""
-    while True:
-        try:
-            st = speedtest.Speedtest()
-            config = st.get_config()
-            network_stats['external_ip'] = config['client']['ip']
-        except Exception as e:
-            print(f"External IP check error: {e}")
-            network_stats['external_ip'] = 'Error'
-        time.sleep(300)  # Check every 5 minutes
-
-def get_quality_face(quality):
-    """Return ASCII face based on connection quality"""
-    faces = {
-        'Excellent': config.FACE_EXCELLENT,
-        'Good': config.FACE_GOOD,
-        'Fair': config.FACE_FAIR,
-        'Poor': config.FACE_POOR
-    }
-    return faces.get(quality, '(?_?)')  # Default confused face if quality unknown
-
-def update_display():
-    """Update the display with current network statistics"""
-    if not args.test:
-        # Load fonts only if using the actual display
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", config.TITLE_FONT_SIZE)
-        small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", config.TEXT_FONT_SIZE)
-
-    while True:
-        if not args.test:
-            # Create a new image with a black background
-            image = Image.new('RGB', (get('display_width'), get('display_height')), color=config.COLOR_BACKGROUND)
-            draw = ImageDraw.Draw(image)
-
-            # Get quality color and face for display
-            _, quality_color = calculate_connection_quality(
-                network_stats['ping'],
-                network_stats['jitter'],
-                network_stats['packet_loss']
-            )
-            quality_face = get_quality_face(network_stats['connection_quality'])
-
-            # Draw network statistics
-            draw.text((10, 10), "Network Monitor", font=font, fill=config.COLOR_TITLE)
-            # Draw quality face with quality color
-            draw.text((280, 10), quality_face, font=font, fill=quality_color)
-            
-            draw.text((10, 40), f"Download: {network_stats['download']:.1f} Mbps", font=small_font, fill=config.COLOR_SPEED)
-            draw.text((10, 70), f"Upload: {network_stats['upload']:.1f} Mbps", font=small_font, fill=config.COLOR_SPEED)
-            draw.text((10, 100), f"Ping: {network_stats['ping']:.0f} ms", font=small_font, fill=config.COLOR_PING)
-            draw.text((10, 130), f"Jitter: {network_stats['jitter']:.1f} ms", font=small_font, fill=config.COLOR_PING)
-            draw.text((160, 130), f"Quality: {network_stats['connection_quality']}", font=small_font, fill=quality_color)
-            draw.text((10, 160), f"IP: {network_stats['external_ip']}", font=small_font, fill=config.COLOR_TITLE)
-            
-            # Draw the ping graph
-            draw_ping_graph(draw, small_font)
-            
-            # Draw packet loss at the bottom
-            draw.text(
-                (10 + 300 + 10, 170 + 60 - 10),  # Using fixed positions
-                f"Loss: {network_stats['packet_loss']:.1f}%",
-                font=small_font,
-                fill=config.COLOR_LOSS
-            )
-            
-            display_output.display(image, network_stats)
-        else:
-            # In test mode output
-            current_time = time.time()
-            if current_time - display_output.last_print_time >= get('display_refresh'):
-                quality_face = get_quality_face(network_stats['connection_quality'])
-                print("\033[2J\033[H")  # Clear screen and move cursor to top
-                print("=== Network Monitor ===")
-                print(f"Connection Status: {quality_face}")
-                print(f"External IP: {network_stats['external_ip']}")
-                print(f"Download: {network_stats['download']:.1f} Mbps")
-                print(f"Upload: {network_stats['upload']:.1f} Mbps")
-                print(f"Ping: {network_stats['ping']:.0f} ms")
-                print(f"Jitter: {network_stats['jitter']:.1f} ms")
-                print(f"Packet Loss: {network_stats['packet_loss']:.1f}%")
-                print(f"Connection Quality: {network_stats['connection_quality']}")
-                print("\n=== Ping History ===")
-                if ping_history:
-                    print(f"Min: {min(ping_history):.0f}ms Max: {max(ping_history):.0f}ms")
-                else:
-                    print("Collecting ping data...")
-                print("=====================")
-                display_output.last_print_time = current_time
-            
-            display_output.display(None, network_stats)
-        
-        time.sleep(get('display_refresh'))
-
-def monitor_config():
-    """Monitor config file for changes"""
-    last_check = 0
-    while True:
-        try:
-            current_time = time.time()
-            if current_time - last_check >= 1:  # Check once per second
-                config.config.check_for_updates()
-                last_check = current_time
-        except Exception as e:
-            print(f"Error monitoring config: {e}")
-        time.sleep(1)
+            self.disp.display(self.image)
 
 def main():
-    # Create and start threads for each monitoring function
-    speed_thread = threading.Thread(target=run_speed_test, daemon=True)
-    ping_thread = threading.Thread(target=check_ping_and_packet_loss, daemon=True)
-    display_thread = threading.Thread(target=update_display, daemon=True)
-    ip_thread = threading.Thread(target=check_external_ip, daemon=True)
-    config_thread = threading.Thread(target=monitor_config, daemon=True)  # Add config monitoring thread
+    parser = argparse.ArgumentParser(description='Network Monitor')
+    parser.add_argument('--test', action='store_true', help='Run in test mode (no physical display)')
+    parser.add_argument('--host', default='1.1.1.1', help='Target host to ping (default: 1.1.1.1)')
+    parser.add_argument('--interval', type=float, default=1.0, help='Update interval in seconds (default: 1.0)')
+    args = parser.parse_args()
 
-    speed_thread.start()
-    ping_thread.start()
-    display_thread.start()
-    ip_thread.start()
-    config_thread.start()  # Start config monitoring thread
+    network_monitor = NetworkMonitor(target_host=args.host)
+    display = Display(test_mode=args.test)
 
-    # Keep the main thread running
     try:
         while True:
-            time.sleep(1)
+            stats = network_monitor.get_stats()
+            display.update(stats)
+            time.sleep(args.interval)
     except KeyboardInterrupt:
-        print("Shutting down...")
+        print("\nProgram terminated by user")
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()

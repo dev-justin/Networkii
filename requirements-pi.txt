@@ -1,6 +1,0 @@
-speedtest-cli
-ping3
-Pillow
-ST7789
-flask
-flask-cors 

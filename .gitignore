@@ -1,7 +1,5 @@
-# Python
+__pycache__/
+*.pyc
+.DS_Store
 .env
-venv
-__pycache__
-
-# Project specific
-network_settings.json
+venv/
