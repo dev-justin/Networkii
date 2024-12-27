@@ -145,13 +145,13 @@ class Display:
         except:
             self.font = ImageFont.load_default()
 
-        # Network health indicators with cute faces
+        # Network health indicators with simple ASCII faces
         self.network_states = {
-            'excellent': '(◕‿◕)',  # Happy face with sparkly eyes
-            'good':      '(｡◕‿◕｡)', # Happy face with rosy cheeks
-            'fair':      '(･‿･)',   # Simple happy face
-            'poor':      '(；一_一)', # Worried/concerned face
-            'critical':  '(╥﹏╥)'    # Crying face
+            'excellent': ':D',    # Big smile
+            'good':      ':)',    # Simple smile
+            'fair':      ':|',    # Neutral face
+            'poor':      ':(',    # Sad face
+            'critical':  ':X'     # Dead face
         }
         
     def calculate_network_health(self, stats: NetworkStats) -> str:
@@ -209,16 +209,19 @@ class Display:
         health_state = self.calculate_network_health(stats)
         symbol = self.network_states[health_state]
         
-        # Use default font for ASCII faces since it handles special characters better
-        font_large = ImageFont.load_default()
+        # Make the face much larger
+        large_font_size = 80
+        try:
+            font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", large_font_size)
+        except:
+            font_large = ImageFont.load_default()
         
         # Draw the network health symbol in the center
-        # Make text bigger by drawing it multiple times with slight offsets
         text_bbox = self.draw.textbbox((0, 0), symbol, font=font_large)
         symbol_width = text_bbox[2] - text_bbox[0]
         symbol_height = text_bbox[3] - text_bbox[1]
         x = (self.width - symbol_width) // 2
-        y = (self.height - symbol_height) // 2 - 20  # Slightly above center
+        y = (self.height - symbol_height) // 2 - 20
         
         # Draw symbol with color based on health
         symbol_colors = {
@@ -229,22 +232,15 @@ class Display:
             'critical': (255, 0, 0)      # Red
         }
         
-        # Draw the face multiple times to make it larger
-        for offset_x in range(-1, 2):
-            for offset_y in range(-1, 2):
-                self.draw.text(
-                    (x + offset_x * 2, y + offset_y * 2),
-                    symbol,
-                    font=font_large,
-                    fill=symbol_colors[health_state]
-                )
+        # Draw the face once but much larger
+        self.draw.text((x, y), symbol, font=font_large, fill=symbol_colors[health_state])
         
         # Draw ping below the symbol
         ping_text = f"{stats.ping:.1f} ms"
         text_bbox = self.draw.textbbox((0, 0), ping_text, font=self.font)
         text_width = text_bbox[2] - text_bbox[0]
         x = (self.width - text_width) // 2
-        self.draw.text((x, y + symbol_height + 40), ping_text, font=self.font, fill=(255, 255, 255))
+        self.draw.text((x, y + symbol_height + 20), ping_text, font=self.font, fill=(255, 255, 255))
         
         if self.test_mode:
             # Test mode console output
