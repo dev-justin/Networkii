@@ -131,6 +131,8 @@ class Display:
             try:
                 from displayhatmini import DisplayHATMini
                 self.disp = DisplayHATMini(self.image)  # Pass the image as buffer
+                # Rotate display 180 degrees
+                self.disp.st7789.rotation(2)  # 0=0°, 1=90°, 2=180°, 3=270°
                 
                 # Test display with simple message
                 font = ImageFont.load_default()
@@ -173,7 +175,7 @@ class Display:
         self.draw.text((10, 35), f"Last Update: {last_update}", font=self.font, fill=(255, 255, 255))
         
         # Draw current metrics
-        y_offset = 70  # Adjusted to make room for timestamp
+        y_offset = 70
         self.draw.text((10, y_offset), f"Ping: {stats.ping:.1f} ms", font=self.font, fill=(255, 255, 255))
         self.draw.text((10, y_offset + 40), f"Jitter: {stats.jitter:.1f} ms", font=self.font, fill=(255, 255, 255))
         self.draw.text((10, y_offset + 80), f"Packet Loss: {stats.packet_loss}%", font=self.font, fill=(255, 255, 255))
@@ -196,7 +198,7 @@ class Display:
         self.draw.text((10, y_offset + 125), f"{stats.min_loss:.1f}/{stats.max_loss:.1f}/{stats.avg_loss:.1f}%", font=self.font, fill=(255, 255, 255))
         
         if self.test_mode:
-            # Clear display
+            # Test mode console output
             print("\033c", end="")
             print("=== Network Monitor Stats ===")
             print(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(stats.timestamp))}")
@@ -211,7 +213,9 @@ class Display:
             print(f"Loss % min/max/avg: {stats.min_loss:.1f}/{stats.max_loss:.1f}/{stats.avg_loss:.1f}%")
             print("-" * 30)
         else:
-            self.disp.display(self.image)
+            # Update physical display using ST7789 controller
+            self.disp.st7789.set_window()
+            self.disp.st7789.display(self.image)
 
 def main():
     parser = argparse.ArgumentParser(description='Network Monitor')
