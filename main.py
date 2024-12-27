@@ -114,22 +114,27 @@ class NetworkMonitor:
                 min_ping=0, max_ping=0, avg_ping=0,
                 timestamp=time.time()
             )
-
+N
 class Display:
     def __init__(self, test_mode: bool = False):
         self.test_mode = test_mode
         
         if not test_mode:
             try:
-                import st7789  # Changed from ST7789 to lowercase
+                import st7789
                 self.disp = st7789.ST7789(
                     port=0,
-                    cs=0,  # Changed from 1 to 0
+                    cs=0,
                     dc=9,
                     backlight=13,
-                    rotation=270,
+                    rotation=90,
                     spi_speed_hz=80 * 1000 * 1000
                 )
+                
+                # Initialize display
+                self.disp.reset()
+                self.disp.init()
+                
             except ImportError as e:
                 print(f"Error importing st7789: {e}")
                 print("Running in test mode instead")
@@ -140,9 +145,9 @@ class Display:
                 print("Navigate to: Interface Options -> SPI -> Enable")
                 self.test_mode = True
         
-        # Display dimensions
-        self.width = 240
-        self.height = 320
+        # Display dimensions - swapped for rotation
+        self.width = 320
+        self.height = 240
         
         # Create initial black canvas
         self.image = Image.new('RGB', (self.width, self.height), (0, 0, 0))
