@@ -128,8 +128,7 @@ class Display:
                     dc=9,
                     backlight=13,
                     rotation=270,
-                    spi_speed_hz=80 * 1000 * 1000,
-                    mode=3
+                    spi_speed_hz=80 * 1000 * 1000
                 )
             except ImportError as e:
                 print(f"Error importing st7789: {e}")
