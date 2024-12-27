@@ -132,7 +132,7 @@ class Display:
                 from displayhatmini import DisplayHATMini
                 self.disp = DisplayHATMini(self.image)  # Pass the image as buffer
                 # Rotate display 180 degrees
-                self.disp.st7789.rotation(2)  # 0=0°, 1=90°, 2=180°, 3=270°
+                self.disp.st7789._rotation(2)  # 0=0°, 1=90°, 2=180°, 3=270°
                 
                 # Test display with simple message
                 font = ImageFont.load_default()
