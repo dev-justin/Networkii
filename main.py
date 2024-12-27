@@ -144,7 +144,11 @@ class Display:
                 y = (240 - text_height) // 2
                 # Draw text in white
                 self.draw.text((x, y), message, font=font, fill=(255, 255, 255))
-                self.disp.update()  # Update the display with current buffer
+                
+                # Update display using ST7789 controller
+                self.disp.st7789.set_window()
+                self.disp.st7789.display(self.image)
+                
                 time.sleep(2)  # Show test message for 2 seconds
                 
             except ImportError as e:
