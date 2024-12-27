@@ -119,10 +119,18 @@ class Display:
     def __init__(self, test_mode: bool = False):
         self.test_mode = test_mode
         
+        # Display dimensions
+        self.width = 320
+        self.height = 240
+        
+        # Create initial black canvas
+        self.image = Image.new('RGB', (self.width, self.height), (0, 0, 0))
+        self.draw = ImageDraw.Draw(self.image)
+        
         if not test_mode:
             try:
                 from displayhatmini import DisplayHATMini
-                self.disp = DisplayHATMini()
+                self.disp = DisplayHATMini(self.image)  # Pass the image as buffer
                 
                 # Test display with simple message
                 test_image = Image.new('RGB', (320, 240), color=(0, 0, 0))
@@ -145,14 +153,6 @@ class Display:
                 print(f"Error importing displayhatmini: {e}")
                 print("Running in test mode instead")
                 self.test_mode = True
-        
-        # Display dimensions
-        self.width = 320
-        self.height = 240
-        
-        # Create initial black canvas
-        self.image = Image.new('RGB', (self.width, self.height), (0, 0, 0))
-        self.draw = ImageDraw.Draw(self.image)
         
         # Try to load a font
         try:
