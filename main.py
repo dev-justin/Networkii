@@ -114,7 +114,7 @@ class NetworkMonitor:
                 min_ping=0, max_ping=0, avg_ping=0,
                 timestamp=time.time()
             )
-N
+
 class Display:
     def __init__(self, test_mode: bool = False):
         self.test_mode = test_mode
