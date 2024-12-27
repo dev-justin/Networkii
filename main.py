@@ -133,20 +133,18 @@ class Display:
                 self.disp = DisplayHATMini(self.image)  # Pass the image as buffer
                 
                 # Test display with simple message
-                test_image = Image.new('RGB', (320, 240), color=(0, 0, 0))
-                draw = ImageDraw.Draw(test_image)
                 font = ImageFont.load_default()
                 message = "Hello!"
                 # Get text size to center it
-                text_bbox = draw.textbbox((0, 0), message, font=font)
+                text_bbox = self.draw.textbbox((0, 0), message, font=font)
                 text_width = text_bbox[2] - text_bbox[0]
                 text_height = text_bbox[3] - text_bbox[1]
                 # Calculate center position
                 x = (320 - text_width) // 2
                 y = (240 - text_height) // 2
                 # Draw text in white
-                draw.text((x, y), message, font=font, fill=(255, 255, 255))
-                self.disp.display(test_image)
+                self.draw.text((x, y), message, font=font, fill=(255, 255, 255))
+                self.disp.update()  # Update the display with current buffer
                 time.sleep(2)  # Show test message for 2 seconds
                 
             except ImportError as e:
