@@ -1,2 +1,4 @@
 pillow
-ST7789 
+numpy
+spidev
+ST7789
