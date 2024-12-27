@@ -121,19 +121,8 @@ class Display:
         
         if not test_mode:
             try:
-                import st7789
-                self.disp = st7789.ST7789(
-                    port=0,
-                    cs=0,
-                    dc=9,
-                    backlight=13,
-                    rotation=90,
-                    spi_speed_hz=80 * 1000 * 1000
-                )
-                
-                # Initialize display
-                self.disp.reset()
-                self.disp._init()
+                from displayhatmini import DisplayHATMini
+                self.disp = DisplayHATMini()
                 
                 # Test display with simple message
                 test_image = Image.new('RGB', (320, 240), color=(0, 0, 0))
@@ -153,16 +142,11 @@ class Display:
                 time.sleep(2)  # Show test message for 2 seconds
                 
             except ImportError as e:
-                print(f"Error importing st7789: {e}")
+                print(f"Error importing displayhatmini: {e}")
                 print("Running in test mode instead")
                 self.test_mode = True
-            except FileNotFoundError as e:
-                print("Error: SPI device not found. Are SPI permissions set correctly?")
-                print("Try: sudo raspi-config")
-                print("Navigate to: Interface Options -> SPI -> Enable")
-                self.test_mode = True
         
-        # Display dimensions - swapped for rotation
+        # Display dimensions
         self.width = 320
         self.height = 240
         
