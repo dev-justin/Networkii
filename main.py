@@ -259,15 +259,6 @@ class Display:
                     fill=(0, 0, 0),
                     width=1
                 )
-        
-        # Draw shine effect (diagonal lines in top-left)
-        shine_color = tuple(min(255, c + 50) for c in color)
-        for i in range(0, width // 2, 2):
-            self.draw.line(
-                (x + i, y, x, y + i),
-                fill=shine_color,
-                width=1
-            )
 
     def draw_hearts(self, x: int, y: int, health_score: int):
         """Draw hearts based on health score (0-100)"""
@@ -327,9 +318,9 @@ class Display:
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
-            self.network_monitor.ping_history, 50)
+            self.network_monitor.ping_history, 30)
         jitter_health = self.calculate_bar_height(
-            self.network_monitor.jitter_history, 10)
+            self.network_monitor.jitter_history, 5)
         loss_health = self.calculate_bar_height(
             self.network_monitor.packet_loss_history, 1)
         
@@ -360,8 +351,13 @@ class Display:
         self.image.paste(face, (face_x, face_y), face)
         
         # Calculate and draw hearts below face
-        hearts_total_width = (5 * self.heart_size) + (4 * 7)  # 5 hearts with 7px spacing
-        hearts_x = (self.WIDTH - hearts_total_width) // 2
+        heart_spacing = 7  # Space between hearts
+        hearts_total_width = (5 * self.heart_size) + (4 * heart_spacing)
+        
+        # Calculate hearts_x to align with face center
+        face_center_x = face_x + (self.face_size // 2)
+        hearts_x = face_center_x - (hearts_total_width // 2)
+        
         hearts_y = face_y + self.face_size + HEART_SPACING 
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
