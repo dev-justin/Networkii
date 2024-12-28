@@ -94,8 +94,9 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 20    
-    METRIC_SPACING = 5     
+    METRIC_WIDTH = 50    # Increased to accommodate larger numbers
+    METRIC_SPACING = 5
+    METRIC_RIGHT_MARGIN = 10  # Margin from right edge of screen
     
     # History settings
     RECENT_HISTORY_LENGTH = 20  # Number of samples to use for recent history
@@ -288,9 +289,9 @@ class Display:
         face_x = bars_total_width + 20  # Add small margin after health bars
         face_y = (self.HEIGHT - (self.face_size + self.HEART_SIZE + self.HEART_SPACING)) // 2
         
-        # Calculate metrics position (to the right of face)
-        metrics_start_x = face_x + self.face_size + 20  # 20px margin between face and metrics
-        metrics_y = 10  # Center metrics vertically with face
+        # Calculate metrics positions (right-aligned)
+        metrics_x = self.WIDTH - (3 * (self.METRIC_WIDTH + self.METRIC_SPACING)) - self.METRIC_RIGHT_MARGIN
+        metrics_y = 10
         
         # Load fonts with smaller sizes
         try:
@@ -304,10 +305,10 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Draw metrics horizontally to the right of face
-        self.draw_metric(metrics_start_x, metrics_y, "P", stats.ping_history, 'ping')
-        self.draw_metric(metrics_start_x + self.METRIC_WIDTH + self.METRIC_SPACING, metrics_y, "J", stats.jitter_history, 'jitter')
-        self.draw_metric(metrics_start_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, metrics_y, "L", stats.packet_loss_history, 'packet_loss')
+        # Draw metrics horizontally
+        self.draw_metric(metrics_x, metrics_y, "P", stats.ping_history, 'ping')
+        self.draw_metric(metrics_x + self.METRIC_WIDTH + self.METRIC_SPACING, metrics_y, "J", stats.jitter_history, 'jitter')
+        self.draw_metric(metrics_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, metrics_y, "L", stats.packet_loss_history, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
@@ -345,28 +346,24 @@ class Display:
             self.disp.st7789.display(self.image)
 
     def draw_metric(self, x: int, y: int, label: str, history: deque, metric_type: str):
-        """Draw metric with last 3 values vertically"""
+        """Draw metric with last 10 values vertically"""
         if not history:
             return
             
         color = self.get_outline_color(metric_type)
         
-        # Draw label centered
-        label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
-        label_width = label_bbox[2] - label_bbox[0]
-        self.draw.text((x + (self.METRIC_WIDTH - label_width) // 2, y), label, font=self.tiny_font, fill=color)
+        # Draw label
+        self.draw.text((x, y), label, font=self.tiny_font, fill=color)
         
-        # Get last 3 values
-        last_values = list(history)[-3:]
-        if len(last_values) < 3:  # Pad with zeros if we don't have 3 values yet
-            last_values = [0] * (3 - len(last_values)) + last_values
+        # Get last 10 values
+        last_values = list(history)[-10:]
+        if len(last_values) < 10:  # Pad with zeros if we don't have 10 values yet
+            last_values = [0] * (10 - len(last_values)) + last_values
         
         # Draw current value (large)
         current_text = str(round(last_values[-1]))
-        current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
-        current_width = current_bbox[2] - current_bbox[0]
         self.draw.text(
-            (x + (self.METRIC_WIDTH - current_width) // 2, y + 12),
+            (x + self.METRIC_WIDTH - len(current_text) * 10, y + 12),  # Right align
             current_text,
             font=self.number_font,
             fill=color
@@ -374,14 +371,12 @@ class Display:
         
         # Draw previous values with increasing transparency
         for i, value in enumerate(reversed(last_values[:-1])):
-            fade_level = 0.6 - (i * 0.2)  # 0.4 for first previous, 0.2 for second previous
+            fade_level = 0.8 - (i * 0.07)  # More gradual fade over 10 values
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
-            value_bbox = self.draw.textbbox((0, 0), value_text, font=self.tiny_font)
-            value_width = value_bbox[2] - value_bbox[0]
             self.draw.text(
-                (x + (self.METRIC_WIDTH - value_width) // 2, y + 30 + (i * 15)),
+                (x + self.METRIC_WIDTH - len(value_text) * 7, y + 30 + (i * 12)),  # Right align, closer spacing
                 value_text,
                 font=self.tiny_font,
                 fill=faded_color
