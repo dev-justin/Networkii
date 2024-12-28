@@ -304,19 +304,19 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate positions
+        # Calculate positions for face and hearts
         face_x = (self.width - self.face_size) // 2
-        face_y = (self.height - self.face_size) // 2
+        face_y = (self.height - (self.face_size + self.heart_size + 15)) // 2  # Account for hearts height
         
         # Draw health bars on the left with full height and spacing
-        bar_height = self.height - 40  # Add more vertical padding for value text
-        bar_y = 25  # Top padding increased for value text
-        bar_width = 15  # Bar width
-        bar_spacing = 8  # Space between bars
+        bar_height = self.height - 40
+        bar_y = 20
+        bar_width = 8  # Thinner bars
+        bar_spacing = 4  # Less spacing between thinner bars
         
         # Calculate total width of bars including spacing
         total_bars_width = (bar_width * 3) + (bar_spacing * 2)
-        start_x = 15  # Left margin
+        start_x = 10  # Left margin
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
@@ -353,9 +353,10 @@ class Display:
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
         
-        # Calculate and draw hearts below face
-        hearts_y = face_y + self.face_size + 10
-        hearts_x = (self.width - (5 * (self.heart_size + 5) - 5)) // 2  # Center hearts
+        # Calculate and draw hearts below face with proper spacing
+        hearts_total_width = (5 * self.heart_size) + (4 * 5)  # 5 hearts with 5px spacing
+        hearts_x = (self.width - hearts_total_width) // 2
+        hearts_y = face_y + self.face_size + 15  # 15px spacing between face and hearts
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
         if self.test_mode:
