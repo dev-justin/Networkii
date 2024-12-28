@@ -277,7 +277,7 @@ class Display:
         face = self.face_images[health_state]
         
         # Define spacing constant
-        HEART_SPACING = 50
+        HEART_SPACING = 10
         
         # Calculate total height of face + hearts + spacing
         total_element_height = self.face_size + self.heart_size + HEART_SPACING
@@ -335,7 +335,7 @@ class Display:
         # Calculate and draw hearts below face
         hearts_total_width = (5 * self.heart_size) + (4 * 7)  # 5 hearts with 7px spacing
         hearts_x = (self.WIDTH - hearts_total_width) // 2
-        hearts_y = face_y + self.face_size  # Remove second HEART_SPACING
+        hearts_y = face_y + self.face_size + HEART_SPACING 
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
         if self.test_mode:
