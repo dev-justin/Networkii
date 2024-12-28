@@ -277,7 +277,7 @@ class Display:
         face = self.face_images[health_state]
         
         # Define spacing constant
-        HEART_SPACING = 10
+        HEART_SPACING = 15
         
         # Calculate total height of face + hearts + spacing
         total_element_height = self.face_size + self.heart_size + HEART_SPACING
