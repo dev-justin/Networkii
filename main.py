@@ -196,11 +196,11 @@ class Display:
         if stats.packet_loss == 0:
             score -= 0
         elif stats.packet_loss < 1:
-            score -= 10
-        elif stats.packet_loss < 5:
             score -= 20
-        else:
+        elif stats.packet_loss < 5:
             score -= 30
+        else:
+            score -= 40
             
         # Determine health state based on score
         if score >= 90:
