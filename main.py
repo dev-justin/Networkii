@@ -5,6 +5,8 @@ import argparse
 from PIL import Image, ImageDraw, ImageFont
 from dataclasses import dataclass
 from collections import deque
+import socket
+import netifaces
 
 @dataclass 
 class NetworkStats:
@@ -523,19 +525,53 @@ class NetworkMetrics:
         else:
             return 0
 
+def get_gateway_ip():
+    """Get the default gateway IP address"""
+    try:
+        # Get default gateway
+        gateways = netifaces.gateways()
+        if 'default' in gateways and netifaces.AF_INET in gateways['default']:
+            return gateways['default'][netifaces.AF_INET][0]
+    except Exception as e:
+        print(f"Error getting gateway IP: {e}")
+    return "1.1.1.1"  # Fallback to Cloudflare DNS
+
 def main():
     parser = argparse.ArgumentParser(description='Network Monitor')
     parser.add_argument('--test', action='store_true', help='Run in test mode (no physical display)')
     args = parser.parse_args()
 
-    network_monitor = NetworkMonitor()
-    display = Display(test_mode=args.test, network_monitor=network_monitor)  # Pass NetworkMonitor instance
+    # Get gateway IP and local network info
+    gateway_ip = get_gateway_ip()
+    local_ip = socket.gethostbyname(socket.gethostname())
+    
+    print(f"Local IP: {local_ip}")
+    print(f"Gateway IP: {gateway_ip}")
+    print("\nNetwork Interfaces:")
+    
+    # Print all network interfaces
+    for interface in netifaces.interfaces():
+        addrs = netifaces.ifaddresses(interface)
+        print(f"\nInterface: {interface}")
+        
+        # Print IPv4 addresses
+        if netifaces.AF_INET in addrs:
+            for addr in addrs[netifaces.AF_INET]:
+                print(f"  IPv4: {addr['addr']}")
+                if 'netmask' in addr:
+                    print(f"  Netmask: {addr['netmask']}")
+                if 'broadcast' in addr:
+                    print(f"  Broadcast: {addr['broadcast']}")
+
+    # Initialize monitor with gateway IP
+    network_monitor = NetworkMonitor(target_host=gateway_ip)
+    display = Display(test_mode=args.test, network_monitor=network_monitor)
 
     try:
         while True:
             stats = network_monitor.get_stats()
             display.update(stats)
-            time.sleep(1) # Sleep for 1 second
+            time.sleep(1)
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
     except Exception as e:
