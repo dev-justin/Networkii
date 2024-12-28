@@ -86,17 +86,17 @@ class Display:
 
     def __init__(self, test_mode: bool = False, network_monitor=None):
         self.test_mode = test_mode
-        self.network_monitor = network_monitor  # Store reference to NetworkMonitor
+        self.network_monitor = network_monitor
         
         # Create initial black canvas
-        self.initImage = Image.new('RGB', (self.WIDTH, self.HEIGHT), (0, 0, 0))
-        self.draw = ImageDraw.Draw(self.initImage)
+        self.image = Image.new('RGB', (self.WIDTH, self.HEIGHT), (0, 0, 0))
+        self.draw = ImageDraw.Draw(self.image)
         
         if not test_mode:
             try:
                 from displayhatmini import DisplayHATMini
-                self.disp = DisplayHATMini(self.initImage)  # Pass the image as buffer
-                self.disp.st7789._rotation = 2  # 0=0°, 1=90°, 2=180°, 3=270°
+                self.disp = DisplayHATMini(self.image)
+                self.disp.st7789._rotation = 2
                 
             except ImportError as e:
                 print(f"Error importing displayhatmini: {e}")
