@@ -223,8 +223,6 @@ class Display:
             loss_scores = [NetworkMetrics.calculate_metric_score(l, NetworkMetrics.PACKET_LOSS) for l in loss_history]
             loss_score = statistics.mean(loss_scores) * NetworkMetrics.PACKET_LOSS.weight
         
-        print(f"ping_score: {ping_score}, jitter_score: {jitter_score}, loss_score: {loss_score}")
-
         # Calculate final score
         final_score = ping_score + jitter_score + loss_score
         final_score = max(0, min(100, final_score))
