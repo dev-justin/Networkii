@@ -220,48 +220,29 @@ class Display:
         # Clear the image
         self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
         
-        # Calculate network health and get corresponding symbol
+        # Calculate network health and get corresponding face
         health_state = self.calculate_network_health(stats)
-        symbol = self.network_states[health_state]
+        face = self.face_images[health_state]
         
-        # Make the face much larger
-        large_font_size = 80
-        try:
-            font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", large_font_size)
-        except:
-            font_large = ImageFont.load_default()
+        # Calculate position to center the face
+        x = (self.width - self.face_size) // 2
+        y = (self.height - self.face_size) // 2 - 20
         
-        # Draw the network health symbol in the center
-        text_bbox = self.draw.textbbox((0, 0), symbol, font=font_large)
-        symbol_width = text_bbox[2] - text_bbox[0]
-        symbol_height = text_bbox[3] - text_bbox[1]
-        x = (self.width - symbol_width) // 2
-        y = (self.height - symbol_height) // 2 - 20
+        # Draw the face
+        self.image.paste(face, (x, y), face)
         
-        # Draw symbol with color based on health
-        symbol_colors = {
-            'excellent': (0, 255, 0),    # Green
-            'good':     (144, 238, 144), # Light green
-            'fair':     (255, 255, 0),   # Yellow
-            'poor':     (255, 165, 0),   # Orange
-            'critical': (255, 0, 0)      # Red
-        }
-        
-        # Draw the face once but much larger
-        self.draw.text((x, y), symbol, font=font_large, fill=symbol_colors[health_state])
-        
-        # Draw ping below the symbol
+        # Draw ping below the face
         ping_text = f"{stats.ping:.1f} ms"
         text_bbox = self.draw.textbbox((0, 0), ping_text, font=self.font)
         text_width = text_bbox[2] - text_bbox[0]
         x = (self.width - text_width) // 2
-        self.draw.text((x, y + symbol_height + 20), ping_text, font=self.font, fill=(255, 255, 255))
+        self.draw.text((x, y + self.face_size + 20), ping_text, font=self.font, fill=(255, 255, 255))
         
         if self.test_mode:
             # Test mode console output
             print("\033c", end="")
             print("=== Network Monitor ===")
-            print(f"Health: {health_state.upper()} {symbol}")
+            print(f"Health: {health_state.upper()}")
             print(f"Ping: {stats.ping:.1f} ms")
             print("-" * 30)
         else:
