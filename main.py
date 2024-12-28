@@ -171,48 +171,52 @@ class Display:
             draw = ImageDraw.Draw(self.heart_image)
             draw.text((self.heart_size//2, self.heart_size//2), "♥", fill=(255, 0, 0, 255))
 
-    def calculate_network_health(self, stats: NetworkStats) -> tuple[int, str]:
-        """Calculate network health based on ping, jitter, and packet loss"""
-        score = 100
+    def calculate_network_health(self, stats: NetworkStats, history_length: int = 15) -> tuple[int, str]:
+        """Calculate network health based on recent history (last ~15 seconds)"""
+        # Get last 15 items from history
+        ping_history = list(self.network_monitor.ping_history)[-history_length:]
+        jitter_history = list(self.network_monitor.jitter_history)[-history_length:]
+        loss_history = list(self.network_monitor.packet_loss_history)[-history_length:]
         
-        # Ping scoring (0-40 points)
-        if stats.ping < 20:
-            score -= 0
-        elif stats.ping < 50:
-            score -= 10
-        elif stats.ping < 100:
-            score -= 20
-        else:
-            score -= 40
+        current_score = 100
+        
+        # Calculate penalties with higher weights for recent issues
+        if ping_history:
+            bad_pings = sum(1 for p in ping_history if p > 100)
+            ping_penalty = (bad_pings / len(ping_history)) * 40
+            current_score -= ping_penalty
+        
+        if jitter_history:
+            bad_jitter = sum(1 for j in jitter_history if j > 20)
+            jitter_penalty = (bad_jitter / len(jitter_history)) * 30
+            current_score -= jitter_penalty
             
-        # Jitter scoring (0-30 points)
-        if stats.jitter < 5:
-            score -= 0
-        elif stats.jitter < 10:
-            score -= 10
-        elif stats.jitter < 20:
-            score -= 20
-        else:
-            score -= 30
-            
-        # Packet loss scoring (0-30 points)
-        if stats.packet_loss == 0:
-            score -= 0
-        elif stats.packet_loss < 1:
-            score -= 20
-        elif stats.packet_loss < 5:
-            score -= 30
-        else:
-            score -= 40
-            
-        # Determine health state based on score
-        state = 'excellent' if score >= 90 else \
-                'good' if score >= 70 else \
-                'fair' if score >= 50 else \
-                'poor' if score >= 30 else \
+        if loss_history:
+            bad_loss = sum(1 for l in loss_history if l > 0)  # More sensitive to any packet loss
+            loss_penalty = (bad_loss / len(loss_history)) * 30
+            current_score -= loss_penalty
+        
+        # Add current state impact (30% current, 70% history)
+        current_impact = 0.3
+        history_impact = 0.7
+        
+        # Calculate current state penalty
+        current_penalty = 0
+        if stats.ping.current > 100: current_penalty += 40
+        if stats.jitter.current > 20: current_penalty += 30
+        if stats.packet_loss.current > 0: current_penalty += 30
+        
+        # Blend current and historical scores
+        final_score = (current_score * history_impact) + ((100 - current_penalty) * current_impact)
+        final_score = max(0, min(100, final_score))
+        
+        state = 'excellent' if final_score >= 90 else \
+                'good' if final_score >= 70 else \
+                'fair' if final_score >= 50 else \
+                'poor' if final_score >= 30 else \
                 'critical'
         
-        return score, state
+        return int(final_score), state
 
     def calculate_bar_height(self, values: deque, bad_threshold: float) -> float:
         """Calculate health bar height based on historical values"""
