@@ -84,7 +84,7 @@ class Display:
     HEIGHT = 240
     
     # Bar dimensions
-    BAR_WIDTH = 12
+    BAR_WIDTH = 8
     BAR_SPACING = 5
     BAR_START_X = 0
     
@@ -384,7 +384,7 @@ class Display:
             text_width = text_bbox[2] - text_bbox[0]
             
             text_x = x + (self.METRIC_WIDTH - text_width) // 2
-            text_y = self.METRIC_TOP_MARGIN + 20 + (i * value_spacing)  # Reduced gap
+            text_y = self.METRIC_TOP_MARGIN + 30 + (i * value_spacing)  # Reduced gap
             
             self.draw.text(
                 (text_x, text_y),
