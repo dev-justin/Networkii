@@ -234,16 +234,46 @@ class Display:
             return (176, 196, 222)  # Light Steel Blue
 
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
-        """Draw a vertical health bar"""
+        """Draw a segmented health bar in retro style"""
         color = self.get_outline_color(metric_type)
         
-        # Draw filled portion
-        fill_height = int(height * health)
-        if fill_height > 0:
-            self.draw.rectangle(
-                (x, y + height - fill_height, x + width, y + height),
-                fill=color  # Use the same color as the text
-            )
+        # Calculate segments
+        total_segments = 10
+        segment_height = height // total_segments
+        filled_segments = round(health * total_segments)
+        
+        # Draw background segments (empty)
+        segment_spacing = 2
+        segment_width = width
+        
+        # Draw value text above bar
+        value_text = f"{round(health * 100)}/100"
+        self.draw.text(
+            (x + width//2, y - 15),
+            value_text,
+            font=self.tiny_font,
+            fill=color,
+            anchor="mm"
+        )
+        
+        # Draw segments from bottom to top
+        for i in range(total_segments):
+            segment_y = y + height - (i + 1) * (segment_height + segment_spacing)
+            
+            # Determine if segment should be filled
+            if i < filled_segments:
+                # Draw filled segment
+                self.draw.rectangle(
+                    (x, segment_y, x + segment_width, segment_y + segment_height),
+                    fill=color
+                )
+            else:
+                # Draw empty segment outline
+                self.draw.rectangle(
+                    (x, segment_y, x + segment_width, segment_y + segment_height),
+                    outline=color,
+                    width=1
+                )
 
     def update(self, stats: NetworkStats):
         """Update the display with network metrics"""
@@ -267,14 +297,14 @@ class Display:
         face_y = (self.height - self.face_size) // 2
         
         # Draw health bars on the left with full height and spacing
-        bar_height = self.height - 20  # Add vertical padding
-        bar_y = 10  # Top padding
-        bar_width = 12  # Thinner bars
-        bar_spacing = 6  # Adjusted spacing for thinner bars
+        bar_height = self.height - 40  # Add more vertical padding for value text
+        bar_y = 25  # Top padding increased for value text
+        bar_width = 15  # Bar width
+        bar_spacing = 8  # Space between bars
         
         # Calculate total width of bars including spacing
         total_bars_width = (bar_width * 3) + (bar_spacing * 2)
-        start_x = 15  # Slightly more left margin
+        start_x = 15  # Left margin
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
