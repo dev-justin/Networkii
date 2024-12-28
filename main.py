@@ -228,45 +228,45 @@ class Display:
             width=border_width
         )
         
-        # Draw separator line for stats
-        line_x = 100  # Position of vertical line
-        self.draw.line(
-            (line_x, margin, line_x, self.height - margin),
-            fill=(40, 40, 40),
-            width=border_width
-        )
-        
-        # Draw ping statistics on the left side
-        stats_x = 15  # Left margin for text
-        y_start = 30  # Starting Y position
-        y_spacing = 35  # Space between lines
-        
-        # Current ping
-        self.draw.text((stats_x, y_start), "PING", font=self.font, fill=(128, 128, 128))
-        self.draw.text((stats_x, y_start + 20), f"{round(stats.ping)}", font=self.font, fill=(255, 255, 255))
-        
-        # Min ping
-        self.draw.text((stats_x, y_start + y_spacing), "MIN", font=self.font, fill=(128, 128, 128))
-        self.draw.text((stats_x, y_start + y_spacing + 20), f"{round(stats.min_ping)}", font=self.font, fill=(255, 255, 255))
-        
-        # Max ping
-        self.draw.text((stats_x, y_start + y_spacing * 2), "MAX", font=self.font, fill=(128, 128, 128))
-        self.draw.text((stats_x, y_start + y_spacing * 2 + 20), f"{round(stats.max_ping)}", font=self.font, fill=(255, 255, 255))
-        
-        # Avg ping
-        self.draw.text((stats_x, y_start + y_spacing * 3), "AVG", font=self.font, fill=(128, 128, 128))
-        self.draw.text((stats_x, y_start + y_spacing * 3 + 20), f"{round(stats.avg_ping)}", font=self.font, fill=(255, 255, 255))
-        
         # Calculate network health and get corresponding face
         health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate position to center the face in the right section
-        face_x = line_x + (self.width - line_x - self.face_size) // 2
+        # Calculate position to center the face
+        face_x = (self.width - self.face_size) // 2
         face_y = (self.height - self.face_size) // 2
         
-        # Draw the face
+        # Draw the face in the center
         self.image.paste(face, (face_x, face_y), face)
+        
+        # Load smaller font for labels
+        try:
+            small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 12)
+            large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
+        except:
+            small_font = ImageFont.load_default()
+            large_font = self.font
+        
+        # Draw ping statistics on the left side
+        stats_x = 20  # Left margin for text
+        y_start = 40  # Starting Y position
+        y_spacing = 45  # Space between metrics
+        number_color = (0, 255, 0)  # Bright green for numbers
+        
+        # Helper function to draw metric
+        def draw_metric(y, label, value):
+            self.draw.text((stats_x, y), label, font=small_font, fill=(128, 128, 128))
+            value_text = str(round(value))
+            # Get text width for right alignment
+            text_bbox = self.draw.textbbox((0, 0), value_text, font=large_font)
+            text_width = text_bbox[2] - text_bbox[0]
+            self.draw.text((80 - text_width, y + 12), value_text, font=large_font, fill=number_color)
+        
+        # Draw each metric
+        draw_metric(y_start, "PING", stats.ping)
+        draw_metric(y_start + y_spacing, "MIN", stats.min_ping)
+        draw_metric(y_start + y_spacing * 2, "MAX", stats.max_ping)
+        draw_metric(y_start + y_spacing * 3, "AVG", stats.avg_ping)
         
         if self.test_mode:
             # Test mode console output
