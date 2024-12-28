@@ -85,9 +85,8 @@ class Display:
     
     # Bar dimensions
     BAR_WIDTH = 12
-    BAR_SPACING = 6
+    BAR_SPACING = 5
     BAR_START_X = 0
-    BAR_MARGIN_RIGHT = 0
     
     # Heart dimensions
     HEART_SPACING = 10      # Vertical spacing between face and hearts
@@ -158,7 +157,7 @@ class Display:
             draw = ImageDraw.Draw(self.heart_image)
             draw.text((self.HEART_SIZE//2, self.HEART_SIZE//2), "♥", fill=(255, 0, 0, 255))
 
-    def calculate_network_health(self, stats: NetworkStats, history_length: int = 30) -> tuple[int, str]:
+    def calculate_network_health(self, stats: NetworkStats, history_length: int = 20) -> tuple[int, str]:
         """Calculate network health based on recent history"""
         ping_history = list(stats.ping_history)[-history_length:]
         jitter_history = list(stats.jitter_history)[-history_length:]
@@ -277,7 +276,7 @@ class Display:
         self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
         # Calculate width taken by health bars on the left
-        bars_total_width = self.BAR_START_X + (self.BAR_WIDTH * 3) + (self.BAR_SPACING * 2) + self.BAR_MARGIN_RIGHT
+        bars_total_width = self.BAR_START_X + (self.BAR_WIDTH * 3) + (self.BAR_SPACING * 2)
         
         # Calculate remaining width for center content
         remaining_width = self.WIDTH - bars_total_width
@@ -304,23 +303,44 @@ class Display:
         # Calculate starting Y position to center everything vertically
         start_y = (self.HEIGHT - total_element_height) // 2
         
-        # Helper function to draw metric with matching color and horizontal alignment
-        def draw_metric(x, y, label, value, metric_type):
+        # Helper function to draw metric with matching color and historical stats
+        def draw_metric(x, y, label, history: deque, metric_type: str):
+            if not history:
+                return
+                
             color = self.get_outline_color(metric_type)
-            # Draw label centered above value
+            dim_color = tuple(max(0, c // 2) for c in color)  # 50% dimmed color
+            
+            # Calculate stats
+            current = history[-1]
+            min_val = min(list(history)[-20:])  # Last 20 values
+            max_val = max(list(history)[-20:])
+            
+            # Draw label centered
             label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
             label_width = label_bbox[2] - label_bbox[0]
-            self.draw.text((x + (40 - label_width) // 2, y), label, font=self.tiny_font, fill=color)
-            # Draw value centered below label
-            value_text = str(round(value))
-            value_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
-            value_width = value_bbox[2] - value_bbox[0]
-            self.draw.text((x + (40 - value_width) // 2, y + 12), value_text, font=self.number_font, fill=color)
+            self.draw.text((x + (60 - label_width) // 2, y), label, font=self.tiny_font, fill=color)
+            
+            # Draw min value (small, dimmed, left)
+            min_text = str(round(min_val))
+            self.draw.text((x + 5, y + 15), min_text, font=self.tiny_font, fill=dim_color)
+            
+            # Draw current value (large, center)
+            current_text = str(round(current))
+            current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
+            current_width = current_bbox[2] - current_bbox[0]
+            self.draw.text((x + (60 - current_width) // 2, y + 12), current_text, font=self.number_font, fill=color)
+            
+            # Draw max value (small, dimmed, right)
+            max_text = str(round(max_val))
+            max_bbox = self.draw.textbbox((0, 0), max_text, font=self.tiny_font)
+            max_width = max_bbox[2] - max_bbox[0]
+            self.draw.text((x + 55 - max_width, y + 15), max_text, font=self.tiny_font, fill=dim_color)
 
         # Draw metrics horizontally above face
-        draw_metric(metrics_start_x, start_y, "PING", stats.ping, 'ping')
-        draw_metric(metrics_start_x + 40 + self.METRIC_SPACING, start_y, "JITTER", stats.jitter, 'jitter')
-        draw_metric(metrics_start_x + (40 + self.METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss, 'packet_loss')
+        draw_metric(metrics_start_x, start_y, "PING", stats.ping_history, 'ping')
+        draw_metric(metrics_start_x + 60 + self.METRIC_SPACING, start_y, "JITTER", stats.jitter_history, 'jitter')
+        draw_metric(metrics_start_x + (60 + self.METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss_history, 'packet_loss')
         
         # Set positions for face centered in remaining space
         face_x = bars_total_width + (remaining_width - self.face_size) // 2
