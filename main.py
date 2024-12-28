@@ -110,7 +110,7 @@ class Display:
             self.font = ImageFont.load_default()
 
         # Network health indicators with PNG faces
-        self.face_size = 82  # Size of the face in pixels
+        self.face_size = 32  # Size of the face in pixels
         self.network_states = {
             'excellent': 'assets/faces/excellent.png',
             'good': 'assets/faces/good.png',
