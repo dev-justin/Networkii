@@ -285,17 +285,20 @@ class Display:
         self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
         # Calculate width taken by health bars on the left
-        bars_total_width = self.BAR_START_X + (self.BAR_WIDTH * 3) + (self.BAR_SPACING * 2)
+        health_bars_width = self.BAR_START_X + (self.BAR_WIDTH * 3) + (self.BAR_SPACING * 2)
         
-        # Calculate remaining width for center content
-        remaining_width = self.WIDTH - bars_total_width
+        # Calculate width taken by metrics on the right
+        metrics_width = (3 * (self.METRIC_WIDTH + self.METRIC_SPACING)) + self.METRIC_RIGHT_MARGIN
         
-        # Calculate face position first (centered in remaining width)
-        face_x = bars_total_width + 20  # Add small margin after health bars
+        # Calculate remaining width for face and hearts
+        remaining_width = self.WIDTH - health_bars_width - metrics_width
+        
+        # Calculate face position (centered in remaining space)
+        face_x = health_bars_width + (remaining_width - self.face_size) // 2
         face_y = (self.HEIGHT - (self.face_size + self.HEART_SIZE + self.HEART_SPACING)) // 2
         
-        # Calculate metrics positions (right-aligned)
-        metrics_x = self.WIDTH - (3 * (self.METRIC_WIDTH + self.METRIC_SPACING)) - self.METRIC_RIGHT_MARGIN
+        # Calculate metrics position (right-aligned)
+        metrics_x = self.WIDTH - metrics_width
         
         # Draw metrics in full-height columns
         self.draw_metric(metrics_x, 0, "P", stats.ping_history, 'ping')
