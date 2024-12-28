@@ -315,7 +315,7 @@ class Display:
         start_y = (self.HEIGHT - total_element_height) // 2
         
         # Calculate metrics positioning in remaining space
-        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING)
+        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING) + 15  # Added 15px right margin
         metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
         
         # Helper function to draw metric with matching color and horizontal alignment
