@@ -224,59 +224,30 @@ class Display:
         # Return health percentage (1.0 = full health, 0.0 = no health)
         return 1.0 - (bad_count / len(values))
 
-    def get_bar_color(self, health: float, metric_type: str) -> tuple:
-        """Get color for health bar based on health percentage and metric type"""
+    def get_outline_color(self, metric_type: str) -> tuple:
+        """Get color for bar outline based on metric type"""
         if metric_type == 'ping':
-            if health > 0.8:
-                return (0, 255, 255)  # Cyan
-            elif health > 0.6:
-                return (0, 200, 200)
-            elif health > 0.4:
-                return (0, 150, 150)
-            elif health > 0.2:
-                return (0, 100, 100)
-            else:
-                return (0, 50, 50)
+            return (0, 255, 255)  # Cyan
         elif metric_type == 'jitter':
-            if health > 0.8:
-                return (255, 0, 255)  # Magenta
-            elif health > 0.6:
-                return (200, 0, 200)
-            elif health > 0.4:
-                return (150, 0, 150)
-            elif health > 0.2:
-                return (100, 0, 100)
-            else:
-                return (50, 0, 50)
+            return (255, 0, 255)  # Magenta
         else:  # packet loss
-            if health > 0.8:
-                return (255, 255, 0)  # Yellow
-            elif health > 0.6:
-                return (200, 200, 0)
-            elif health > 0.4:
-                return (150, 150, 0)
-            elif health > 0.2:
-                return (100, 100, 0)
-            else:
-                return (50, 50, 0)
+            return (255, 255, 0)  # Yellow
 
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
         """Draw a vertical health bar"""
-        border_color = (40, 40, 40)
-        
-        # Draw border
+        # Draw colored outline
         self.draw.rectangle(
             (x, y, x + width, y + height),
-            outline=border_color,
-            width=1
+            outline=self.get_outline_color(metric_type),
+            width=2
         )
         
         # Draw filled portion
         fill_height = int(height * health)
         if fill_height > 0:
             self.draw.rectangle(
-                (x + 1, y + height - fill_height, x + width - 1, y + height - 1),
-                fill=self.get_bar_color(health, metric_type)
+                (x + 2, y + height - fill_height, x + width - 2, y + height - 2),
+                fill=(255, 255, 255)  # White fill for all bars
             )
 
     def update(self, stats: NetworkStats):
@@ -303,7 +274,7 @@ class Display:
         # Draw health bars on the left with full height
         bar_height = self.height
         bar_y = 0
-        bar_width = 15
+        bar_width = 25  # Increased width
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
@@ -318,22 +289,19 @@ class Display:
         self.draw_health_bar(bar_width, bar_y, bar_width, bar_height, jitter_health, 'jitter')
         self.draw_health_bar(bar_width * 2, bar_y, bar_width, bar_height, loss_health, 'packet_loss')
         
-        # Helper function to draw metric
-        def draw_metric(x, y, label, value, align='left'):
-            self.draw.text((x, y), label, font=self.tiny_font, fill=(128, 128, 128))
+        # Helper function to draw metric with matching color
+        def draw_metric(y, label, value, metric_type):
+            color = self.get_outline_color(metric_type)
+            self.draw.text((self.width - 80, y), label, font=self.tiny_font, fill=color)
             value_text = str(round(value))
-            if align == 'left':
-                self.draw.text((x, y + 12), value_text, font=self.number_font, fill=(0, 255, 0))
-            else:  # right align
-                text_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
-                text_width = text_bbox[2] - text_bbox[0]
-                self.draw.text((x - text_width, y + 12), value_text, font=self.number_font, fill=(0, 255, 0))
+            self.draw.text((self.width - 80, y + 12), value_text, font=self.number_font, fill=color)
 
-        # Draw current stats above face
-        top_y = face_y - 60
-        draw_metric(120, top_y, "PING", stats.ping)
-        draw_metric(200, top_y, "JITTER", stats.jitter)
-        draw_metric(280, top_y, "LOSS", stats.packet_loss)
+        # Draw current stats on right side
+        stats_y = 40
+        stats_spacing = 45
+        draw_metric(stats_y, "PING", stats.ping, 'ping')
+        draw_metric(stats_y + stats_spacing, "JITTER", stats.jitter, 'jitter')
+        draw_metric(stats_y + stats_spacing * 2, "LOSS", stats.packet_loss, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
