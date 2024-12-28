@@ -94,7 +94,7 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 50    
+    METRIC_WIDTH = 30    
     METRIC_SPACING = 5     
     
     # History settings
