@@ -94,7 +94,7 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 10    # Width of each metric column
+    METRIC_WIDTH = 15    # Width of each metric column
     METRIC_SPACING = 5   # Space between columns
     METRIC_RIGHT_MARGIN = 10
     METRIC_TOP_MARGIN = 10
@@ -361,7 +361,7 @@ class Display:
         
         # Calculate spacing for values
         available_height = self.HEIGHT - self.METRIC_TOP_MARGIN - self.METRIC_BOTTOM_MARGIN
-        value_spacing = available_height // 10
+        value_spacing = (available_height - 45) // 9  # Adjust for current value height
         
         # Draw most recent value larger
         current_value = str(round(last_values[-1]))
@@ -375,17 +375,16 @@ class Display:
         )
         
         # Draw previous values from top to bottom with fading
-        for i, value in enumerate(reversed(last_values[:-1]), 1):  # Skip most recent value
-            fade_level = 0.8 - (i * 0.08)  # Gradual fade for older values
+        for i, value in enumerate(reversed(last_values[:-1]), 1):
+            fade_level = 0.8 - (i * 0.08)
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
             text_bbox = self.draw.textbbox((0, 0), value_text, font=self.tiny_font)
             text_width = text_bbox[2] - text_bbox[0]
             
-            # Center text in column
             text_x = x + (self.METRIC_WIDTH - text_width) // 2
-            text_y = self.METRIC_TOP_MARGIN + 45 + (i * value_spacing)  # Start lower to account for larger current value
+            text_y = self.METRIC_TOP_MARGIN + 35 + (i * value_spacing)  # Reduced gap
             
             self.draw.text(
                 (text_x, text_y),
