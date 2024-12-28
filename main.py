@@ -396,7 +396,7 @@ class Display:
             text_width = text_bbox[2] - text_bbox[0]
             
             text_x = x + (self.METRIC_WIDTH - text_width) // 2
-            text_y = self.METRIC_TOP_MARGIN + 35 + (i * value_spacing)  # Adjusted spacing for larger font
+            text_y = self.METRIC_TOP_MARGIN + 30 + (i * value_spacing)  # Adjusted spacing for larger font
             
             self.draw.text(
                 (text_x, text_y),
