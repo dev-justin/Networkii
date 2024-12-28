@@ -110,6 +110,7 @@ class Display:
     FONT_LARGE = 16    # For current value
     FONT_MEDIUM = 14   # For past values
     FONT_SMALL = 10    # For labels
+    FONT_MESSAGE = 14  # For network state message
 
     # Asset paths
     ASSETS = {
@@ -171,11 +172,13 @@ class Display:
             self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.FONT_SMALL)
             self.number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.FONT_LARGE)
             self.medium_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.FONT_MEDIUM)
+            self.message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.FONT_MESSAGE)
         except:
             self.font = ImageFont.load_default()
             self.tiny_font = ImageFont.load_default()
             self.number_font = ImageFont.load_default()
             self.medium_font = ImageFont.load_default()
+            self.message_font = ImageFont.load_default()
 
         # Load and cache the face images
         self.face_images = {}
@@ -359,10 +362,10 @@ class Display:
         # Draw network state message above face
         health_score, health_state = self.calculate_network_health(stats)
         message = self.NETWORK_STATES[health_state]['message']
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.tiny_font)
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = face_x + (self.FACE_SIZE - message_width) // 2
-        self.draw.text((message_x, message_y), message, font=self.tiny_font, fill=(255, 255, 255))
+        self.draw.text((message_x, message_y), message, font=self.message_font, fill=(255, 255, 255))
         
         # Draw the face
         self.image.paste(self.face_images[health_state], (face_x, face_y), self.face_images[health_state])
