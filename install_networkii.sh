@@ -97,7 +97,7 @@ sudo apt-get upgrade -y
 print_success "System packages upgraded"
 
 #------------------------------
-# 3. INSTALL APP REQUIREMENTS    
+# 3. INSTALL AND SETUP APP REQUIREMENTS    
 #------------------------------
 print_header "Installing Python Requirements"
 pushd "$PROJECT_DIR" > /dev/null
@@ -107,10 +107,15 @@ print_info "Installing python3-dev..."
 sudo apt-get install -y python3-dev
 print_success "python3-dev installed"
 
-# Install dependencies needed for PIL
-print_info "Installing dependencies needed for PIL..."
-sudo apt-get install -y zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev
+# Install dependencies needed for PIL and NumPy
+print_info "Installing dependencies needed for PIL and NumPy..."
+sudo apt-get install -y zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev libopenblas0
 print_success "Dependencies installed"
+
+# Enable SPI interface so we can use DisplayHATMini
+print_info "Enabling SPI interface..."
+sudo raspi-config nonint do_spi 0
+print_success "SPI interface enabled"
 
 # Create virtual environment
 print_info "Creating virtual environment..."
