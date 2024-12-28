@@ -299,7 +299,7 @@ class Display:
         face = self.face_images[health_state]
         
         # Calculate total height of all elements (metrics + face + hearts)
-        total_element_height = self.METRICS_HEIGHT + self.face_size + self.heart_size + self.HEART_SPACING
+        total_element_height = self.METRICS_HEIGHT + self.face_size + self.HEART_SIZE + self.HEART_SPACING
         
         # Calculate starting Y position to center everything vertically
         start_y = (self.HEIGHT - total_element_height) // 2
