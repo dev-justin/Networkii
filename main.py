@@ -219,33 +219,54 @@ class Display:
         # Clear the image
         self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
         
+        # Draw modern border - slightly inset from edges
+        border_width = 2
+        margin = 5
+        self.draw.rectangle(
+            (margin, margin, self.width - margin, self.height - margin),
+            outline=(40, 40, 40),  # Dark gray
+            width=border_width
+        )
+        
+        # Draw separator line for stats
+        line_x = 100  # Position of vertical line
+        self.draw.line(
+            (line_x, margin, line_x, self.height - margin),
+            fill=(40, 40, 40),
+            width=border_width
+        )
+        
+        # Draw ping statistics on the left side
+        stats_x = 15  # Left margin for text
+        y_start = 30  # Starting Y position
+        y_spacing = 35  # Space between lines
+        
+        # Current ping
+        self.draw.text((stats_x, y_start), "PING", font=self.font, fill=(128, 128, 128))
+        self.draw.text((stats_x, y_start + 20), f"{round(stats.ping)}", font=self.font, fill=(255, 255, 255))
+        
+        # Min ping
+        self.draw.text((stats_x, y_start + y_spacing), "MIN", font=self.font, fill=(128, 128, 128))
+        self.draw.text((stats_x, y_start + y_spacing + 20), f"{round(stats.min_ping)}", font=self.font, fill=(255, 255, 255))
+        
+        # Max ping
+        self.draw.text((stats_x, y_start + y_spacing * 2), "MAX", font=self.font, fill=(128, 128, 128))
+        self.draw.text((stats_x, y_start + y_spacing * 2 + 20), f"{round(stats.max_ping)}", font=self.font, fill=(255, 255, 255))
+        
+        # Avg ping
+        self.draw.text((stats_x, y_start + y_spacing * 3), "AVG", font=self.font, fill=(128, 128, 128))
+        self.draw.text((stats_x, y_start + y_spacing * 3 + 20), f"{round(stats.avg_ping)}", font=self.font, fill=(255, 255, 255))
+        
         # Calculate network health and get corresponding face
         health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate position to center the face
-        x = (self.width - self.face_size) // 2
-        y = (self.height - self.face_size) // 2 - 30  # Move face up a bit to make room
+        # Calculate position to center the face in the right section
+        face_x = line_x + (self.width - line_x - self.face_size) // 2
+        face_y = (self.height - self.face_size) // 2
         
         # Draw the face
-        self.image.paste(face, (x, y), face)
-        
-        # Draw ping statistics below the face
-        y_offset = y + self.face_size + 20
-        
-        # Current ping
-        ping_text = f"Ping: {round(stats.ping)} ms"
-        text_bbox = self.draw.textbbox((0, 0), ping_text, font=self.font)
-        text_width = text_bbox[2] - text_bbox[0]
-        x = (self.width - text_width) // 2
-        self.draw.text((x, y_offset), ping_text, font=self.font, fill=(255, 255, 255))
-        
-        # Min/Max/Avg on next line
-        stats_text = f"Min/Max/Avg: {round(stats.min_ping)}/{round(stats.max_ping)}/{round(stats.avg_ping)}"
-        text_bbox = self.draw.textbbox((0, 0), stats_text, font=self.font)
-        text_width = text_bbox[2] - text_bbox[0]
-        x = (self.width - text_width) // 2
-        self.draw.text((x, y_offset + 25), stats_text, font=self.font, fill=(255, 255, 255))
+        self.image.paste(face, (face_x, face_y), face)
         
         if self.test_mode:
             # Test mode console output
