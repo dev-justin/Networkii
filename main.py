@@ -291,7 +291,7 @@ class Display:
         
         # Calculate metrics position (to the right of face)
         metrics_start_x = face_x + self.face_size + 20  # 20px margin between face and metrics
-        metrics_start_y = face_y + (self.face_size // 2) - (self.METRICS_HEIGHT * 1.5)  # Center metrics vertically with face
+        metrics_y = face_y + (self.face_size // 2) - (self.METRICS_HEIGHT // 2)  # Center metrics vertically with face
         
         # Load fonts with smaller sizes
         try:
@@ -305,10 +305,10 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Draw metrics vertically to the right of face
-        self.draw_metric(metrics_start_x, metrics_start_y, "PING", stats.ping_history, 'ping')
-        self.draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT, "JITTER", stats.jitter_history, 'jitter')
-        self.draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT * 2, "LOSS", stats.packet_loss_history, 'packet_loss')
+        # Draw metrics horizontally to the right of face
+        self.draw_metric(metrics_start_x, metrics_y, "PING", stats.ping_history, 'ping')
+        self.draw_metric(metrics_start_x + self.METRIC_WIDTH + self.METRIC_SPACING, metrics_y, "JITTER", stats.jitter_history, 'jitter')
+        self.draw_metric(metrics_start_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, metrics_y, "LOSS", stats.packet_loss_history, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
