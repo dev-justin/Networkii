@@ -94,9 +94,11 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 10    # Increased to accommodate larger numbers
-    METRIC_SPACING = 5
-    METRIC_RIGHT_MARGIN = 10  # Margin from right edge of screen
+    METRIC_WIDTH = 10    # Width of each metric column
+    METRIC_SPACING = 5   # Space between columns
+    METRIC_RIGHT_MARGIN = 10
+    METRIC_TOP_MARGIN = 10
+    METRIC_BOTTOM_MARGIN = 10
     
     # History settings
     RECENT_HISTORY_LENGTH = 20  # Number of samples to use for recent history
@@ -291,33 +293,20 @@ class Display:
         
         # Calculate metrics positions (right-aligned)
         metrics_x = self.WIDTH - (3 * (self.METRIC_WIDTH + self.METRIC_SPACING)) - self.METRIC_RIGHT_MARGIN
-        metrics_y = 10
         
-        # Load fonts with smaller sizes
-        try:
-            self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-            self.number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
-        except:
-            self.tiny_font = ImageFont.load_default()
-            self.number_font = self.font
-
-        # Calculate network health and get corresponding face
-        health_score, health_state = self.calculate_network_health(stats)
-        face = self.face_images[health_state]
-        
-        # Draw metrics horizontally
-        self.draw_metric(metrics_x, metrics_y, "P", stats.ping_history, 'ping')
-        self.draw_metric(metrics_x + self.METRIC_WIDTH + self.METRIC_SPACING, metrics_y, "J", stats.jitter_history, 'jitter')
-        self.draw_metric(metrics_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, metrics_y, "L", stats.packet_loss_history, 'packet_loss')
+        # Draw metrics in full-height columns
+        self.draw_metric(metrics_x, 0, "PING", stats.ping_history, 'ping')
+        self.draw_metric(metrics_x + self.METRIC_WIDTH + self.METRIC_SPACING, 0, "JITTER", stats.jitter_history, 'jitter')
+        self.draw_metric(metrics_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, 0, "LOSS", stats.packet_loss_history, 'packet_loss')
         
         # Draw the face
-        self.image.paste(face, (face_x, face_y), face)
+        self.image.paste(self.face_images[self.calculate_network_health(stats)[1]], (face_x, face_y), self.face_images[self.calculate_network_health(stats)[1]])
         
         # Calculate and draw hearts below face
         hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
         hearts_x = face_x + (self.face_size - hearts_total_width) // 2  # Center hearts under face
         hearts_y = face_y + self.face_size + self.HEART_SPACING
-        self.draw_hearts(hearts_x, hearts_y, health_score)
+        self.draw_hearts(hearts_x, hearts_y, self.calculate_network_health(stats)[0])
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
@@ -336,7 +325,7 @@ class Display:
             # Test mode console output
             print("\033c", end="")
             print("=== Network Monitor ===")
-            print(f"Health: {health_state.upper()}")
+            print(f"Health: {self.calculate_network_health(stats)[1].upper()}")
             print(f"Current: {round(stats.ping)} ms")
             print(f"Avg: {round(statistics.mean(stats.ping_history))} ms")
             print("-" * 30)
@@ -346,37 +335,46 @@ class Display:
             self.disp.st7789.display(self.image)
 
     def draw_metric(self, x: int, y: int, label: str, history: deque, metric_type: str):
-        """Draw metric with last 10 values vertically"""
+        """Draw metric column with values using full height"""
         if not history:
             return
             
         color = self.get_outline_color(metric_type)
         
-        # Draw label
-        self.draw.text((x, y), label, font=self.tiny_font, fill=color)
-        
-        # Get last 10 values
-        last_values = list(history)[-10:]
-        if len(last_values) < 10:  # Pad with zeros if we don't have 10 values yet
-            last_values = [0] * (10 - len(last_values)) + last_values
-        
-        # Draw current value (large)
-        current_text = str(round(last_values[-1]))
+        # Draw label centered at top
+        label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
+        label_width = label_bbox[2] - label_bbox[0]
         self.draw.text(
-            (x + self.METRIC_WIDTH - len(current_text) * 10, y + 12),  # Right align
-            current_text,
-            font=self.number_font,
+            (x + (self.METRIC_WIDTH - label_width) // 2, self.METRIC_TOP_MARGIN),
+            label,
+            font=self.tiny_font,
             fill=color
         )
         
-        # Draw previous values with increasing transparency
-        for i, value in enumerate(reversed(last_values[:-1])):
-            fade_level = 0.8 - (i * 0.07)  # More gradual fade over 10 values
+        # Get last 10 values
+        last_values = list(history)[-10:]
+        if len(last_values) < 10:
+            last_values = [0] * (10 - len(last_values)) + last_values
+        
+        # Calculate spacing for values
+        available_height = self.HEIGHT - self.METRIC_TOP_MARGIN - self.METRIC_BOTTOM_MARGIN
+        value_spacing = available_height // 10
+        
+        # Draw values from top to bottom with fading
+        for i, value in enumerate(reversed(last_values)):
+            fade_level = 1.0 - (i * 0.08)  # Gradual fade from bottom to top
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
+            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.tiny_font)
+            text_width = text_bbox[2] - text_bbox[0]
+            
+            # Center text in column
+            text_x = x + (self.METRIC_WIDTH - text_width) // 2
+            text_y = self.METRIC_TOP_MARGIN + 20 + (i * value_spacing)
+            
             self.draw.text(
-                (x + self.METRIC_WIDTH - len(value_text) * 7, y + 30 + (i * 12)),  # Right align, closer spacing
+                (text_x, text_y),
                 value_text,
                 font=self.tiny_font,
                 fill=faded_color
