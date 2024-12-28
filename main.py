@@ -331,8 +331,7 @@ class Display:
         
         # Calculate and draw hearts below face
         hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
-        face_center_x = face_x + (self.face_size // 2)
-        hearts_x = face_center_x - (hearts_total_width // 2)
+        hearts_x = bars_total_width + (remaining_width - hearts_total_width) // 2  # Center in remaining space
         hearts_y = face_y + self.face_size + self.HEART_SPACING
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
