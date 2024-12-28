@@ -342,6 +342,26 @@ class Display:
         hearts_y = face_y + self.face_size + HEART_SPACING
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
+        # Draw health bars on the left with full height and spacing
+        bar_height = self.HEIGHT  # Use full height
+        bar_y = 0  # Start from top
+        bar_width = 12  # Wider bars
+        bar_spacing = 6  # Slightly more spacing for wider bars
+        start_x = 15  # Left margin
+        
+        # Calculate health percentages using NetworkMonitor's history
+        ping_health = self.calculate_bar_height(
+            self.network_monitor.ping_history, 30)
+        jitter_health = self.calculate_bar_height(
+            self.network_monitor.jitter_history, 5)
+        loss_health = self.calculate_bar_height(
+            self.network_monitor.packet_loss_history, 1)
+        
+        # Draw the three bars with spacing
+        self.draw_health_bar(start_x, bar_y, bar_width, bar_height, ping_health, 'ping')
+        self.draw_health_bar(start_x + bar_width + bar_spacing, bar_y, bar_width, bar_height, jitter_health, 'jitter')
+        self.draw_health_bar(start_x + (bar_width + bar_spacing) * 2, bar_y, bar_width, bar_height, loss_health, 'packet_loss')
+
         if self.test_mode:
             # Test mode console output
             print("\033c", end="")
