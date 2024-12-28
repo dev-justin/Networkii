@@ -227,11 +227,11 @@ class Display:
     def get_outline_color(self, metric_type: str) -> tuple:
         """Get color for bar outline based on metric type"""
         if metric_type == 'ping':
-            return (0, 255, 255)  # Cyan
+            return (64, 224, 208)  # Turquoise
         elif metric_type == 'jitter':
-            return (255, 0, 255)  # Magenta
+            return (95, 158, 160)  # Cadet Blue
         else:  # packet loss
-            return (255, 255, 0)  # Yellow
+            return (176, 196, 222)  # Light Steel Blue
 
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
         """Draw a vertical health bar"""
@@ -269,12 +269,12 @@ class Display:
         # Draw health bars on the left with full height and spacing
         bar_height = self.height - 20  # Add vertical padding
         bar_y = 10  # Top padding
-        bar_width = 20  # Slightly narrower bars
-        bar_spacing = 8  # More space between bars
+        bar_width = 12  # Thinner bars
+        bar_spacing = 6  # Adjusted spacing for thinner bars
         
         # Calculate total width of bars including spacing
         total_bars_width = (bar_width * 3) + (bar_spacing * 2)
-        start_x = 10  # Left margin
+        start_x = 15  # Slightly more left margin
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
