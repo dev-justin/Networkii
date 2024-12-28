@@ -326,7 +326,7 @@ class Display:
         # Calculate and draw hearts below face with proper spacing
         hearts_total_width = (5 * self.heart_size) + (4 * 7)  # 5 hearts with 5px spacing
         hearts_x = (self.WIDTH - hearts_total_width) // 2
-        hearts_y = face_y + self.face_size + 30  # 15px spacing between face and hearts
+        hearts_y = face_y + self.face_size + 10  # spacing between face and hearts
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
         if self.test_mode:
