@@ -111,13 +111,40 @@ class Display:
     FONT_MEDIUM = 14   # For past values
     FONT_SMALL = 10    # For labels
 
-    # Network state messages
-    NETWORK_MESSAGES = {
-        'excellent': "Network is Purring! 😺",
-        'good':      "All Systems Go! 🚀",
-        'fair':      "Hanging in There! 🤞",
-        'poor':      "Having Hiccups... 😅",
-        'critical':  "Help, I'm Sick! 🤒"
+    # Asset paths
+    ASSETS = {
+        'faces': {
+            'excellent': 'assets/faces/excellent.png',
+            'good': 'assets/faces/good.png',
+            'fair': 'assets/faces/fair.png',
+            'poor': 'assets/faces/poor.png',
+            'critical': 'assets/faces/critical.png'
+        },
+        'heart': 'assets/heart.png'
+    }
+    
+    # Network states configuration
+    NETWORK_STATES = {
+        'excellent': {
+            'message': "Network is Purring! 😺",
+            'threshold': 90
+        },
+        'good': {
+            'message': "All Systems Go! 🚀",
+            'threshold': 70
+        },
+        'fair': {
+            'message': "Hanging in There! 🤞",
+            'threshold': 50
+        },
+        'poor': {
+            'message': "Having Hiccups... 😅",
+            'threshold': 30
+        },
+        'critical': {
+            'message': "Help, I'm Sick! 🤒",
+            'threshold': 0
+        }
     }
 
     def __init__(self, test_mode: bool = False, network_monitor=None):
@@ -150,23 +177,14 @@ class Display:
             self.number_font = ImageFont.load_default()
             self.medium_font = ImageFont.load_default()
 
-        # Network health indicators with PNG faces
-        self.network_states = {
-            'excellent': 'assets/faces/excellent.png',
-            'good': 'assets/faces/good.png',
-            'fair': 'assets/faces/fair.png',
-            'poor': 'assets/faces/poor.png',
-            'critical': 'assets/faces/critical.png'
-        }
-        
         # Load and cache the face images
         self.face_images = {}
-        for state, png_path in self.network_states.items():
+        for state, path in self.ASSETS['faces'].items():
             try:
-                image = Image.open(png_path).convert('RGBA')
+                image = Image.open(path).convert('RGBA')
                 self.face_images[state] = image.resize((self.FACE_SIZE, self.FACE_SIZE), Image.Resampling.LANCZOS)
             except Exception as e:
-                print(f"Error loading face {png_path}: {e}")
+                print(f"Error loading face {path}: {e}")
                 # Create a fallback image
                 img = Image.new('RGBA', (self.FACE_SIZE, self.FACE_SIZE), (0, 0, 0, 0))
                 draw = ImageDraw.Draw(img)
@@ -175,7 +193,7 @@ class Display:
 
         # Load heart image
         try:
-            self.heart_image = Image.open('assets/heart.png').convert('RGBA')
+            self.heart_image = Image.open(self.ASSETS['heart']).convert('RGBA')
             self.heart_image = self.heart_image.resize((self.HEART_SIZE, self.HEART_SIZE))
         except Exception as e:
             print(f"Error loading heart image: {e}")
@@ -207,12 +225,8 @@ class Display:
         final_score = ping_score + jitter_score + loss_score
         final_score = max(0, min(100, final_score))
         
-        # Determine state based on score
-        state = 'excellent' if final_score >= 90 else \
-                'good' if final_score >= 70 else \
-                'fair' if final_score >= 50 else \
-                'poor' if final_score >= 30 else \
-                'critical'
+        # Determine state based on score 
+        state = next((state for state, info in self.NETWORK_STATES.items() if final_score >= info['threshold']), 'critical')
         
         return int(final_score), state
 
@@ -323,23 +337,40 @@ class Display:
         self.draw_metric(metrics_x + self.METRIC_WIDTH + self.METRIC_SPACING, 0, "J", stats.jitter_history, 'jitter')
         self.draw_metric(metrics_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, 'packet_loss')
         
+        # Calculate total height of all elements
+        message_bbox = self.draw.textbbox((0, 0), "Test", font=self.tiny_font)
+        message_height = message_bbox[3] - message_bbox[1]
+        total_element_height = (
+            message_height +          # Message height
+            20 +                      # Space between message and face
+            self.FACE_SIZE +          # Face height
+            self.HEART_SPACING +      # Space between face and hearts
+            self.HEART_SIZE           # Hearts height
+        )
+        
+        # Calculate starting Y position to center everything vertically
+        start_y = (self.HEIGHT - total_element_height) // 2
+        
+        # Position each element
+        message_y = start_y
+        face_y = message_y + message_height + 20
+        hearts_y = face_y + self.FACE_SIZE + self.HEART_SPACING
+        
         # Draw network state message above face
         health_score, health_state = self.calculate_network_health(stats)
-        message = self.NETWORK_MESSAGES[health_state]
+        message = self.NETWORK_STATES[health_state]['message']
         message_bbox = self.draw.textbbox((0, 0), message, font=self.tiny_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = face_x + (self.FACE_SIZE - message_width) // 2
-        message_y = face_y - 20  # 20px above face
         self.draw.text((message_x, message_y), message, font=self.tiny_font, fill=(255, 255, 255))
         
         # Draw the face
         self.image.paste(self.face_images[health_state], (face_x, face_y), self.face_images[health_state])
         
-        # Calculate and draw hearts below face
+        # Draw hearts
         hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
-        hearts_x = face_x + (self.FACE_SIZE - hearts_total_width) // 2  # Center hearts under face
-        hearts_y = face_y + self.FACE_SIZE + self.HEART_SPACING
-        self.draw_hearts(hearts_x, hearts_y, self.calculate_network_health(stats)[0])
+        hearts_x = face_x + (self.FACE_SIZE - hearts_total_width) // 2
+        self.draw_hearts(hearts_x, hearts_y, health_score)
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
