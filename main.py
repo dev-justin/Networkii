@@ -88,10 +88,13 @@ class Display:
     BAR_SPACING = 5
     BAR_START_X = 0
     
+    # Face dimensions
+    FACE_SIZE = 128
+    
     # Heart dimensions
     HEART_SPACING = 10      # Vertical spacing between face and hearts
-    HEART_GAP = 10          # Horizontal spacing between hearts
-    HEART_SIZE = 32        # Size of each heart
+    HEART_GAP = 8          # Horizontal spacing between hearts
+    HEART_SIZE = 28        # Size of each heart
     
     # Metric dimensions
     METRIC_WIDTH = 15    # Width of each metric column
@@ -132,7 +135,6 @@ class Display:
             self.number_font = ImageFont.load_default()
 
         # Network health indicators with PNG faces
-        self.face_size = 128  # Size of the face in pixels
         self.network_states = {
             'excellent': 'assets/faces/excellent.png',
             'good': 'assets/faces/good.png',
@@ -146,13 +148,13 @@ class Display:
         for state, png_path in self.network_states.items():
             try:
                 image = Image.open(png_path).convert('RGBA')
-                self.face_images[state] = image.resize((self.face_size, self.face_size), Image.Resampling.LANCZOS)
+                self.face_images[state] = image.resize((self.FACE_SIZE, self.FACE_SIZE), Image.Resampling.LANCZOS)
             except Exception as e:
                 print(f"Error loading face {png_path}: {e}")
                 # Create a fallback image
-                img = Image.new('RGBA', (self.face_size, self.face_size), (0, 0, 0, 0))
+                img = Image.new('RGBA', (self.FACE_SIZE, self.FACE_SIZE), (0, 0, 0, 0))
                 draw = ImageDraw.Draw(img)
-                draw.text((self.face_size//2, self.face_size//2), "?", fill=(255, 255, 255, 255))
+                draw.text((self.FACE_SIZE//2, self.FACE_SIZE//2), "?", fill=(255, 255, 255, 255))
                 self.face_images[state] = img
 
         # Load heart image
@@ -294,8 +296,8 @@ class Display:
         remaining_width = self.WIDTH - health_bars_width - metrics_width
         
         # Calculate face position (centered in remaining space)
-        face_x = health_bars_width + (remaining_width - self.face_size) // 2
-        face_y = (self.HEIGHT - (self.face_size + self.HEART_SIZE + self.HEART_SPACING)) // 2
+        face_x = health_bars_width + (remaining_width - self.FACE_SIZE) // 2
+        face_y = (self.HEIGHT - (self.FACE_SIZE + self.HEART_SIZE + self.HEART_SPACING)) // 2
         
         # Calculate metrics position (right-aligned)
         metrics_x = self.WIDTH - metrics_width
@@ -310,8 +312,8 @@ class Display:
         
         # Calculate and draw hearts below face
         hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
-        hearts_x = face_x + (self.face_size - hearts_total_width) // 2  # Center hearts under face
-        hearts_y = face_y + self.face_size + self.HEART_SPACING
+        hearts_x = face_x + (self.FACE_SIZE - hearts_total_width) // 2  # Center hearts under face
+        hearts_y = face_y + self.FACE_SIZE + self.HEART_SPACING
         self.draw_hearts(hearts_x, hearts_y, self.calculate_network_health(stats)[0])
         
         # Calculate health percentages using NetworkMonitor's history
