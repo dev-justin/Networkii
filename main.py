@@ -323,23 +323,23 @@ class Display:
             # Draw label centered
             label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
             label_width = label_bbox[2] - label_bbox[0]
-            self.draw.text((x + (60 - label_width) // 2, y), label, font=self.tiny_font, fill=color)
+            self.draw.text((x + (self.METRIC_WIDTH - label_width) // 2, y), label, font=self.tiny_font, fill=color)
             
             # Draw min value (small, dimmed, left)
             min_text = str(round(min_val))
-            self.draw.text((x + 5, y + 15), min_text, font=self.tiny_font, fill=dim_color)
+            self.draw.text((x + 2, y + 15), min_text, font=self.tiny_font, fill=dim_color)
             
             # Draw current value (large, center)
             current_text = str(round(current))
             current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
             current_width = current_bbox[2] - current_bbox[0]
-            self.draw.text((x + (60 - current_width) // 2, y + 12), current_text, font=self.number_font, fill=color)
+            self.draw.text((x + (self.METRIC_WIDTH - current_width) // 2, y + 12), current_text, font=self.number_font, fill=color)
             
             # Draw max value (small, dimmed, right)
             max_text = str(round(max_val))
             max_bbox = self.draw.textbbox((0, 0), max_text, font=self.tiny_font)
             max_width = max_bbox[2] - max_bbox[0]
-            self.draw.text((x + 55 - max_width, y + 15), max_text, font=self.tiny_font, fill=dim_color)
+            self.draw.text((x + self.METRIC_WIDTH - max_width - 2, y + 15), max_text, font=self.tiny_font, fill=dim_color)
 
         # Draw metrics horizontally above face
         draw_metric(metrics_start_x, start_y, "PING", stats.ping_history, 'ping')
