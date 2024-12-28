@@ -314,11 +314,10 @@ class Display:
         total_metrics = 3
         spacing = self.HEIGHT // total_metrics  # Divide height into 3 equal parts
         
-        # Draw metrics evenly spaced (at 1/3, 2/3, and 3/3 of screen height)
-        offset = spacing // 2  # Center within each third
-        draw_metric(offset, "PING", stats.ping, 'ping')
-        draw_metric(spacing + offset, "JITTER", stats.jitter, 'jitter')
-        draw_metric((spacing * 2) + offset, "LOSS", stats.packet_loss, 'packet_loss')
+        # Draw metrics evenly spaced at the center of each third
+        draw_metric(0, "PING", stats.ping, 'ping')
+        draw_metric(spacing, "JITTER", stats.jitter, 'jitter')
+        draw_metric(spacing * 2, "LOSS", stats.packet_loss, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
