@@ -312,12 +312,12 @@ class Display:
 
         # Draw current stats on right side, evenly spaced vertically
         total_metrics = 3
-        spacing = self.HEIGHT // total_metrics  # Divide height into 3 equal parts
+        spacing = self.HEIGHT // (total_metrics + 2)  # Divide height into 5 parts for 3 metrics + top/bottom spacing
         
-        # Draw metrics evenly spaced at the center of each third
-        draw_metric(0, "PING", stats.ping, 'ping')
-        draw_metric(spacing, "JITTER", stats.jitter, 'jitter')
-        draw_metric(spacing * 2, "LOSS", stats.packet_loss, 'packet_loss')
+        # Draw metrics evenly spaced (starting at 1/5, ending at 4/5)
+        draw_metric(spacing, "PING", stats.ping, 'ping')
+        draw_metric(spacing * 2, "JITTER", stats.jitter, 'jitter')
+        draw_metric(spacing * 3, "LOSS", stats.packet_loss, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
