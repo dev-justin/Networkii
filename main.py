@@ -257,7 +257,7 @@ class Display:
     def update(self, stats: NetworkStats):
         """Update the display with network metrics"""
         # Clear the image
-        self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
+        self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
         # Load fonts with smaller sizes
         try:
@@ -272,14 +272,14 @@ class Display:
         face = self.face_images[health_state]
         
         # Calculate positions for face and hearts
-        face_x = (self.width - self.face_size) // 2
-        face_y = (self.height - (self.face_size + self.heart_size + 30)) // 2  # Account for hearts height
+        face_x = (self.WIDTH - self.face_size) // 2
+        face_y = (self.HEIGHT - (self.face_size + self.heart_size + 30)) // 2
         
         # Draw health bars on the left with full height and spacing
-        bar_height = self.height - 40
+        bar_height = self.HEIGHT - 40
         bar_y = 20
-        bar_width = 8  # Thinner bars
-        bar_spacing = 4  # Less spacing between thinner bars
+        bar_width = 8
+        bar_spacing = 4
         
         # Calculate total width of bars including spacing
         start_x = 10  # Left margin
@@ -301,15 +301,15 @@ class Display:
         def draw_metric(y, label, value, metric_type):
             color = self.get_outline_color(metric_type)
             # Draw label
-            self.draw.text((self.width - 20, y), label, font=self.tiny_font, fill=color, anchor="rt")
+            self.draw.text((self.WIDTH - 20, y), label, font=self.tiny_font, fill=color, anchor="rt")
             # Draw value right-aligned
             value_text = str(round(value))
-            self.draw.text((self.width - 20, y + 12), value_text, font=self.number_font, fill=color, anchor="rt")
+            self.draw.text((self.WIDTH - 20, y + 12), value_text, font=self.number_font, fill=color, anchor="rt")
 
         # Draw current stats on right side, evenly spaced vertically
-        margin = 30  # Top and bottom margin
-        available_height = self.height - (2 * margin)
-        spacing = available_height // 2  # Space between each stat
+        margin = 30
+        available_height = self.HEIGHT - (2 * margin)
+        spacing = available_height // 2
         
         # Draw metrics evenly spaced
         draw_metric(margin, "PING", stats.ping, 'ping')
@@ -321,7 +321,7 @@ class Display:
         
         # Calculate and draw hearts below face with proper spacing
         hearts_total_width = (5 * self.heart_size) + (4 * 5)  # 5 hearts with 5px spacing
-        hearts_x = (self.width - hearts_total_width) // 2
+        hearts_x = (self.WIDTH - hearts_total_width) // 2
         hearts_y = face_y + self.face_size + 15  # 15px spacing between face and hearts
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
