@@ -281,7 +281,7 @@ class Display:
         # Calculate width taken by health bars on the left
         bar_width = 12
         bar_spacing = 6
-        start_x = 15
+        start_x = 0
         bars_total_width = start_x + (bar_width * 3) + (bar_spacing * 2) + 20  # Add right margin
         
         # Calculate remaining width for center content
