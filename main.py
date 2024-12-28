@@ -145,15 +145,29 @@ class Display:
         except:
             self.font = ImageFont.load_default()
 
-        # Network health indicators with simple ASCII faces
+        # Network health indicators with PNG faces
+        self.face_size = 100  # Size of the face in pixels
         self.network_states = {
-            'excellent': ':D',    # Big smile
-            'good':      ':)',    # Simple smile
-            'fair':      ':|',    # Neutral face
-            'poor':      ':(',    # Sad face
-            'critical':  ':X'     # Dead face
+            'excellent': 'assets/faces/excellent.png',
+            'good': 'assets/faces/good.png',
+            'fair': 'assets/faces/fair.png',
+            'poor': 'assets/faces/poor.png',
+            'critical': 'assets/faces/critical.png'
         }
         
+        # Load and cache the face images
+        self.face_images = {}
+        for state, png_path in self.network_states.items():
+            try:
+                self.face_images[state] = Image.open(png_path).convert('RGBA')
+            except Exception as e:
+                print(f"Error loading face {png_path}: {e}")
+                # Create a fallback image
+                img = Image.new('RGBA', (self.face_size, self.face_size), (0, 0, 0, 0))
+                draw = ImageDraw.Draw(img)
+                draw.text((self.face_size//2, self.face_size//2), "?", fill=(255, 255, 255, 255))
+                self.face_images[state] = img
+
     def calculate_network_health(self, stats: NetworkStats) -> str:
         """Calculate network health based on ping, jitter, and packet loss"""
         score = 100
