@@ -116,8 +116,9 @@ class NetworkMonitor:
             )
 
 class Display:
-    def __init__(self, test_mode: bool = False):
+    def __init__(self, test_mode: bool = False, network_monitor=None):
         self.test_mode = test_mode
+        self.network_monitor = network_monitor  # Store reference to NetworkMonitor
         
         # Display dimensions
         self.width = 320
@@ -290,10 +291,13 @@ class Display:
         bar_height = 160
         bar_y = (self.height - bar_height) // 2
         
-        # Calculate health percentages
-        ping_health = self.calculate_bar_height(self.ping_history, 100, 50)  # Bad ping > 50ms
-        jitter_health = self.calculate_bar_height(self.jitter_history, 20, 10)  # Bad jitter > 10ms
-        loss_health = self.calculate_bar_height(self.packet_loss_history, 5, 1)  # Bad loss > 1%
+        # Calculate health percentages using NetworkMonitor's history
+        ping_health = self.calculate_bar_height(
+            self.network_monitor.ping_history, 100, 50)  # Bad ping > 50ms
+        jitter_health = self.calculate_bar_height(
+            self.network_monitor.jitter_history, 20, 10)  # Bad jitter > 10ms
+        loss_health = self.calculate_bar_height(
+            self.network_monitor.packet_loss_history, 5, 1)  # Bad loss > 1%
         
         # Draw the three bars
         self.draw_health_bar(30, bar_y, bar_height, ping_health, "P")
@@ -347,7 +351,7 @@ def main():
     args = parser.parse_args()
 
     network_monitor = NetworkMonitor(target_host=args.host)
-    display = Display(test_mode=args.test)
+    display = Display(test_mode=args.test, network_monitor=network_monitor)  # Pass NetworkMonitor instance
 
     try:
         while True:
