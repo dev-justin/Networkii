@@ -247,7 +247,7 @@ class Display:
         if fill_height > 0:
             self.draw.rectangle(
                 (x + 2, y + height - fill_height, x + width - 2, y + height - 2),
-                fill=(255, 255, 255)  # White fill for all bars
+                fill=(0, 255, 128)  # Light green fill
             )
 
     def update(self, stats: NetworkStats):
@@ -271,10 +271,15 @@ class Display:
         face_x = (self.width - self.face_size) // 2
         face_y = (self.height - self.face_size) // 2
         
-        # Draw health bars on the left with full height
+        # Draw health bars on the left with full height and spacing
         bar_height = self.height
         bar_y = 0
-        bar_width = 25  # Increased width
+        bar_width = 25
+        bar_spacing = 5  # Space between bars
+        
+        # Calculate total width of bars including spacing
+        total_bars_width = (bar_width * 3) + (bar_spacing * 2)
+        start_x = 5  # Left margin
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
@@ -284,24 +289,29 @@ class Display:
         loss_health = self.calculate_bar_height(
             self.network_monitor.packet_loss_history, 5, 1)
         
-        # Draw the three bars edge to edge
-        self.draw_health_bar(0, bar_y, bar_width, bar_height, ping_health, 'ping')
-        self.draw_health_bar(bar_width, bar_y, bar_width, bar_height, jitter_health, 'jitter')
-        self.draw_health_bar(bar_width * 2, bar_y, bar_width, bar_height, loss_health, 'packet_loss')
+        # Draw the three bars with spacing
+        self.draw_health_bar(start_x, bar_y, bar_width, bar_height, ping_health, 'ping')
+        self.draw_health_bar(start_x + bar_width + bar_spacing, bar_y, bar_width, bar_height, jitter_health, 'jitter')
+        self.draw_health_bar(start_x + (bar_width + bar_spacing) * 2, bar_y, bar_width, bar_height, loss_health, 'packet_loss')
         
-        # Helper function to draw metric with matching color
+        # Helper function to draw metric with matching color and right alignment
         def draw_metric(y, label, value, metric_type):
             color = self.get_outline_color(metric_type)
-            self.draw.text((self.width - 80, y), label, font=self.tiny_font, fill=color)
+            # Draw label
+            self.draw.text((self.width - 20, y), label, font=self.tiny_font, fill=color, anchor="rt")
+            # Draw value right-aligned
             value_text = str(round(value))
-            self.draw.text((self.width - 80, y + 12), value_text, font=self.number_font, fill=color)
+            self.draw.text((self.width - 20, y + 12), value_text, font=self.number_font, fill=color, anchor="rt")
 
-        # Draw current stats on right side
-        stats_y = 40
-        stats_spacing = 45
-        draw_metric(stats_y, "PING", stats.ping, 'ping')
-        draw_metric(stats_y + stats_spacing, "JITTER", stats.jitter, 'jitter')
-        draw_metric(stats_y + stats_spacing * 2, "LOSS", stats.packet_loss, 'packet_loss')
+        # Draw current stats on right side, evenly spaced vertically
+        margin = 30  # Top and bottom margin
+        available_height = self.height - (2 * margin)
+        spacing = available_height // 2  # Space between each stat
+        
+        # Draw metrics evenly spaced
+        draw_metric(margin, "PING", stats.ping, 'ping')
+        draw_metric(margin + spacing, "JITTER", stats.jitter, 'jitter')
+        draw_metric(margin + spacing * 2, "LOSS", stats.packet_loss, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
