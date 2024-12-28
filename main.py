@@ -94,7 +94,7 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 50    # Increased to accommodate larger numbers
+    METRIC_WIDTH = 10    # Increased to accommodate larger numbers
     METRIC_SPACING = 5
     METRIC_RIGHT_MARGIN = 10  # Margin from right edge of screen
     
