@@ -306,7 +306,7 @@ class Display:
         
         # Calculate positions for face and hearts
         face_x = (self.width - self.face_size) // 2
-        face_y = (self.height - (self.face_size + self.heart_size + 15)) // 2  # Account for hearts height
+        face_y = (self.height - (self.face_size + self.heart_size + 30)) // 2  # Account for hearts height
         
         # Draw health bars on the left with full height and spacing
         bar_height = self.height - 40
