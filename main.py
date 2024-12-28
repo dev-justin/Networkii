@@ -219,54 +219,48 @@ class Display:
         # Clear the image
         self.draw.rectangle((0, 0, self.width, self.height), fill=(0, 0, 0))
         
-        # Draw modern border - slightly inset from edges
-        border_width = 2
-        margin = 5
-        self.draw.rectangle(
-            (margin, margin, self.width - margin, self.height - margin),
-            outline=(40, 40, 40),  # Dark gray
-            width=border_width
-        )
-        
+        # Load fonts with smaller sizes
+        try:
+            tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
+            number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+        except:
+            tiny_font = ImageFont.load_default()
+            number_font = self.font
+
         # Calculate network health and get corresponding face
         health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate position to center the face
+        # Calculate positions
         face_x = (self.width - self.face_size) // 2
         face_y = (self.height - self.face_size) // 2
         
-        # Draw the face in the center
+        # Helper function to draw metric
+        def draw_metric(x, y, label, value, align='left'):
+            self.draw.text((x, y), label, font=tiny_font, fill=(128, 128, 128))
+            value_text = str(round(value))
+            if align == 'left':
+                self.draw.text((x, y + 12), value_text, font=number_font, fill=(0, 255, 0))
+            else:  # right align
+                text_bbox = self.draw.textbbox((0, 0), value_text, font=number_font)
+                text_width = text_bbox[2] - text_bbox[0]
+                self.draw.text((x - text_width, y + 12), value_text, font=number_font, fill=(0, 255, 0))
+
+        # Draw current stats above face
+        top_y = face_y - 60
+        spacing = 35
+        draw_metric(80, top_y, "PING", stats.ping)
+        draw_metric(160, top_y, "JITTER", stats.jitter)
+        draw_metric(240, top_y, "LOSS", stats.packet_loss)
+        
+        # Draw the face
         self.image.paste(face, (face_x, face_y), face)
         
-        # Load smaller font for labels
-        try:
-            small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 12)
-            large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
-        except:
-            small_font = ImageFont.load_default()
-            large_font = self.font
-        
-        # Draw ping statistics on the left side
-        stats_x = 20  # Left margin for text
-        y_start = 40  # Starting Y position
-        y_spacing = 45  # Space between metrics
-        number_color = (0, 255, 0)  # Bright green for numbers
-        
-        # Helper function to draw metric
-        def draw_metric(y, label, value):
-            self.draw.text((stats_x, y), label, font=small_font, fill=(128, 128, 128))
-            value_text = str(round(value))
-            # Get text width for right alignment
-            text_bbox = self.draw.textbbox((0, 0), value_text, font=large_font)
-            text_width = text_bbox[2] - text_bbox[0]
-            self.draw.text((80 - text_width, y + 12), value_text, font=large_font, fill=number_color)
-        
-        # Draw each metric
-        draw_metric(y_start, "PING", stats.ping)
-        draw_metric(y_start + y_spacing, "MIN", stats.min_ping)
-        draw_metric(y_start + y_spacing * 2, "MAX", stats.max_ping)
-        draw_metric(y_start + y_spacing * 3, "AVG", stats.avg_ping)
+        # Draw averages below face
+        bottom_y = face_y + self.face_size + 10
+        draw_metric(80, bottom_y, "MIN", stats.min_ping)
+        draw_metric(160, bottom_y, "AVG", stats.avg_ping)
+        draw_metric(240, bottom_y, "MAX", stats.max_ping)
         
         if self.test_mode:
             # Test mode console output
