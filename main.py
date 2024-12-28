@@ -87,7 +87,7 @@ class Display:
     BAR_WIDTH = 12
     BAR_SPACING = 6
     BAR_START_X = 0
-    BAR_MARGIN_RIGHT = 20
+    BAR_MARGIN_RIGHT = 0
     
     # Heart dimensions
     HEART_SPACING = 10      # Vertical spacing between face and hearts
