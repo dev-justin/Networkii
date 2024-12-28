@@ -181,7 +181,7 @@ class Display:
             draw = ImageDraw.Draw(self.heart_image)
             draw.text((self.heart_size//2, self.heart_size//2), "♥", fill=(255, 0, 0, 255))
 
-    def calculate_network_health(self, stats: NetworkStats) -> str:
+    def calculate_network_health(self, stats: NetworkStats) -> tuple[int, str]:
         """Calculate network health based on ping, jitter, and packet loss"""
         score = 100
         
@@ -216,16 +216,13 @@ class Display:
             score -= 40
             
         # Determine health state based on score
-        if score >= 90:
-            return 'excellent'
-        elif score >= 70:
-            return 'good'
-        elif score >= 50:
-            return 'fair'
-        elif score >= 30:
-            return 'poor'
-        else:
-            return 'critical'
+        state = 'excellent' if score >= 90 else \
+                'good' if score >= 70 else \
+                'fair' if score >= 50 else \
+                'poor' if score >= 30 else \
+                'critical'
+        
+        return score, state
 
     def calculate_bar_height(self, values: deque, max_value: float, bad_threshold: float) -> float:
         """Calculate health bar height based on historical values"""
@@ -304,7 +301,7 @@ class Display:
             self.number_font = self.font
 
         # Calculate network health and get corresponding face
-        health_state = self.calculate_network_health(stats)
+        health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
         # Calculate positions
@@ -357,7 +354,6 @@ class Display:
         self.image.paste(face, (face_x, face_y), face)
         
         # Calculate and draw hearts below face
-        health_score = int(self.calculate_network_health(stats).split('_')[0])
         hearts_y = face_y + self.face_size + 10
         hearts_x = (self.width - (5 * (self.heart_size + 5) - 5)) // 2  # Center hearts
         self.draw_hearts(hearts_x, hearts_y, health_score)
