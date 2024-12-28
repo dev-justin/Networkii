@@ -160,7 +160,6 @@ class Display:
             try:
                 from displayhatmini import DisplayHATMini
                 self.disp = DisplayHATMini(self.image)
-                # self.disp.st7789._rotation = 2  # 0 = 0 degrees, 1 = 90 degrees, 2 = 180 degrees, 3 = 270 degrees
             except ImportError as e:
                 print(f"Error importing displayhatmini: {e}")
                 print("Running in test mode instead")
@@ -300,10 +299,16 @@ class Display:
                     width=1
                 )
 
-    def draw_hearts(self, x: int, y: int, health_score: int):
-        """Draw hearts based on health score (0-100)"""
+    def draw_hearts(self, x: int, y: int, health_state: str):
+        """Draw hearts based on network state"""
         total_hearts = 5
-        filled_hearts = round((health_score / 100.0) * total_hearts)
+        filled_hearts = {
+            'excellent': 5,
+            'good': 4,
+            'fair': 3,
+            'poor': 2,
+            'critical': 1
+        }.get(health_state, 0)
         
         for i in range(total_hearts):
             heart_x = x + (i * (self.HEART_SIZE + self.HEART_GAP))
@@ -373,7 +378,7 @@ class Display:
         # Draw hearts
         hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
         hearts_x = face_x + (self.FACE_SIZE - hearts_total_width) // 2
-        self.draw_hearts(hearts_x, hearts_y, health_score)
+        self.draw_hearts(hearts_x, hearts_y, health_state)
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
