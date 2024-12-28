@@ -94,8 +94,8 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 60       # Width of each metric display
-    METRIC_SPACING = 40     # Space between metrics
+    METRIC_WIDTH = 50       # Reduced from 60
+    METRIC_SPACING = 15     # Reduced from 40
     METRICS_HEIGHT = 40
     
     # History settings
@@ -285,9 +285,13 @@ class Display:
         # Calculate remaining width for center content
         remaining_width = self.WIDTH - bars_total_width
         
-        # Calculate metrics positioning in remaining space
-        metrics_total_width = (3 * self.METRIC_WIDTH) + (2 * self.METRIC_SPACING)
-        metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
+        # Calculate face position first (centered in remaining width)
+        face_x = bars_total_width + 20  # Add small margin after health bars
+        face_y = (self.HEIGHT - (self.face_size + self.HEART_SIZE + self.HEART_SPACING)) // 2
+        
+        # Calculate metrics position (to the right of face)
+        metrics_start_x = face_x + self.face_size + 20  # 20px margin between face and metrics
+        metrics_start_y = face_y + (self.face_size // 2) - (self.METRICS_HEIGHT * 1.5)  # Center metrics vertically with face
         
         # Load fonts with smaller sizes
         try:
@@ -301,70 +305,17 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate total height of all elements (metrics + face + hearts)
-        total_element_height = self.METRICS_HEIGHT + self.face_size + self.HEART_SIZE + self.HEART_SPACING
-        
-        # Calculate starting Y position to center everything vertically
-        start_y = (self.HEIGHT - total_element_height) // 2
-        
-        # Helper function to draw metric with matching color and historical stats
-        def draw_metric(x, y, label, history: deque, metric_type: str):
-            if not history:
-                return
-                
-            color = self.get_outline_color(metric_type)
-            
-            # Draw label centered
-            label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
-            label_width = label_bbox[2] - label_bbox[0]
-            self.draw.text((x + (self.METRIC_WIDTH - label_width) // 2, y), label, font=self.tiny_font, fill=color)
-            
-            # Get last 3 values
-            last_values = list(history)[-3:]
-            if len(last_values) < 3:  # Pad with zeros if we don't have 3 values yet
-                last_values = [0] * (3 - len(last_values)) + last_values
-            
-            # Draw current value (large)
-            current_text = str(round(last_values[-1]))
-            current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
-            current_width = current_bbox[2] - current_bbox[0]
-            self.draw.text(
-                (x + (self.METRIC_WIDTH - current_width) // 2, y + 12),
-                current_text,
-                font=self.number_font,
-                fill=color
-            )
-            
-            # Draw previous values with increasing transparency
-            for i, value in enumerate(reversed(last_values[:-1])):
-                fade_level = 0.6 - (i * 0.2)  # 0.4 for first previous, 0.2 for second previous
-                faded_color = tuple(int(c * fade_level) for c in color)
-                
-                value_text = str(round(value))
-                value_bbox = self.draw.textbbox((0, 0), value_text, font=self.tiny_font)
-                value_width = value_bbox[2] - value_bbox[0]
-                self.draw.text(
-                    (x + (self.METRIC_WIDTH - value_width) // 2, y + 30 + (i * 15)),
-                    value_text,
-                    font=self.tiny_font,
-                    fill=faded_color
-                )
-
-        # Draw metrics horizontally above face
-        draw_metric(metrics_start_x, start_y, "PING", stats.ping_history, 'ping')
-        draw_metric(metrics_start_x + self.METRIC_WIDTH + self.METRIC_SPACING, start_y, "JITTER", stats.jitter_history, 'jitter')
-        draw_metric(metrics_start_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss_history, 'packet_loss')
-        
-        # Set positions for face centered in remaining space
-        face_x = bars_total_width + (remaining_width - self.face_size) // 2
-        face_y = start_y + self.METRICS_HEIGHT
+        # Draw metrics vertically to the right of face
+        draw_metric(metrics_start_x, metrics_start_y, "PING", stats.ping_history, 'ping')
+        draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT, "JITTER", stats.jitter_history, 'jitter')
+        draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT * 2, "LOSS", stats.packet_loss_history, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
         
         # Calculate and draw hearts below face
         hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
-        hearts_x = bars_total_width + (remaining_width - hearts_total_width) // 2  # Center in remaining space
+        hearts_x = face_x + (self.face_size - hearts_total_width) // 2  # Center hearts under face
         hearts_y = face_y + self.face_size + self.HEART_SPACING
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
