@@ -116,17 +116,20 @@ class Display:
                 from displayhatmini import DisplayHATMini
                 self.disp = DisplayHATMini(self.image)
                 self.disp.st7789._rotation = 2
-                
             except ImportError as e:
                 print(f"Error importing displayhatmini: {e}")
                 print("Running in test mode instead")
                 self.test_mode = True
         
-        # Try to load a font
+        # Load fonts
         try:
             self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
+            self.number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
         except:
             self.font = ImageFont.load_default()
+            self.tiny_font = ImageFont.load_default()
+            self.number_font = ImageFont.load_default()
 
         # Network health indicators with PNG faces
         self.face_size = 128  # Size of the face in pixels
