@@ -89,8 +89,12 @@ class Display:
     BAR_START_X = 0
     BAR_MARGIN_RIGHT = 20
     
-    # Other spacing constants
-    HEART_SPACING = 15
+    # Heart dimensions
+    HEART_SPACING = 10      # Vertical spacing between face and hearts
+    HEART_GAP = 10          # Horizontal spacing between hearts
+    HEART_SIZE = 32        # Size of each heart
+    
+    # Metric dimensions
     METRIC_SPACING = 60
     METRICS_HEIGHT = 40
 
@@ -146,14 +150,13 @@ class Display:
         # Load heart image
         try:
             self.heart_image = Image.open('assets/heart.png').convert('RGBA')
-            self.heart_size = 30  # Size to display hearts
-            self.heart_image = self.heart_image.resize((self.heart_size, self.heart_size))
+            self.heart_image = self.heart_image.resize((self.HEART_SIZE, self.HEART_SIZE))
         except Exception as e:
             print(f"Error loading heart image: {e}")
             # Create a fallback heart
-            self.heart_image = Image.new('RGBA', (self.heart_size, self.heart_size), (0, 0, 0, 0))
+            self.heart_image = Image.new('RGBA', (self.HEART_SIZE, self.HEART_SIZE), (0, 0, 0, 0))
             draw = ImageDraw.Draw(self.heart_image)
-            draw.text((self.heart_size//2, self.heart_size//2), "♥", fill=(255, 0, 0, 255))
+            draw.text((self.HEART_SIZE//2, self.HEART_SIZE//2), "♥", fill=(255, 0, 0, 255))
 
     def calculate_network_health(self, stats: NetworkStats, history_length: int = 30) -> tuple[int, str]:
         """Calculate network health based on recent history"""
@@ -260,14 +263,11 @@ class Display:
         filled_hearts = round((health_score / 100.0) * total_hearts)
         
         for i in range(total_hearts):
-            heart_x = x + (i * (self.heart_size + 5))  # 5px spacing between hearts
+            heart_x = x + (i * (self.heart_size + self.HEART_GAP))
             if i < filled_hearts:
-                # Draw filled heart
                 self.image.paste(self.heart_image, (heart_x, y), self.heart_image)
             else:
-                # Draw empty heart (could be a different image or just outline) || TODO: Add half heart image
                 heart_outline = self.heart_image.copy()
-                # Make it semi-transparent for empty state
                 heart_outline.putalpha(50)
                 self.image.paste(heart_outline, (heart_x, y), heart_outline)
 
@@ -330,8 +330,7 @@ class Display:
         self.image.paste(face, (face_x, face_y), face)
         
         # Calculate and draw hearts below face
-        heart_spacing = 7
-        hearts_total_width = (5 * self.heart_size) + (4 * heart_spacing)
+        hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
         face_center_x = face_x + (self.face_size // 2)
         hearts_x = face_center_x - (hearts_total_width // 2)
         hearts_y = face_y + self.face_size + self.HEART_SPACING
