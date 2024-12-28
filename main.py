@@ -327,7 +327,7 @@ class Display:
             
             # Draw min value (small, dimmed, left)
             min_text = str(round(min_val))
-            self.draw.text((x + 2, y + 15), min_text, font=self.tiny_font, fill=dim_color)
+            self.draw.text((x + 8, y + 15), min_text, font=self.tiny_font, fill=dim_color)
             
             # Draw current value (large, center)
             current_text = str(round(current))
@@ -339,7 +339,7 @@ class Display:
             max_text = str(round(max_val))
             max_bbox = self.draw.textbbox((0, 0), max_text, font=self.tiny_font)
             max_width = max_bbox[2] - max_bbox[0]
-            self.draw.text((x + self.METRIC_WIDTH - max_width - 2, y + 15), max_text, font=self.tiny_font, fill=dim_color)
+            self.draw.text((x + self.METRIC_WIDTH - max_width - 8, y + 15), max_text, font=self.tiny_font, fill=dim_color)
 
         # Draw metrics horizontally above face
         draw_metric(metrics_start_x, start_y, "PING", stats.ping_history, 'ping')
