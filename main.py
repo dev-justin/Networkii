@@ -159,7 +159,6 @@ class Display:
         self.face_images = {}
         for state, png_path in self.network_states.items():
             try:
-                print(f"Loading face {png_path}")
                 self.face_images[state] = Image.open(png_path).convert('RGBA')
             except Exception as e:
                 print(f"Error loading face {png_path}: {e}")
@@ -226,24 +225,35 @@ class Display:
         
         # Calculate position to center the face
         x = (self.width - self.face_size) // 2
-        y = (self.height - self.face_size) // 2 - 20
+        y = (self.height - self.face_size) // 2 - 30  # Move face up a bit to make room
         
         # Draw the face
         self.image.paste(face, (x, y), face)
         
-        # Draw ping below the face
-        ping_text = f"{stats.ping:.1f} ms"
+        # Draw ping statistics below the face
+        y_offset = y + self.face_size + 20
+        
+        # Current ping
+        ping_text = f"Ping: {round(stats.ping)} ms"
         text_bbox = self.draw.textbbox((0, 0), ping_text, font=self.font)
         text_width = text_bbox[2] - text_bbox[0]
         x = (self.width - text_width) // 2
-        self.draw.text((x, y + self.face_size + 20), ping_text, font=self.font, fill=(255, 255, 255))
+        self.draw.text((x, y_offset), ping_text, font=self.font, fill=(255, 255, 255))
+        
+        # Min/Max/Avg on next line
+        stats_text = f"Min/Max/Avg: {round(stats.min_ping)}/{round(stats.max_ping)}/{round(stats.avg_ping)}"
+        text_bbox = self.draw.textbbox((0, 0), stats_text, font=self.font)
+        text_width = text_bbox[2] - text_bbox[0]
+        x = (self.width - text_width) // 2
+        self.draw.text((x, y_offset + 25), stats_text, font=self.font, fill=(255, 255, 255))
         
         if self.test_mode:
             # Test mode console output
             print("\033c", end="")
             print("=== Network Monitor ===")
             print(f"Health: {health_state.upper()}")
-            print(f"Ping: {stats.ping:.1f} ms")
+            print(f"Current: {round(stats.ping)} ms")
+            print(f"Min/Max/Avg: {round(stats.min_ping)}/{round(stats.max_ping)}/{round(stats.avg_ping)} ms")
             print("-" * 30)
         else:
             # Update physical display
