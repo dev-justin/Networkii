@@ -211,36 +211,63 @@ class Display:
             return (147, 112, 219)  # Medium Purple
 
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
-        """Draw a segmented health bar in retro style"""
+        """Draw a retro-style health bar"""
         color = self.get_outline_color(metric_type)
+        dim_color = tuple(max(0, c // 3) for c in color)  # Dimmed version of color
+        
+        # Draw outer border (3px thick)
+        border_color = (80, 80, 80)  # Dark gray border
+        self.draw.rectangle(
+            (x - 2, y - 2, x + width + 2, y + height + 2),
+            outline=border_color,
+            width=1
+        )
         
         # Calculate segments
-        total_segments = 10
-        segment_spacing = 2
-        # Calculate segment height accounting for spacing
-        total_spacing = segment_spacing * (total_segments - 1)
-        segment_height = (height - total_spacing) // total_segments
+        total_segments = 20  # More segments for smoother look
+        segment_height = height // total_segments
         filled_segments = round(health * total_segments)
         
-        # Draw segments from bottom to top
+        # Draw background grid (empty segments)
         for i in range(total_segments):
-            # Calculate y position accounting for spacing
-            segment_y = y + height - ((i + 1) * segment_height + i * segment_spacing)
+            segment_y = y + height - ((i + 1) * segment_height)
+            # Draw dim background segments
+            self.draw.rectangle(
+                (x, segment_y, x + width, segment_y + segment_height - 1),
+                fill=dim_color
+            )
+            # Draw segment separator lines
+            self.draw.line(
+                (x, segment_y, x + width, segment_y),
+                fill=(0, 0, 0),
+                width=1
+            )
+        
+        # Draw filled segments from bottom up
+        if filled_segments > 0:
+            fill_height = filled_segments * segment_height
+            self.draw.rectangle(
+                (x, y + height - fill_height, x + width, y + height),
+                fill=color
+            )
             
-            # Determine if segment should be filled
-            if i < filled_segments:
-                # Draw filled segment
-                self.draw.rectangle(
-                    (x, segment_y, x + width, segment_y + segment_height),
-                    fill=color
-                )
-            else:
-                # Draw empty segment outline
-                self.draw.rectangle(
-                    (x, segment_y, x + width, segment_y + segment_height),
-                    outline=color,
+            # Draw segment lines over filled area
+            for i in range(filled_segments):
+                line_y = y + height - ((i + 1) * segment_height)
+                self.draw.line(
+                    (x, line_y, x + width, line_y),
+                    fill=(0, 0, 0),
                     width=1
                 )
+        
+        # Draw shine effect (diagonal lines in top-left)
+        shine_color = tuple(min(255, c + 50) for c in color)
+        for i in range(0, width // 2, 2):
+            self.draw.line(
+                (x + i, y, x, y + i),
+                fill=shine_color,
+                width=1
+            )
 
     def draw_hearts(self, x: int, y: int, health_score: int):
         """Draw hearts based on health score (0-100)"""
