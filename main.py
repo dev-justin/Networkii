@@ -239,31 +239,32 @@ class Display:
 
     def draw_health_bar(self, x: int, y: int, height: int, health: float, label: str):
         """Draw a vertical health bar"""
-        bar_width = 10
+        bar_width = 15  # Increased from 10 to 15
         border_color = (40, 40, 40)
+        label_padding = 15  # Space for label at bottom
         
-        # Draw border
+        # Draw border (adjusted height to leave space for label)
         self.draw.rectangle(
-            (x, y, x + bar_width, y + height),
+            (x, y, x + bar_width, y + height - label_padding),
             outline=border_color,
             width=1
         )
         
         # Draw filled portion
-        fill_height = int(height * health)
+        fill_height = int((height - label_padding) * health)
         if fill_height > 0:
             self.draw.rectangle(
-                (x + 1, y + height - fill_height, x + bar_width - 1, y + height - 1),
+                (x + 1, y + (height - label_padding) - fill_height, x + bar_width - 1, y + (height - label_padding) - 1),
                 fill=self.get_bar_color(health)
             )
         
-        # Draw label
+        # Draw label (moved up slightly from bottom)
         self.draw.text(
-            (x - 2, y + height + 5),
+            (x + bar_width//2, y + height - 5),
             label,
             font=self.tiny_font,
             fill=(128, 128, 128),
-            anchor="ma"  # middle-ascender anchor
+            anchor="ms"  # middle-top anchor
         )
 
     def update(self, stats: NetworkStats):
@@ -287,22 +288,22 @@ class Display:
         face_x = (self.width - self.face_size) // 2
         face_y = (self.height - self.face_size) // 2
         
-        # Draw health bars on the left
-        bar_height = 160
-        bar_y = (self.height - bar_height) // 2
+        # Draw health bars on the left with full height
+        bar_height = self.height - 10  # Use almost full height, leave 5px padding top and bottom
+        bar_y = 5  # Small padding from top
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
-            self.network_monitor.ping_history, 100, 50)  # Bad ping > 50ms
+            self.network_monitor.ping_history, 100, 50)
         jitter_health = self.calculate_bar_height(
-            self.network_monitor.jitter_history, 20, 10)  # Bad jitter > 10ms
+            self.network_monitor.jitter_history, 20, 10)
         loss_health = self.calculate_bar_height(
-            self.network_monitor.packet_loss_history, 5, 1)  # Bad loss > 1%
+            self.network_monitor.packet_loss_history, 5, 1)
         
-        # Draw the three bars
+        # Draw the three bars with more spacing between them
         self.draw_health_bar(30, bar_y, bar_height, ping_health, "P")
-        self.draw_health_bar(50, bar_y, bar_height, jitter_health, "J")
-        self.draw_health_bar(70, bar_y, bar_height, loss_health, "L")
+        self.draw_health_bar(55, bar_y, bar_height, jitter_health, "J")
+        self.draw_health_bar(80, bar_y, bar_height, loss_health, "L")
         
         # Helper function to draw metric
         def draw_metric(x, y, label, value, align='left'):
@@ -323,12 +324,6 @@ class Display:
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
-        
-        # Draw averages below face
-        bottom_y = face_y + self.face_size + 10
-        draw_metric(120, bottom_y, "MIN", stats.min_ping)
-        draw_metric(200, bottom_y, "AVG", stats.avg_ping)
-        draw_metric(280, bottom_y, "MAX", stats.max_ping)
         
         if self.test_mode:
             # Test mode console output
