@@ -79,10 +79,20 @@ class NetworkMonitor:
             )
 
 class Display:
-
     # Display dimensions
     WIDTH = 320 
     HEIGHT = 240
+    
+    # Bar dimensions
+    BAR_WIDTH = 12
+    BAR_SPACING = 6
+    BAR_START_X = 0
+    BAR_MARGIN_RIGHT = 20
+    
+    # Other spacing constants
+    HEART_SPACING = 10
+    METRIC_SPACING = 60
+    METRICS_HEIGHT = 40
 
     def __init__(self, test_mode: bool = False, network_monitor=None):
         self.test_mode = test_mode
@@ -266,6 +276,9 @@ class Display:
         # Clear the image
         self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
+        # Calculate width taken by health bars on the left
+        bars_total_width = self.BAR_START_X + (self.BAR_WIDTH * 3) + (self.BAR_SPACING * 2) + self.BAR_MARGIN_RIGHT
+        
         # Load fonts with smaller sizes
         try:
             self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
@@ -278,28 +291,17 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate width taken by health bars on the left
-        bar_width = 12
-        bar_spacing = 6
-        start_x = 0
-        bars_total_width = start_x + (bar_width * 3) + (bar_spacing * 2) + 20  # Add right margin
-        
         # Calculate remaining width for center content
         remaining_width = self.WIDTH - bars_total_width
         
-        # Define spacing constants
-        HEART_SPACING = 10
-        METRIC_SPACING = 60
-        
         # Calculate total height of all elements (metrics + face + hearts)
-        metrics_height = 40
-        total_element_height = metrics_height + self.face_size + self.heart_size + HEART_SPACING
+        total_element_height = self.METRICS_HEIGHT + self.face_size + self.heart_size + self.HEART_SPACING
         
         # Calculate starting Y position to center everything vertically
         start_y = (self.HEIGHT - total_element_height) // 2
         
         # Calculate metrics positioning in remaining space
-        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING) + 20
+        metrics_total_width = (3 * 40) + (2 * self.METRIC_SPACING) + 20
         metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
         
         # Helper function to draw metric with matching color and horizontal alignment
@@ -317,12 +319,12 @@ class Display:
 
         # Draw metrics horizontally above face
         draw_metric(metrics_start_x, start_y, "PING", stats.ping, 'ping')
-        draw_metric(metrics_start_x + 40 + METRIC_SPACING, start_y, "JITTER", stats.jitter, 'jitter')
-        draw_metric(metrics_start_x + (40 + METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss, 'packet_loss')
+        draw_metric(metrics_start_x + 40 + self.METRIC_SPACING, start_y, "JITTER", stats.jitter, 'jitter')
+        draw_metric(metrics_start_x + (40 + self.METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss, 'packet_loss')
         
         # Set positions for face centered in remaining space
         face_x = bars_total_width + (remaining_width - self.face_size) // 2
-        face_y = start_y + metrics_height
+        face_y = start_y + self.METRICS_HEIGHT
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
@@ -332,15 +334,8 @@ class Display:
         hearts_total_width = (5 * self.heart_size) + (4 * heart_spacing)
         face_center_x = face_x + (self.face_size // 2)
         hearts_x = face_center_x - (hearts_total_width // 2)
-        hearts_y = face_y + self.face_size + HEART_SPACING
+        hearts_y = face_y + self.face_size + self.HEART_SPACING
         self.draw_hearts(hearts_x, hearts_y, health_score)
-        
-        # Draw health bars on the left with full height and spacing
-        bar_height = self.HEIGHT  # Use full height
-        bar_y = 0  # Start from top
-        bar_width = 12  # Wider bars
-        bar_spacing = 6  # Slightly more spacing for wider bars
-        start_x = 15  # Left margin
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
@@ -351,9 +346,9 @@ class Display:
             self.network_monitor.packet_loss_history, 'packet_loss')
         
         # Draw the three bars with spacing
-        self.draw_health_bar(start_x, bar_y, bar_width, bar_height, ping_health, 'ping')
-        self.draw_health_bar(start_x + bar_width + bar_spacing, bar_y, bar_width, bar_height, jitter_health, 'jitter')
-        self.draw_health_bar(start_x + (bar_width + bar_spacing) * 2, bar_y, bar_width, bar_height, loss_health, 'packet_loss')
+        self.draw_health_bar(self.BAR_START_X, 0, self.BAR_WIDTH, self.HEIGHT, ping_health, 'ping')
+        self.draw_health_bar(self.BAR_START_X + self.BAR_WIDTH + self.BAR_SPACING, 0, self.BAR_WIDTH, self.HEIGHT, jitter_health, 'jitter')
+        self.draw_health_bar(self.BAR_START_X + (self.BAR_WIDTH + self.BAR_SPACING) * 2, 0, self.BAR_WIDTH, self.HEIGHT, loss_health, 'packet_loss')
 
         if self.test_mode:
             # Test mode console output
