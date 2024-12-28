@@ -500,7 +500,7 @@ class NetworkMetrics:
         if metric_type == 'ping':
             return NetworkMetrics.PING.good
         elif metric_type == 'jitter':
-            return NetworkMetrics.JITTER.good
+            return NetworkMetrics.JITTER.fair
         else:  # packet loss
             return NetworkMetrics.PACKET_LOSS.excellent
     
