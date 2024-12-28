@@ -160,7 +160,7 @@ class Display:
             try:
                 from displayhatmini import DisplayHATMini
                 self.disp = DisplayHATMini(self.image)
-                self.disp.st7789._rotation = 0
+                self.disp.st7789._rotation = 0 # 0 = 0 degrees, 1 = 90 degrees, 2 = 180 degrees, 3 = 270 degrees
             except ImportError as e:
                 print(f"Error importing displayhatmini: {e}")
                 print("Running in test mode instead")
