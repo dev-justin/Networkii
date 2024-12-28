@@ -96,31 +96,8 @@ print_info "Upgrading existing packages..."
 sudo apt-get upgrade -y
 print_success "System packages upgraded"
 
-print_info "Installing git..."
-sudo apt-get install -y git
-print_success "Git installed successfully"
-
 #------------------------------
-# 3. GIT CLONE THE REPOSITORY
-#------------------------------
-REPO_URL="https://github.com/dev-justin/Networkii.git"
-PROJECT_DIR="Networkii"
-
-print_header "Cloning repository from $REPO_URL"
-if [ -d "$PROJECT_DIR" ]; then
-    print_info "Directory '$PROJECT_DIR' already exists. Pulling latest changes..."
-    pushd "$PROJECT_DIR" > /dev/null
-    git pull
-    print_success "Successfully pulled latest changes"
-    popd > /dev/null
-else
-    print_info "Cloning repository..."
-    git clone "$REPO_URL"
-    print_success "Repository cloned successfully"
-fi
-
-#------------------------------
-# 4. INSTALL PYTHON REQUIREMENTS
+# 3. INSTALL PYTHON REQUIREMENTS    
 #------------------------------
 print_header "Installing Python Requirements"
 pushd "$PROJECT_DIR" > /dev/null
