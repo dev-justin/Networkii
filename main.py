@@ -136,11 +136,11 @@ class Display:
         },
         'fair': {
             'message': "Hanging in There!",
-            'threshold': 50
+            'threshold': 60
         },
         'poor': {
             'message': "Having Hiccups... ",
-            'threshold': 30
+            'threshold': 50
         },
         'critical': {
             'message': "Help, I'm Sick!",
@@ -490,7 +490,7 @@ class NetworkMetrics:
         good=5,        # < 5ms is good
         fair=10,       # < 10ms is fair
         poor=20,       # < 20ms is poor, >= 20 is critical
-        weight=0.2     # 20% of total score
+        weight=0.4     # 20% of total score
     )
     
     PACKET_LOSS = MetricThresholds(
@@ -498,7 +498,7 @@ class NetworkMetrics:
         good=0.1,      # < 0.1% is good
         fair=0.5,      # < 0.5% is fair
         poor=1,        # < 1% is poor, >= 1% is critical
-        weight=0.4     # 40% of total score
+        weight=0.2     # 40% of total score
     )
     
     @staticmethod
