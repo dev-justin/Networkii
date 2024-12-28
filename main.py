@@ -204,11 +204,11 @@ class Display:
     def get_outline_color(self, metric_type: str) -> tuple:
         """Get color for bar outline based on metric type"""
         if metric_type == 'ping':
-            return (64, 224, 208)  # Turquoise
+            return (0, 255, 127)  # Spring Green
         elif metric_type == 'jitter':
-            return (95, 158, 160)  # Cadet Blue
+            return (255, 99, 71)  # Tomato Red
         else:  # packet loss
-            return (176, 196, 222)  # Light Steel Blue
+            return (147, 112, 219)  # Medium Purple
 
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
         """Draw a segmented health bar in retro style"""
