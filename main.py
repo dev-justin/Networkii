@@ -313,33 +313,42 @@ class Display:
                 return
                 
             color = self.get_outline_color(metric_type)
-            dim_color = tuple(max(0, c // 2) for c in color)  # 50% dimmed color
-            
-            # Calculate stats
-            current = history[-1]
-            min_val = min(list(history)[-self.RECENT_HISTORY_LENGTH:])
-            max_val = max(list(history)[-self.RECENT_HISTORY_LENGTH:])
             
             # Draw label centered
             label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
             label_width = label_bbox[2] - label_bbox[0]
             self.draw.text((x + (self.METRIC_WIDTH - label_width) // 2, y), label, font=self.tiny_font, fill=color)
             
-            # Draw min value (small, dimmed, left)
-            min_text = str(round(min_val))
-            self.draw.text((x + 8, y + 15), min_text, font=self.tiny_font, fill=dim_color)
+            # Get last 3 values
+            last_values = list(history)[-3:]
+            if len(last_values) < 3:  # Pad with zeros if we don't have 3 values yet
+                last_values = [0] * (3 - len(last_values)) + last_values
             
-            # Draw current value (large, center)
-            current_text = str(round(current))
+            # Draw current value (large)
+            current_text = str(round(last_values[-1]))
             current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
             current_width = current_bbox[2] - current_bbox[0]
-            self.draw.text((x + (self.METRIC_WIDTH - current_width) // 2, y + 12), current_text, font=self.number_font, fill=color)
+            self.draw.text(
+                (x + (self.METRIC_WIDTH - current_width) // 2, y + 12),
+                current_text,
+                font=self.number_font,
+                fill=color
+            )
             
-            # Draw max value (small, dimmed, right)
-            max_text = str(round(max_val))
-            max_bbox = self.draw.textbbox((0, 0), max_text, font=self.tiny_font)
-            max_width = max_bbox[2] - max_bbox[0]
-            self.draw.text((x + self.METRIC_WIDTH - max_width - 8, y + 15), max_text, font=self.tiny_font, fill=dim_color)
+            # Draw previous values with increasing transparency
+            for i, value in enumerate(reversed(last_values[:-1])):
+                fade_level = 0.6 - (i * 0.2)  # 0.4 for first previous, 0.2 for second previous
+                faded_color = tuple(int(c * fade_level) for c in color)
+                
+                value_text = str(round(value))
+                value_bbox = self.draw.textbbox((0, 0), value_text, font=self.tiny_font)
+                value_width = value_bbox[2] - value_bbox[0]
+                self.draw.text(
+                    (x + (self.METRIC_WIDTH - value_width) // 2, y + 30 + (i * 15)),
+                    value_text,
+                    font=self.tiny_font,
+                    fill=faded_color
+                )
 
         # Draw metrics horizontally above face
         draw_metric(metrics_start_x, start_y, "PING", stats.ping_history, 'ping')
