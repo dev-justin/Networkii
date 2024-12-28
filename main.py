@@ -214,6 +214,57 @@ class Display:
         else:
             return 'critical'
 
+    def calculate_bar_height(self, values: deque, max_value: float, bad_threshold: float) -> float:
+        """Calculate health bar height based on historical values"""
+        if not values:
+            return 1.0
+        # Calculate how many values are above the bad threshold
+        bad_count = sum(1 for v in values if v > bad_threshold)
+        # Return health percentage (1.0 = full health, 0.0 = no health)
+        return 1.0 - (bad_count / len(values))
+
+    def get_bar_color(self, health: float) -> tuple:
+        """Get color for health bar based on health percentage"""
+        if health > 0.8:
+            return (0, 255, 0)  # Green
+        elif health > 0.6:
+            return (150, 255, 0)  # Yellow-green
+        elif health > 0.4:
+            return (255, 255, 0)  # Yellow
+        elif health > 0.2:
+            return (255, 165, 0)  # Orange
+        else:
+            return (255, 0, 0)  # Red
+
+    def draw_health_bar(self, x: int, y: int, height: int, health: float, label: str):
+        """Draw a vertical health bar"""
+        bar_width = 10
+        border_color = (40, 40, 40)
+        
+        # Draw border
+        self.draw.rectangle(
+            (x, y, x + bar_width, y + height),
+            outline=border_color,
+            width=1
+        )
+        
+        # Draw filled portion
+        fill_height = int(height * health)
+        if fill_height > 0:
+            self.draw.rectangle(
+                (x + 1, y + height - fill_height, x + bar_width - 1, y + height - 1),
+                fill=self.get_bar_color(health)
+            )
+        
+        # Draw label
+        self.draw.text(
+            (x - 2, y + height + 5),
+            label,
+            font=self.tiny_font,
+            fill=(128, 128, 128),
+            anchor="ma"  # middle-ascender anchor
+        )
+
     def update(self, stats: NetworkStats):
         """Update the display with network metrics"""
         # Clear the image
@@ -221,11 +272,11 @@ class Display:
         
         # Load fonts with smaller sizes
         try:
-            tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-            number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+            self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
+            self.number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
         except:
-            tiny_font = ImageFont.load_default()
-            number_font = self.font
+            self.tiny_font = ImageFont.load_default()
+            self.number_font = self.font
 
         # Calculate network health and get corresponding face
         health_state = self.calculate_network_health(stats)
@@ -235,32 +286,45 @@ class Display:
         face_x = (self.width - self.face_size) // 2
         face_y = (self.height - self.face_size) // 2
         
+        # Draw health bars on the left
+        bar_height = 160
+        bar_y = (self.height - bar_height) // 2
+        
+        # Calculate health percentages
+        ping_health = self.calculate_bar_height(self.ping_history, 100, 50)  # Bad ping > 50ms
+        jitter_health = self.calculate_bar_height(self.jitter_history, 20, 10)  # Bad jitter > 10ms
+        loss_health = self.calculate_bar_height(self.packet_loss_history, 5, 1)  # Bad loss > 1%
+        
+        # Draw the three bars
+        self.draw_health_bar(30, bar_y, bar_height, ping_health, "P")
+        self.draw_health_bar(50, bar_y, bar_height, jitter_health, "J")
+        self.draw_health_bar(70, bar_y, bar_height, loss_health, "L")
+        
         # Helper function to draw metric
         def draw_metric(x, y, label, value, align='left'):
-            self.draw.text((x, y), label, font=tiny_font, fill=(128, 128, 128))
+            self.draw.text((x, y), label, font=self.tiny_font, fill=(128, 128, 128))
             value_text = str(round(value))
             if align == 'left':
-                self.draw.text((x, y + 12), value_text, font=number_font, fill=(0, 255, 0))
+                self.draw.text((x, y + 12), value_text, font=self.number_font, fill=(0, 255, 0))
             else:  # right align
-                text_bbox = self.draw.textbbox((0, 0), value_text, font=number_font)
+                text_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
                 text_width = text_bbox[2] - text_bbox[0]
-                self.draw.text((x - text_width, y + 12), value_text, font=number_font, fill=(0, 255, 0))
+                self.draw.text((x - text_width, y + 12), value_text, font=self.number_font, fill=(0, 255, 0))
 
         # Draw current stats above face
         top_y = face_y - 60
-        spacing = 35
-        draw_metric(80, top_y, "PING", stats.ping)
-        draw_metric(160, top_y, "JITTER", stats.jitter)
-        draw_metric(240, top_y, "LOSS", stats.packet_loss)
+        draw_metric(120, top_y, "PING", stats.ping)
+        draw_metric(200, top_y, "JITTER", stats.jitter)
+        draw_metric(280, top_y, "LOSS", stats.packet_loss)
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
         
         # Draw averages below face
         bottom_y = face_y + self.face_size + 10
-        draw_metric(80, bottom_y, "MIN", stats.min_ping)
-        draw_metric(160, bottom_y, "AVG", stats.avg_ping)
-        draw_metric(240, bottom_y, "MAX", stats.max_ping)
+        draw_metric(120, bottom_y, "MIN", stats.min_ping)
+        draw_metric(200, bottom_y, "AVG", stats.avg_ping)
+        draw_metric(280, bottom_y, "MAX", stats.max_ping)
         
         if self.test_mode:
             # Test mode console output
