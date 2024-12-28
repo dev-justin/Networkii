@@ -383,8 +383,8 @@ class NetworkMetrics:
     # Define thresholds for each metric
     PING = MetricThresholds(
         excellent=20,  # < 20ms is excellent
-        good=40,       # < 40ms is good
-        fair=80,      # < 80ms is fair
+        good=30,       # < 30ms is good
+        fair=70,      # < 70ms is fair
         poor=120,      # < 120ms is poor, >= 120 is critical
         weight=0.4     # 40% of total score
     )
@@ -413,7 +413,7 @@ class NetworkMetrics:
         elif metric_type == 'jitter':
             return NetworkMetrics.JITTER.good
         else:  # packet loss
-            return NetworkMetrics.PACKET_LOSS.good
+            return NetworkMetrics.PACKET_LOSS.excellent
     
     @staticmethod
     def calculate_metric_score(value: float, thresholds: MetricThresholds) -> float:
