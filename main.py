@@ -276,9 +276,18 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate positions for face and hearts
+        # Define spacing constant
+        HEART_SPACING = 10
+        
+        # Calculate total height of face + hearts + spacing
+        total_element_height = self.face_size + self.heart_size + HEART_SPACING
+        
+        # Calculate starting Y position to center both elements
+        start_y = (self.HEIGHT - total_element_height) // 2
+        
+        # Set positions for face and hearts
         face_x = (self.WIDTH - self.face_size) // 2
-        face_y = (self.HEIGHT - (self.face_size + self.heart_size + 30)) // 2
+        face_y = start_y
         
         # Draw health bars on the left with full height and spacing
         bar_height = self.HEIGHT  # Use full height
@@ -323,10 +332,10 @@ class Display:
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
         
-        # Calculate and draw hearts below face with proper spacing
-        hearts_total_width = (5 * self.heart_size) + (4 * 7)  # 5 hearts with 5px spacing
+        # Calculate and draw hearts below face
+        hearts_total_width = (5 * self.heart_size) + (4 * 7)  # 5 hearts with 7px spacing
         hearts_x = (self.WIDTH - hearts_total_width) // 2
-        hearts_y = face_y + self.face_size + 10  # spacing between face and hearts
+        hearts_y = face_y + self.face_size  # Remove second HEART_SPACING
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
         if self.test_mode:
