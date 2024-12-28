@@ -363,9 +363,20 @@ class Display:
         available_height = self.HEIGHT - self.METRIC_TOP_MARGIN - self.METRIC_BOTTOM_MARGIN
         value_spacing = available_height // 10
         
-        # Draw values from top to bottom with fading
-        for i, value in enumerate(reversed(last_values)):
-            fade_level = 1.0 - (i * 0.08)  # Gradual fade from bottom to top
+        # Draw most recent value larger
+        current_value = str(round(last_values[-1]))
+        current_bbox = self.draw.textbbox((0, 0), current_value, font=self.number_font)
+        current_width = current_bbox[2] - current_bbox[0]
+        self.draw.text(
+            (x + (self.METRIC_WIDTH - current_width) // 2, self.METRIC_TOP_MARGIN + 20),
+            current_value,
+            font=self.number_font,
+            fill=color
+        )
+        
+        # Draw previous values from top to bottom with fading
+        for i, value in enumerate(reversed(last_values[:-1]), 1):  # Skip most recent value
+            fade_level = 0.8 - (i * 0.08)  # Gradual fade for older values
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
@@ -374,7 +385,7 @@ class Display:
             
             # Center text in column
             text_x = x + (self.METRIC_WIDTH - text_width) // 2
-            text_y = self.METRIC_TOP_MARGIN + 20 + (i * value_spacing)
+            text_y = self.METRIC_TOP_MARGIN + 45 + (i * value_spacing)  # Start lower to account for larger current value
             
             self.draw.text(
                 (text_x, text_y),
