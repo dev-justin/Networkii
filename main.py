@@ -306,9 +306,9 @@ class Display:
         face = self.face_images[health_state]
         
         # Draw metrics vertically to the right of face
-        draw_metric(metrics_start_x, metrics_start_y, "PING", stats.ping_history, 'ping')
-        draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT, "JITTER", stats.jitter_history, 'jitter')
-        draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT * 2, "LOSS", stats.packet_loss_history, 'packet_loss')
+        self.draw_metric(metrics_start_x, metrics_start_y, "PING", stats.ping_history, 'ping')
+        self.draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT, "JITTER", stats.jitter_history, 'jitter')
+        self.draw_metric(metrics_start_x, metrics_start_y + self.METRICS_HEIGHT * 2, "LOSS", stats.packet_loss_history, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
@@ -344,6 +344,49 @@ class Display:
             # Update physical display
             self.disp.st7789.set_window()
             self.disp.st7789.display(self.image)
+
+    def draw_metric(self, x: int, y: int, label: str, history: deque, metric_type: str):
+        """Draw metric with last 3 values vertically"""
+        if not history:
+            return
+            
+        color = self.get_outline_color(metric_type)
+        
+        # Draw label centered
+        label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
+        label_width = label_bbox[2] - label_bbox[0]
+        self.draw.text((x + (self.METRIC_WIDTH - label_width) // 2, y), label, font=self.tiny_font, fill=color)
+        
+        # Get last 3 values
+        last_values = list(history)[-3:]
+        if len(last_values) < 3:  # Pad with zeros if we don't have 3 values yet
+            last_values = [0] * (3 - len(last_values)) + last_values
+        
+        # Draw current value (large)
+        current_text = str(round(last_values[-1]))
+        current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
+        current_width = current_bbox[2] - current_bbox[0]
+        self.draw.text(
+            (x + (self.METRIC_WIDTH - current_width) // 2, y + 12),
+            current_text,
+            font=self.number_font,
+            fill=color
+        )
+        
+        # Draw previous values with increasing transparency
+        for i, value in enumerate(reversed(last_values[:-1])):
+            fade_level = 0.6 - (i * 0.2)  # 0.4 for first previous, 0.2 for second previous
+            faded_color = tuple(int(c * fade_level) for c in color)
+            
+            value_text = str(round(value))
+            value_bbox = self.draw.textbbox((0, 0), value_text, font=self.tiny_font)
+            value_width = value_bbox[2] - value_bbox[0]
+            self.draw.text(
+                (x + (self.METRIC_WIDTH - value_width) // 2, y + 30 + (i * 15)),
+                value_text,
+                font=self.tiny_font,
+                fill=faded_color
+            )
 
 @dataclass
 class MetricThresholds:
