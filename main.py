@@ -294,16 +294,29 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
+        # Calculate width taken by health bars on the left
+        bar_width = 12
+        bar_spacing = 6
+        start_x = 15
+        bars_total_width = start_x + (bar_width * 3) + (bar_spacing * 2) + 15  # Add right margin
+        
+        # Calculate remaining width for center content
+        remaining_width = self.WIDTH - bars_total_width
+        
         # Define spacing constants
         HEART_SPACING = 10
-        METRIC_SPACING = 60  # Horizontal spacing between metrics
+        METRIC_SPACING = 60
         
         # Calculate total height of all elements (metrics + face + hearts)
-        metrics_height = 40  # Height needed for metrics
+        metrics_height = 40
         total_element_height = metrics_height + self.face_size + self.heart_size + HEART_SPACING
         
-        # Calculate starting Y position to center everything
+        # Calculate starting Y position to center everything vertically
         start_y = (self.HEIGHT - total_element_height) // 2
+        
+        # Calculate metrics positioning in remaining space
+        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING)
+        metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
         
         # Helper function to draw metric with matching color and horizontal alignment
         def draw_metric(x, y, label, value, metric_type):
@@ -318,18 +331,14 @@ class Display:
             value_width = value_bbox[2] - value_bbox[0]
             self.draw.text((x + (40 - value_width) // 2, y + 12), value_text, font=self.number_font, fill=color)
 
-        # Calculate metrics positioning
-        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING)  # 3 metrics of 40px width each + spacing
-        metrics_start_x = (self.WIDTH - metrics_total_width) // 2
-        
         # Draw metrics horizontally above face
         draw_metric(metrics_start_x, start_y, "PING", stats.ping, 'ping')
         draw_metric(metrics_start_x + 40 + METRIC_SPACING, start_y, "JITTER", stats.jitter, 'jitter')
         draw_metric(metrics_start_x + (40 + METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss, 'packet_loss')
         
-        # Set positions for face
-        face_x = (self.WIDTH - self.face_size) // 2
-        face_y = start_y + metrics_height  # Place face below metrics
+        # Set positions for face centered in remaining space
+        face_x = bars_total_width + (remaining_width - self.face_size) // 2
+        face_y = start_y + metrics_height
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
