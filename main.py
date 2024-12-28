@@ -1,12 +1,12 @@
 import time
 import subprocess
 import statistics
-import argparse
 from PIL import Image, ImageDraw, ImageFont
 from dataclasses import dataclass
 from collections import deque
 import socket
 import netifaces
+from displayhatmini import DisplayHATMini
 
 @dataclass 
 class NetworkStats:
@@ -113,59 +113,45 @@ class Display:
     FONT_MEDIUM = 14   # For past values
     FONT_SMALL = 10    # For labels
     FONT_MESSAGE = 14  # For network state message
-
-    # Asset paths
-    ASSETS = {
-        'faces': {
-            'excellent': 'assets/faces/excellent.png',
-            'good': 'assets/faces/good.png',
-            'fair': 'assets/faces/fair.png',
-            'poor': 'assets/faces/poor.png',
-            'critical': 'assets/faces/critical.png'
-        },
-        'heart': 'assets/heart.png'
-    }
     
     # Network states configuration
     NETWORK_STATES = {
         'excellent': {
             'message': "Network is Purring!",
+            'face': 'assets/faces/excellent.png',
             'threshold': 90
         },
         'good': {
             'message': "All Systems Go!",
+            'face': 'assets/faces/good.png',
             'threshold': 70
         },
         'fair': {
             'message': "Hanging in There!",
+            'face': 'assets/faces/fair.png',
             'threshold': 60
         },
         'poor': {
             'message': "Having Hiccups... ",
+            'face': 'assets/faces/poor.png',
             'threshold': 50
         },
         'critical': {
             'message': "Help, I'm Sick!",
+            'face': 'assets/faces/critical.png',
             'threshold': 0
         }
     }
 
-    def __init__(self, test_mode: bool = False, network_monitor=None):
-        self.test_mode = test_mode
+    def __init__(self, network_monitor=None):
         self.network_monitor = network_monitor
         
         # Create initial black canvas
         self.image = Image.new('RGB', (self.WIDTH, self.HEIGHT), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
         
-        if not test_mode:
-            try:
-                from displayhatmini import DisplayHATMini
-                self.disp = DisplayHATMini(self.image)
-            except ImportError as e:
-                print(f"Error importing displayhatmini: {e}")
-                print("Running in test mode instead")
-                self.test_mode = True
+        # Initialize display
+        self.disp = DisplayHATMini(self.image)
         
         # Load fonts
         try:
@@ -183,12 +169,12 @@ class Display:
 
         # Load and cache the face images
         self.face_images = {}
-        for state, path in self.ASSETS['faces'].items():
+        for state, info in self.NETWORK_STATES.items():
             try:
-                image = Image.open(path).convert('RGBA')
+                image = Image.open(info['face']).convert('RGBA')
                 self.face_images[state] = image.resize((self.FACE_SIZE, self.FACE_SIZE), Image.Resampling.LANCZOS)
             except Exception as e:
-                print(f"Error loading face {path}: {e}")
+                print(f"Error loading face {info['face']}: {e}")
                 # Create a fallback image
                 img = Image.new('RGBA', (self.FACE_SIZE, self.FACE_SIZE), (0, 0, 0, 0))
                 draw = ImageDraw.Draw(img)
@@ -197,7 +183,7 @@ class Display:
 
         # Load heart image
         try:
-            self.heart_image = Image.open(self.ASSETS['heart']).convert('RGBA')
+            self.heart_image = Image.open('assets/heart.png').convert('RGBA')
             self.heart_image = self.heart_image.resize((self.HEART_SIZE, self.HEART_SIZE))
         except Exception as e:
             print(f"Error loading heart image: {e}")
@@ -395,18 +381,9 @@ class Display:
         self.draw_health_bar(self.BAR_START_X + self.BAR_WIDTH + self.BAR_SPACING, 0, self.BAR_WIDTH, self.HEIGHT, jitter_health, 'jitter')
         self.draw_health_bar(self.BAR_START_X + (self.BAR_WIDTH + self.BAR_SPACING) * 2, 0, self.BAR_WIDTH, self.HEIGHT, loss_health, 'packet_loss')
 
-        if self.test_mode:
-            # Test mode console output
-            print("\033c", end="")
-            print("=== Network Monitor ===")
-            print(f"Health: {self.calculate_network_health(stats)[1].upper()}")
-            print(f"Current: {round(stats.ping)} ms")
-            print(f"Avg: {round(statistics.mean(stats.ping_history))} ms")
-            print("-" * 30)
-        else:
-            # Update physical display
-            self.disp.st7789.set_window()
-            self.disp.st7789.display(self.image)
+        # Remove test mode console output and just update display
+        self.disp.st7789.set_window()
+        self.disp.st7789.display(self.image)
 
     def draw_metric(self, x: int, y: int, label: str, history: deque, metric_type: str):
         """Draw metric column with values using full height"""
@@ -537,11 +514,7 @@ def get_gateway_ip():
     return "1.1.1.1"  # Fallback to Cloudflare DNS
 
 def main():
-    parser = argparse.ArgumentParser(description='Network Monitor')
-    parser.add_argument('--test', action='store_true', help='Run in test mode (no physical display)')
-    args = parser.parse_args()
-
-    # Get gateway IP and local network info
+    # Remove test mode argument
     gateway_ip = get_gateway_ip()
     local_ip = socket.gethostbyname(socket.gethostname())
     
@@ -565,7 +538,7 @@ def main():
 
     # Initialize monitor with gateway IP
     network_monitor = NetworkMonitor(target_host=gateway_ip)
-    display = Display(test_mode=args.test, network_monitor=network_monitor)
+    display = Display(network_monitor=network_monitor)
 
     try:
         while True:
