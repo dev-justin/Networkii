@@ -127,23 +127,23 @@ class Display:
     # Network states configuration
     NETWORK_STATES = {
         'excellent': {
-            'message': "Network is Purring! 😺",
+            'message': "Network is Purring!",
             'threshold': 90
         },
         'good': {
-            'message': "All Systems Go! 🚀",
+            'message': "All Systems Go!",
             'threshold': 70
         },
         'fair': {
-            'message': "Hanging in There! 🤞",
+            'message': "Hanging in There!",
             'threshold': 50
         },
         'poor': {
-            'message': "Having Hiccups... 😅",
+            'message': "Having Hiccups... ",
             'threshold': 30
         },
         'critical': {
-            'message': "Help, I'm Sick! 🤒",
+            'message': "Help, I'm Sick!",
             'threshold': 0
         }
     }
@@ -223,6 +223,8 @@ class Display:
             loss_scores = [NetworkMetrics.calculate_metric_score(l, NetworkMetrics.PACKET_LOSS) for l in loss_history]
             loss_score = statistics.mean(loss_scores) * NetworkMetrics.PACKET_LOSS.weight
         
+        print(f"ping_score: {ping_score}, jitter_score: {jitter_score}, loss_score: {loss_score}")
+
         # Calculate final score
         final_score = ping_score + jitter_score + loss_score
         final_score = max(0, min(100, final_score))
@@ -478,8 +480,8 @@ class NetworkMetrics:
     PING = MetricThresholds(
         excellent=20,  # < 20ms is excellent
         good=30,       # < 30ms is good
-        fair=70,      # < 70ms is fair
-        poor=120,      # < 120ms is poor, >= 120 is critical
+        fair=60,      # < 60ms is fair
+        poor=100,      # < 100ms is poor, >= 100 is critical
         weight=0.4     # 40% of total score
     )
     
