@@ -29,7 +29,7 @@ class NetworkStats:
         return self.packet_loss_history[-1] if self.packet_loss_history else 0
 
 class NetworkMonitor:
-    def __init__(self, target_host: str = "1.1.1.1", history_length: int = 600):
+    def __init__(self, target_host: str = "1.1.1.1", history_length: int = 300):
         self.target_host = target_host
         self.ping_history = deque(maxlen=history_length)
         self.jitter_history = deque(maxlen=history_length)
