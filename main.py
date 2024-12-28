@@ -94,7 +94,7 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 30    
+    METRIC_WIDTH = 20    
     METRIC_SPACING = 5     
     
     # History settings
@@ -305,9 +305,9 @@ class Display:
         face = self.face_images[health_state]
         
         # Draw metrics horizontally to the right of face
-        self.draw_metric(metrics_start_x, metrics_y, "PING", stats.ping_history, 'ping')
-        self.draw_metric(metrics_start_x + self.METRIC_WIDTH + self.METRIC_SPACING, metrics_y, "JITTER", stats.jitter_history, 'jitter')
-        self.draw_metric(metrics_start_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, metrics_y, "LOSS", stats.packet_loss_history, 'packet_loss')
+        self.draw_metric(metrics_start_x, metrics_y, "P", stats.ping_history, 'ping')
+        self.draw_metric(metrics_start_x + self.METRIC_WIDTH + self.METRIC_SPACING, metrics_y, "J", stats.jitter_history, 'jitter')
+        self.draw_metric(metrics_start_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, metrics_y, "L", stats.packet_loss_history, 'packet_loss')
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
