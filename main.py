@@ -263,7 +263,7 @@ class Display:
         filled_hearts = round((health_score / 100.0) * total_hearts)
         
         for i in range(total_hearts):
-            heart_x = x + (i * (self.heart_size + self.HEART_GAP))
+            heart_x = x + (i * (self.HEART_SIZE + self.HEART_GAP))
             if i < filled_hearts:
                 self.image.paste(self.heart_image, (heart_x, y), self.heart_image)
             else:
