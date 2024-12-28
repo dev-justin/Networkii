@@ -159,6 +159,7 @@ class Display:
         self.face_images = {}
         for state, png_path in self.network_states.items():
             try:
+                print(f"Loading face {png_path}")
                 self.face_images[state] = Image.open(png_path).convert('RGBA')
             except Exception as e:
                 print(f"Error loading face {png_path}: {e}")
