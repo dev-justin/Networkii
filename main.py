@@ -90,7 +90,7 @@ class Display:
     BAR_MARGIN_RIGHT = 20
     
     # Other spacing constants
-    HEART_SPACING = 10
+    HEART_SPACING = 15
     METRIC_SPACING = 60
     METRICS_HEIGHT = 40
 
