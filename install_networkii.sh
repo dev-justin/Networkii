@@ -84,7 +84,7 @@ print_success "USB OTG (RNDIS) is now enabled. A reboot is recommended to apply 
 print_info "To complete setup, run: ${BOLD}sudo reboot${NC}"
 
 #------------------------------
-# 2. UPDATE SYSTEM & INSTALL GIT
+# 2. UPDATE SYSTEM
 #------------------------------
 print_header "Updating System Packages"
 
@@ -97,15 +97,20 @@ sudo apt-get upgrade -y
 print_success "System packages upgraded"
 
 #------------------------------
-# 3. INSTALL PYTHON REQUIREMENTS    
+# 3. INSTALL APP REQUIREMENTS    
 #------------------------------
 print_header "Installing Python Requirements"
 pushd "$PROJECT_DIR" > /dev/null
 
-# Install python3-venv if not already installed
-print_info "Installing python3-venv..."
-sudo apt-get install -y python3-venv
-print_success "python3-venv installed"
+# Install python3-dev
+print_info "Installing python3-dev..."
+sudo apt-get install -y python3-dev
+print_success "python3-dev installed"
+
+# Install dependencies needed for PIL
+print_info "Installing dependencies needed for PIL..."
+sudo apt-get install -y zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev
+print_success "Dependencies installed"
 
 # Create virtual environment
 print_info "Creating virtual environment..."
@@ -126,10 +131,6 @@ if [ -f requirements.txt ]; then
 else
     print_info "No requirements.txt found in '$PROJECT_DIR'. Skipping pip install."
 fi
-
-# Deactivate virtual environment
-deactivate
-print_success "Virtual environment deactivated"
 
 popd > /dev/null
 
