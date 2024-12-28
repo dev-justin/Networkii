@@ -2,3 +2,4 @@ pillow
 spidev
 displayhatmini
 netifaces
+numpy
