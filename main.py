@@ -145,45 +145,30 @@ class Display:
             draw = ImageDraw.Draw(self.heart_image)
             draw.text((self.heart_size//2, self.heart_size//2), "♥", fill=(255, 0, 0, 255))
 
-    def calculate_network_health(self, stats: NetworkStats, history_length: int = 15) -> tuple[int, str]:
-        """Calculate network health based on recent history (last ~15 seconds)"""
-        # Get last 15 items from history
-        ping_history = list(self.network_monitor.ping_history)[-history_length:]
-        jitter_history = list(self.network_monitor.jitter_history)[-history_length:]
-        loss_history = list(self.network_monitor.packet_loss_history)[-history_length:]
+    def calculate_network_health(self, stats: NetworkStats, history_length: int = 30) -> tuple[int, str]:
+        """Calculate network health based on recent history"""
+        ping_history = list(stats.ping_history)[-history_length:]
+        jitter_history = list(stats.jitter_history)[-history_length:]
+        loss_history = list(stats.packet_loss_history)[-history_length:]
         
-        current_score = 100
-        
-        # Calculate penalties with higher weights for recent issues
+        # Calculate historical scores
         if ping_history:
-            bad_pings = sum(1 for p in ping_history if p > 100)
-            ping_penalty = (bad_pings / len(ping_history)) * 40
-            current_score -= ping_penalty
+            ping_scores = [NetworkMetrics.calculate_metric_score(p, NetworkMetrics.PING) for p in ping_history]
+            ping_score = statistics.mean(ping_scores) * NetworkMetrics.PING.weight
         
         if jitter_history:
-            bad_jitter = sum(1 for j in jitter_history if j > 20)
-            jitter_penalty = (bad_jitter / len(jitter_history)) * 30
-            current_score -= jitter_penalty
+            jitter_scores = [NetworkMetrics.calculate_metric_score(j, NetworkMetrics.JITTER) for j in jitter_history]
+            jitter_score = statistics.mean(jitter_scores) * NetworkMetrics.JITTER.weight
             
         if loss_history:
-            bad_loss = sum(1 for l in loss_history if l > 0)  # More sensitive to any packet loss
-            loss_penalty = (bad_loss / len(loss_history)) * 30
-            current_score -= loss_penalty
+            loss_scores = [NetworkMetrics.calculate_metric_score(l, NetworkMetrics.PACKET_LOSS) for l in loss_history]
+            loss_score = statistics.mean(loss_scores) * NetworkMetrics.PACKET_LOSS.weight
         
-        # Add current state impact (30% current, 70% history)
-        current_impact = 0.3
-        history_impact = 0.7
-        
-        # Calculate current state penalty
-        current_penalty = 0
-        if stats.ping > 100: current_penalty += 40
-        if stats.jitter > 20: current_penalty += 30
-        if stats.packet_loss > 0: current_penalty += 30
-        
-        # Blend current and historical scores
-        final_score = (current_score * history_impact) + ((100 - current_penalty) * current_impact)
+        # Calculate final score
+        final_score = ping_score + jitter_score + loss_score
         final_score = max(0, min(100, final_score))
         
+        # Determine state based on score
         state = 'excellent' if final_score >= 90 else \
                 'good' if final_score >= 70 else \
                 'fair' if final_score >= 50 else \
@@ -192,13 +177,12 @@ class Display:
         
         return int(final_score), state
 
-    def calculate_bar_height(self, values: deque, bad_threshold: float) -> float:
+    def calculate_bar_height(self, values: deque, metric_type: str) -> float:
         """Calculate health bar height based on historical values"""
         if not values:
             return 1.0
-        # Calculate how many values are above the bad threshold
-        bad_count = sum(1 for v in values if v > bad_threshold)
-        # Return health percentage (1.0 = full health, 0.0 = no health)
+        threshold = NetworkMetrics.get_health_threshold(metric_type)
+        bad_count = sum(1 for v in values if v > threshold)
         return 1.0 - (bad_count / len(values))
 
     def get_outline_color(self, metric_type: str) -> tuple:
@@ -360,11 +344,11 @@ class Display:
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
-            self.network_monitor.ping_history, 30)
+            self.network_monitor.ping_history, 'ping')
         jitter_health = self.calculate_bar_height(
-            self.network_monitor.jitter_history, 5)
+            self.network_monitor.jitter_history, 'jitter')
         loss_health = self.calculate_bar_height(
-            self.network_monitor.packet_loss_history, 1)
+            self.network_monitor.packet_loss_history, 'packet_loss')
         
         # Draw the three bars with spacing
         self.draw_health_bar(start_x, bar_y, bar_width, bar_height, ping_health, 'ping')
@@ -383,6 +367,67 @@ class Display:
             # Update physical display
             self.disp.st7789.set_window()
             self.disp.st7789.display(self.image)
+
+@dataclass
+class MetricThresholds:
+    """Thresholds for network metrics"""
+    excellent: float
+    good: float
+    fair: float
+    poor: float
+    weight: float  # How much this metric affects overall score (0-1)
+
+class NetworkMetrics:
+    """Centralized network metrics configuration"""
+    
+    # Define thresholds for each metric
+    PING = MetricThresholds(
+        excellent=20,  # < 20ms is excellent
+        good=40,       # < 40ms is good
+        fair=80,      # < 80ms is fair
+        poor=120,      # < 120ms is poor, >= 120 is critical
+        weight=0.4     # 40% of total score
+    )
+    
+    JITTER = MetricThresholds(
+        excellent=2,   # < 2ms is excellent
+        good=5,        # < 5ms is good
+        fair=10,       # < 10ms is fair
+        poor=20,       # < 20ms is poor, >= 20 is critical
+        weight=0.2     # 20% of total score
+    )
+    
+    PACKET_LOSS = MetricThresholds(
+        excellent=0,   # 0% is excellent
+        good=0.1,      # < 0.1% is good
+        fair=0.5,      # < 0.5% is fair
+        poor=1,        # < 1% is poor, >= 1% is critical
+        weight=0.4     # 40% of total score
+    )
+    
+    @staticmethod
+    def get_health_threshold(metric_type: str) -> float:
+        """Get threshold for health bar calculation"""
+        if metric_type == 'ping':
+            return NetworkMetrics.PING.good
+        elif metric_type == 'jitter':
+            return NetworkMetrics.JITTER.good
+        else:  # packet loss
+            return NetworkMetrics.PACKET_LOSS.good
+    
+    @staticmethod
+    def calculate_metric_score(value: float, thresholds: MetricThresholds) -> float:
+        """Calculate score (0-100) for a metric based on its thresholds"""
+        if value <= thresholds.excellent:
+            return 100
+        elif value <= thresholds.good:
+            return 75
+        elif value <= thresholds.fair:
+            return 50
+        elif value <= thresholds.poor:
+            return 25
+        else:
+            return 0
 
 def main():
     parser = argparse.ArgumentParser(description='Network Monitor')
