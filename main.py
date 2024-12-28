@@ -279,6 +279,13 @@ class Display:
         # Calculate width taken by health bars on the left
         bars_total_width = self.BAR_START_X + (self.BAR_WIDTH * 3) + (self.BAR_SPACING * 2) + self.BAR_MARGIN_RIGHT
         
+        # Calculate remaining width for center content
+        remaining_width = self.WIDTH - bars_total_width
+        
+        # Calculate metrics positioning in remaining space
+        metrics_total_width = (3 * 40) + (2 * self.METRIC_SPACING)
+        metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
+        
         # Load fonts with smaller sizes
         try:
             self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
@@ -291,18 +298,11 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Calculate remaining width for center content
-        remaining_width = self.WIDTH - bars_total_width
-        
         # Calculate total height of all elements (metrics + face + hearts)
         total_element_height = self.METRICS_HEIGHT + self.face_size + self.heart_size + self.HEART_SPACING
         
         # Calculate starting Y position to center everything vertically
         start_y = (self.HEIGHT - total_element_height) // 2
-        
-        # Calculate metrics positioning in remaining space
-        metrics_total_width = (3 * 40) + (2 * self.METRIC_SPACING) + 20
-        metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
         
         # Helper function to draw metric with matching color and horizontal alignment
         def draw_metric(x, y, label, value, metric_type):
