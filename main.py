@@ -97,7 +97,7 @@ class Display:
     HEART_SIZE = 28        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 15    # Width of each metric column
+    METRIC_WIDTH = 18    # Width of each metric column
     METRIC_SPACING = 5   # Space between columns
     METRIC_RIGHT_MARGIN = 0
     METRIC_TOP_MARGIN = 10
@@ -110,6 +110,15 @@ class Display:
     FONT_LARGE = 16    # For current value
     FONT_MEDIUM = 14   # For past values
     FONT_SMALL = 10    # For labels
+
+    # Network state messages
+    NETWORK_MESSAGES = {
+        'excellent': "Network is Purring! 😺",
+        'good':      "All Systems Go! 🚀",
+        'fair':      "Hanging in There! 🤞",
+        'poor':      "Having Hiccups... 😅",
+        'critical':  "Help, I'm Sick! 🤒"
+    }
 
     def __init__(self, test_mode: bool = False, network_monitor=None):
         self.test_mode = test_mode
@@ -314,8 +323,17 @@ class Display:
         self.draw_metric(metrics_x + self.METRIC_WIDTH + self.METRIC_SPACING, 0, "J", stats.jitter_history, 'jitter')
         self.draw_metric(metrics_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, 'packet_loss')
         
+        # Draw network state message above face
+        health_score, health_state = self.calculate_network_health(stats)
+        message = self.NETWORK_MESSAGES[health_state]
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.tiny_font)
+        message_width = message_bbox[2] - message_bbox[0]
+        message_x = face_x + (self.FACE_SIZE - message_width) // 2
+        message_y = face_y - 20  # 20px above face
+        self.draw.text((message_x, message_y), message, font=self.tiny_font, fill=(255, 255, 255))
+        
         # Draw the face
-        self.image.paste(self.face_images[self.calculate_network_health(stats)[1]], (face_x, face_y), self.face_images[self.calculate_network_health(stats)[1]])
+        self.image.paste(self.face_images[health_state], (face_x, face_y), self.face_images[health_state])
         
         # Calculate and draw hearts below face
         hearts_total_width = (5 * self.HEART_SIZE) + (4 * self.HEART_GAP)
