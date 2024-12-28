@@ -110,7 +110,7 @@ class Display:
             self.font = ImageFont.load_default()
 
         # Network health indicators with PNG faces
-        self.face_size = 100  # Size of the face in pixels
+        self.face_size = 92  # Size of the face in pixels
         self.network_states = {
             'excellent': 'assets/faces/excellent.png',
             'good': 'assets/faces/good.png',
@@ -276,21 +276,21 @@ class Display:
         face_y = (self.HEIGHT - (self.face_size + self.heart_size + 30)) // 2
         
         # Draw health bars on the left with full height and spacing
-        bar_height = self.HEIGHT - 40
-        bar_y = 0
-        bar_width = 8
-        bar_spacing = 4
+        bar_height = self.HEIGHT  # Use full height
+        bar_y = 0  # Start from top
+        bar_width = 12  # Wider bars
+        bar_spacing = 6  # Slightly more spacing for wider bars
         
         # Calculate total width of bars including spacing
-        start_x = 10  # Left margin
+        start_x = 15  # Slightly more left margin
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
-            self.network_monitor.ping_history, 50)  # Bad ping > 50ms
+            self.network_monitor.ping_history, 50)
         jitter_health = self.calculate_bar_height(
-            self.network_monitor.jitter_history, 10)  # Bad jitter > 10ms
+            self.network_monitor.jitter_history, 10)
         loss_health = self.calculate_bar_height(
-            self.network_monitor.packet_loss_history, 1)  # Bad loss > 1%
+            self.network_monitor.packet_loss_history, 1)
         
         # Draw the three bars with spacing
         self.draw_health_bar(start_x, bar_y, bar_width, bar_height, ping_health, 'ping')
