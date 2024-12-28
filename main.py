@@ -235,19 +235,14 @@ class Display:
 
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
         """Draw a vertical health bar"""
-        # Draw colored outline
-        self.draw.rectangle(
-            (x, y, x + width, y + height),
-            outline=self.get_outline_color(metric_type),
-            width=2
-        )
+        color = self.get_outline_color(metric_type)
         
         # Draw filled portion
         fill_height = int(height * health)
         if fill_height > 0:
             self.draw.rectangle(
-                (x + 2, y + height - fill_height, x + width - 2, y + height - 2),
-                fill=(0, 255, 128)  # Light green fill
+                (x, y + height - fill_height, x + width, y + height),
+                fill=color  # Use the same color as the text
             )
 
     def update(self, stats: NetworkStats):
@@ -272,14 +267,14 @@ class Display:
         face_y = (self.height - self.face_size) // 2
         
         # Draw health bars on the left with full height and spacing
-        bar_height = self.height
-        bar_y = 0
-        bar_width = 25
-        bar_spacing = 5  # Space between bars
+        bar_height = self.height - 20  # Add vertical padding
+        bar_y = 10  # Top padding
+        bar_width = 20  # Slightly narrower bars
+        bar_spacing = 8  # More space between bars
         
         # Calculate total width of bars including spacing
         total_bars_width = (bar_width * 3) + (bar_spacing * 2)
-        start_x = 5  # Left margin
+        start_x = 10  # Left margin
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
