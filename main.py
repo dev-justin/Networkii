@@ -169,6 +169,18 @@ class Display:
                 draw.text((self.face_size//2, self.face_size//2), "?", fill=(255, 255, 255, 255))
                 self.face_images[state] = img
 
+        # Load heart image
+        try:
+            self.heart_image = Image.open('assets/heart.png').convert('RGBA')
+            self.heart_size = 20  # Size to display hearts
+            self.heart_image = self.heart_image.resize((self.heart_size, self.heart_size))
+        except Exception as e:
+            print(f"Error loading heart image: {e}")
+            # Create a fallback heart
+            self.heart_image = Image.new('RGBA', (self.heart_size, self.heart_size), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(self.heart_image)
+            draw.text((self.heart_size//2, self.heart_size//2), "♥", fill=(255, 0, 0, 255))
+
     def calculate_network_health(self, stats: NetworkStats) -> str:
         """Calculate network health based on ping, jitter, and packet loss"""
         score = 100
@@ -242,38 +254,41 @@ class Display:
         segment_height = height // total_segments
         filled_segments = round(health * total_segments)
         
-        # Draw background segments (empty)
-        segment_spacing = 2
-        segment_width = width
-        
-        # Draw value text above bar
-        value_text = f"{round(health * 100)}/100"
-        self.draw.text(
-            (x + width//2, y - 15),
-            value_text,
-            font=self.tiny_font,
-            fill=color,
-            anchor="mm"
-        )
-        
         # Draw segments from bottom to top
         for i in range(total_segments):
-            segment_y = y + height - (i + 1) * (segment_height + segment_spacing)
+            segment_y = y + height - (i + 1) * (segment_height + 2)  # 2px spacing
             
             # Determine if segment should be filled
             if i < filled_segments:
                 # Draw filled segment
                 self.draw.rectangle(
-                    (x, segment_y, x + segment_width, segment_y + segment_height),
+                    (x, segment_y, x + width, segment_y + segment_height),
                     fill=color
                 )
             else:
                 # Draw empty segment outline
                 self.draw.rectangle(
-                    (x, segment_y, x + segment_width, segment_y + segment_height),
+                    (x, segment_y, x + width, segment_y + segment_height),
                     outline=color,
                     width=1
                 )
+
+    def draw_hearts(self, x: int, y: int, health_score: int):
+        """Draw hearts based on health score (0-100)"""
+        total_hearts = 5
+        filled_hearts = round((health_score / 100.0) * total_hearts)
+        
+        for i in range(total_hearts):
+            heart_x = x + (i * (self.heart_size + 5))  # 5px spacing between hearts
+            if i < filled_hearts:
+                # Draw filled heart
+                self.image.paste(self.heart_image, (heart_x, y), self.heart_image)
+            else:
+                # Draw empty heart (could be a different image or just outline)
+                heart_outline = self.heart_image.copy()
+                # Make it semi-transparent for empty state
+                heart_outline.putalpha(50)
+                self.image.paste(heart_outline, (heart_x, y), heart_outline)
 
     def update(self, stats: NetworkStats):
         """Update the display with network metrics"""
@@ -340,6 +355,12 @@ class Display:
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
+        
+        # Calculate and draw hearts below face
+        health_score = int(self.calculate_network_health(stats).split('_')[0])
+        hearts_y = face_y + self.face_size + 10
+        hearts_x = (self.width - (5 * (self.heart_size + 5) - 5)) // 2  # Center hearts
+        self.draw_hearts(hearts_x, hearts_y, health_score)
         
         if self.test_mode:
             # Test mode console output
