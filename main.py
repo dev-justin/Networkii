@@ -215,12 +215,16 @@ class Display:
         
         # Calculate segments
         total_segments = 10
-        segment_height = height // total_segments
+        segment_spacing = 2
+        # Calculate segment height accounting for spacing
+        total_spacing = segment_spacing * (total_segments - 1)
+        segment_height = (height - total_spacing) // total_segments
         filled_segments = round(health * total_segments)
         
         # Draw segments from bottom to top
         for i in range(total_segments):
-            segment_y = y + height - (i + 1) * (segment_height + 2)  # 2px spacing
+            # Calculate y position accounting for spacing
+            segment_y = y + height - ((i + 1) * segment_height + i * segment_spacing)
             
             # Determine if segment should be filled
             if i < filled_segments:
