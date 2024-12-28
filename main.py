@@ -99,12 +99,17 @@ class Display:
     # Metric dimensions
     METRIC_WIDTH = 15    # Width of each metric column
     METRIC_SPACING = 5   # Space between columns
-    METRIC_RIGHT_MARGIN = 10
+    METRIC_RIGHT_MARGIN = 0
     METRIC_TOP_MARGIN = 10
     METRIC_BOTTOM_MARGIN = 10
     
     # History settings
     RECENT_HISTORY_LENGTH = 20  # Number of samples to use for recent history
+
+    # Font sizes
+    FONT_LARGE = 16    # For current value
+    FONT_MEDIUM = 14   # For past values
+    FONT_SMALL = 10    # For labels
 
     def __init__(self, test_mode: bool = False, network_monitor=None):
         self.test_mode = test_mode
@@ -127,12 +132,14 @@ class Display:
         # Load fonts
         try:
             self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
-            self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-            self.number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+            self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.FONT_SMALL)
+            self.number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.FONT_LARGE)
+            self.medium_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.FONT_MEDIUM)
         except:
             self.font = ImageFont.load_default()
             self.tiny_font = ImageFont.load_default()
             self.number_font = ImageFont.load_default()
+            self.medium_font = ImageFont.load_default()
 
         # Network health indicators with PNG faces
         self.network_states = {
@@ -385,16 +392,16 @@ class Display:
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
-            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.tiny_font)
+            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.medium_font)
             text_width = text_bbox[2] - text_bbox[0]
             
             text_x = x + (self.METRIC_WIDTH - text_width) // 2
-            text_y = self.METRIC_TOP_MARGIN + 30 + (i * value_spacing)  # Reduced gap
+            text_y = self.METRIC_TOP_MARGIN + 35 + (i * value_spacing)  # Adjusted spacing for larger font
             
             self.draw.text(
                 (text_x, text_y),
                 value_text,
-                font=self.tiny_font,
+                font=self.medium_font,
                 fill=faded_color
             )
 
