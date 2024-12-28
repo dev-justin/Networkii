@@ -224,48 +224,60 @@ class Display:
         # Return health percentage (1.0 = full health, 0.0 = no health)
         return 1.0 - (bad_count / len(values))
 
-    def get_bar_color(self, health: float) -> tuple:
-        """Get color for health bar based on health percentage"""
-        if health > 0.8:
-            return (0, 255, 0)  # Green
-        elif health > 0.6:
-            return (150, 255, 0)  # Yellow-green
-        elif health > 0.4:
-            return (255, 255, 0)  # Yellow
-        elif health > 0.2:
-            return (255, 165, 0)  # Orange
-        else:
-            return (255, 0, 0)  # Red
+    def get_bar_color(self, health: float, metric_type: str) -> tuple:
+        """Get color for health bar based on health percentage and metric type"""
+        if metric_type == 'ping':
+            if health > 0.8:
+                return (0, 255, 255)  # Cyan
+            elif health > 0.6:
+                return (0, 200, 200)
+            elif health > 0.4:
+                return (0, 150, 150)
+            elif health > 0.2:
+                return (0, 100, 100)
+            else:
+                return (0, 50, 50)
+        elif metric_type == 'jitter':
+            if health > 0.8:
+                return (255, 0, 255)  # Magenta
+            elif health > 0.6:
+                return (200, 0, 200)
+            elif health > 0.4:
+                return (150, 0, 150)
+            elif health > 0.2:
+                return (100, 0, 100)
+            else:
+                return (50, 0, 50)
+        else:  # packet loss
+            if health > 0.8:
+                return (255, 255, 0)  # Yellow
+            elif health > 0.6:
+                return (200, 200, 0)
+            elif health > 0.4:
+                return (150, 150, 0)
+            elif health > 0.2:
+                return (100, 100, 0)
+            else:
+                return (50, 50, 0)
 
-    def draw_health_bar(self, x: int, y: int, height: int, health: float, label: str):
+    def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
         """Draw a vertical health bar"""
-        bar_width = 15  # Increased from 10 to 15
         border_color = (40, 40, 40)
-        label_padding = 15  # Space for label at bottom
         
-        # Draw border (adjusted height to leave space for label)
+        # Draw border
         self.draw.rectangle(
-            (x, y, x + bar_width, y + height - label_padding),
+            (x, y, x + width, y + height),
             outline=border_color,
             width=1
         )
         
         # Draw filled portion
-        fill_height = int((height - label_padding) * health)
+        fill_height = int(height * health)
         if fill_height > 0:
             self.draw.rectangle(
-                (x + 1, y + (height - label_padding) - fill_height, x + bar_width - 1, y + (height - label_padding) - 1),
-                fill=self.get_bar_color(health)
+                (x + 1, y + height - fill_height, x + width - 1, y + height - 1),
+                fill=self.get_bar_color(health, metric_type)
             )
-        
-        # Draw label (moved up slightly from bottom)
-        self.draw.text(
-            (x + bar_width//2, y + height - 5),
-            label,
-            font=self.tiny_font,
-            fill=(128, 128, 128),
-            anchor="ms"  # middle-top anchor
-        )
 
     def update(self, stats: NetworkStats):
         """Update the display with network metrics"""
@@ -289,8 +301,9 @@ class Display:
         face_y = (self.height - self.face_size) // 2
         
         # Draw health bars on the left with full height
-        bar_height = self.height - 10  # Use almost full height, leave 5px padding top and bottom
-        bar_y = 5  # Small padding from top
+        bar_height = self.height
+        bar_y = 0
+        bar_width = 15
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
@@ -300,10 +313,10 @@ class Display:
         loss_health = self.calculate_bar_height(
             self.network_monitor.packet_loss_history, 5, 1)
         
-        # Draw the three bars with more spacing between them
-        self.draw_health_bar(30, bar_y, bar_height, ping_health, "P")
-        self.draw_health_bar(55, bar_y, bar_height, jitter_health, "J")
-        self.draw_health_bar(80, bar_y, bar_height, loss_health, "L")
+        # Draw the three bars edge to edge
+        self.draw_health_bar(0, bar_y, bar_width, bar_height, ping_health, 'ping')
+        self.draw_health_bar(bar_width, bar_y, bar_width, bar_height, jitter_health, 'jitter')
+        self.draw_health_bar(bar_width * 2, bar_y, bar_width, bar_height, loss_health, 'packet_loss')
         
         # Helper function to draw metric
         def draw_metric(x, y, label, value, align='left'):
