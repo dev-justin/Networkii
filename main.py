@@ -94,9 +94,8 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_WIDTH = 50       # Reduced from 60
-    METRIC_SPACING = 15     # Reduced from 40
-    METRICS_HEIGHT = 40
+    METRIC_WIDTH = 50    
+    METRIC_SPACING = 5     
     
     # History settings
     RECENT_HISTORY_LENGTH = 20  # Number of samples to use for recent history
@@ -291,7 +290,7 @@ class Display:
         
         # Calculate metrics position (to the right of face)
         metrics_start_x = face_x + self.face_size + 20  # 20px margin between face and metrics
-        metrics_y = face_y + (self.face_size // 2) - (self.METRICS_HEIGHT // 2)  # Center metrics vertically with face
+        metrics_y = 10  # Center metrics vertically with face
         
         # Load fonts with smaller sizes
         try:
