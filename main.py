@@ -298,9 +298,9 @@ class Display:
         metrics_x = self.WIDTH - (3 * (self.METRIC_WIDTH + self.METRIC_SPACING)) - self.METRIC_RIGHT_MARGIN
         
         # Draw metrics in full-height columns
-        self.draw_metric(metrics_x, 0, "PING", stats.ping_history, 'ping')
-        self.draw_metric(metrics_x + self.METRIC_WIDTH + self.METRIC_SPACING, 0, "JITTER", stats.jitter_history, 'jitter')
-        self.draw_metric(metrics_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, 0, "LOSS", stats.packet_loss_history, 'packet_loss')
+        self.draw_metric(metrics_x, 0, "P", stats.ping_history, 'ping')
+        self.draw_metric(metrics_x + self.METRIC_WIDTH + self.METRIC_SPACING, 0, "J", stats.jitter_history, 'jitter')
+        self.draw_metric(metrics_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, 'packet_loss')
         
         # Draw the face
         self.image.paste(self.face_images[self.calculate_network_health(stats)[1]], (face_x, face_y), self.face_images[self.calculate_network_health(stats)[1]])
