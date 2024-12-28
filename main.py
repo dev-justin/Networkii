@@ -315,7 +315,6 @@ class Display:
         bar_spacing = 4  # Less spacing between thinner bars
         
         # Calculate total width of bars including spacing
-        total_bars_width = (bar_width * 3) + (bar_spacing * 2)
         start_x = 10  # Left margin
         
         # Calculate health percentages using NetworkMonitor's history
