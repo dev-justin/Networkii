@@ -298,7 +298,7 @@ class Display:
         bar_width = 12
         bar_spacing = 6
         start_x = 15
-        bars_total_width = start_x + (bar_width * 3) + (bar_spacing * 2) + 15  # Add right margin
+        bars_total_width = start_x + (bar_width * 3) + (bar_spacing * 2) + 20  # Add right margin
         
         # Calculate remaining width for center content
         remaining_width = self.WIDTH - bars_total_width
@@ -315,7 +315,7 @@ class Display:
         start_y = (self.HEIGHT - total_element_height) // 2
         
         # Calculate metrics positioning in remaining space
-        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING) + 15  # Added 15px right margin
+        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING) + 20
         metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
         
         # Helper function to draw metric with matching color and horizontal alignment
