@@ -6,19 +6,27 @@ from PIL import Image, ImageDraw, ImageFont
 from dataclasses import dataclass
 from collections import deque
 
-@dataclass
-class MetricStats:
-    current: float
-    min: float
-    max: float
-    avg: float
-
 @dataclass 
 class NetworkStats:
-    ping: MetricStats
-    jitter: MetricStats
-    packet_loss: MetricStats
     timestamp: float
+    ping_history: deque
+    jitter_history: deque
+    packet_loss_history: deque
+    
+    @property
+    def ping(self) -> float:
+        """Current ping"""
+        return self.ping_history[-1] if self.ping_history else 0
+        
+    @property
+    def jitter(self) -> float:
+        """Current jitter"""
+        return self.jitter_history[-1] if self.jitter_history else 0
+        
+    @property
+    def packet_loss(self) -> float:
+        """Current packet loss"""
+        return self.packet_loss_history[-1] if self.packet_loss_history else 0
 
 class NetworkMonitor:
     def __init__(self, target_host: str = "1.1.1.1", history_length: int = 600):
@@ -27,82 +35,47 @@ class NetworkMonitor:
         self.jitter_history = deque(maxlen=history_length)
         self.packet_loss_history = deque(maxlen=history_length)
         
-    def update_history(self, ping: float, jitter: float, packet_loss: float):
-        """Update history and calculate statistics for all metrics"""
-        if ping > 0:
-            self.ping_history.append(ping)
-        if jitter >= 0:
-            self.jitter_history.append(jitter)
-        self.packet_loss_history.append(packet_loss)
-        
-        # Calculate stats for ping
-        ping_stats = (
-            min(self.ping_history) if self.ping_history else 0,
-            max(self.ping_history) if self.ping_history else 0,
-            statistics.mean(self.ping_history) if self.ping_history else 0
-        )
-        
-        # Calculate stats for jitter
-        jitter_stats = (
-            min(self.jitter_history) if self.jitter_history else 0,
-            max(self.jitter_history) if self.jitter_history else 0,
-            statistics.mean(self.jitter_history) if self.jitter_history else 0
-        )
-        
-        # Calculate stats for packet loss
-        loss_stats = (
-            min(self.packet_loss_history) if self.packet_loss_history else 0,
-            max(self.packet_loss_history) if self.packet_loss_history else 0,
-            statistics.mean(self.packet_loss_history) if self.packet_loss_history else 0
-        )
-
-        return ping_stats, jitter_stats, loss_stats
-        
     def get_stats(self, count=3, ping_interval=0.25) -> NetworkStats:
         """Execute ping command and return network statistics"""
         try:
             cmd = ['ping', '-c', str(count), '-i', str(ping_interval), self.target_host]
             result = subprocess.run(cmd, capture_output=True, text=True)
             
-            # Initialize variables
             times = []
             packets_received = 0
             
-            # Parse the ping output
             for line in result.stdout.splitlines():
                 if 'time=' in line:
                     time_str = line.split('time=')[1].split()[0]
                     times.append(float(time_str))
                     packets_received += 1
             
-            # Calculate current ping and jitter
-            if times:
-                avg_ping = statistics.mean(times)
-                jitter = statistics.stdev(times) if len(times) > 1 else 0
-            else:
-                avg_ping = 0
-                jitter = 0
-
-            # Calculate packet loss percentage
+            # Calculate values
+            avg_ping = statistics.mean(times) if times else 0
+            jitter = statistics.stdev(times) if len(times) > 1 else 0
             packet_loss = ((count - packets_received) / count) * 100
             
-            # Update history and get historical stats
-            ping_stats, jitter_stats, loss_stats = self.update_history(avg_ping, jitter, packet_loss)
+            # Update histories
+            if avg_ping > 0:
+                self.ping_history.append(avg_ping)
+            if jitter >= 0:
+                self.jitter_history.append(jitter)
+            self.packet_loss_history.append(packet_loss)
             
             return NetworkStats(
-                ping=MetricStats(current=avg_ping, min=ping_stats[0], max=ping_stats[1], avg=ping_stats[2]),
-                jitter=MetricStats(current=jitter, min=jitter_stats[0], max=jitter_stats[1], avg=jitter_stats[2]),
-                packet_loss=MetricStats(current=packet_loss, min=loss_stats[0], max=loss_stats[1], avg=loss_stats[2]),
-                timestamp=time.time()
+                timestamp=time.time(),
+                ping_history=self.ping_history,
+                jitter_history=self.jitter_history,
+                packet_loss_history=self.packet_loss_history
             )
             
         except Exception as e:
             print(f"Error during ping: {e}")
             return NetworkStats(
-                ping=MetricStats(current=0, min=0, max=0, avg=0),
-                jitter=MetricStats(current=0, min=0, max=0, avg=0),
-                packet_loss=MetricStats(current=0, min=0, max=0, avg=0),
-                timestamp=time.time()
+                timestamp=time.time(),
+                ping_history=self.ping_history,
+                jitter_history=self.jitter_history,
+                packet_loss_history=self.packet_loss_history
             )
 
 class Display:
@@ -202,9 +175,9 @@ class Display:
         
         # Calculate current state penalty
         current_penalty = 0
-        if stats.ping.current > 100: current_penalty += 40
-        if stats.jitter.current > 20: current_penalty += 30
-        if stats.packet_loss.current > 0: current_penalty += 30
+        if stats.ping > 100: current_penalty += 40
+        if stats.jitter > 20: current_penalty += 30
+        if stats.packet_loss > 0: current_penalty += 30
         
         # Blend current and historical scores
         final_score = (current_score * history_impact) + ((100 - current_penalty) * current_impact)
@@ -358,7 +331,7 @@ class Display:
             print("=== Network Monitor ===")
             print(f"Health: {health_state.upper()}")
             print(f"Current: {round(stats.ping)} ms")
-            print(f"Min/Max/Avg: {round(stats.min_ping)}/{round(stats.max_ping)}/{round(stats.avg_ping)} ms")
+            print(f"Avg: {round(statistics.mean(stats.ping_history))} ms")
             print("-" * 30)
         else:
             # Update physical display
