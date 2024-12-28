@@ -135,7 +135,7 @@ class Display:
         # Load heart image
         try:
             self.heart_image = Image.open('assets/heart.png').convert('RGBA')
-            self.heart_size = 32  # Size to display hearts
+            self.heart_size = 26  # Size to display hearts
             self.heart_image = self.heart_image.resize((self.heart_size, self.heart_size))
         except Exception as e:
             print(f"Error loading heart image: {e}")
@@ -277,7 +277,7 @@ class Display:
         
         # Draw health bars on the left with full height and spacing
         bar_height = self.HEIGHT - 40
-        bar_y = 20
+        bar_y = 0
         bar_width = 8
         bar_spacing = 4
         
