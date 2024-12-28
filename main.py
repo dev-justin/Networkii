@@ -294,71 +294,52 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         face = self.face_images[health_state]
         
-        # Define spacing constant
+        # Define spacing constants
         HEART_SPACING = 10
+        METRIC_SPACING = 60  # Horizontal spacing between metrics
         
-        # Calculate total height of face + hearts + spacing
-        total_element_height = self.face_size + self.heart_size + HEART_SPACING
+        # Calculate total height of all elements (metrics + face + hearts)
+        metrics_height = 40  # Height needed for metrics
+        total_element_height = metrics_height + self.face_size + self.heart_size + HEART_SPACING
         
-        # Calculate starting Y position to center both elements
+        # Calculate starting Y position to center everything
         start_y = (self.HEIGHT - total_element_height) // 2
         
-        # Set positions for face and hearts
-        face_x = (self.WIDTH - self.face_size) // 2
-        face_y = start_y
-        
-        # Draw health bars on the left with full height and spacing
-        bar_height = self.HEIGHT  # Use full height
-        bar_y = 0  # Start from top
-        bar_width = 12  # Wider bars
-        bar_spacing = 6  # Slightly more spacing for wider bars
-        
-        # Calculate total width of bars including spacing
-        start_x = 15  # Slightly more left margin
-        
-        # Calculate health percentages using NetworkMonitor's history
-        ping_health = self.calculate_bar_height(
-            self.network_monitor.ping_history, 30)
-        jitter_health = self.calculate_bar_height(
-            self.network_monitor.jitter_history, 5)
-        loss_health = self.calculate_bar_height(
-            self.network_monitor.packet_loss_history, 1)
-        
-        # Draw the three bars with spacing
-        self.draw_health_bar(start_x, bar_y, bar_width, bar_height, ping_health, 'ping')
-        self.draw_health_bar(start_x + bar_width + bar_spacing, bar_y, bar_width, bar_height, jitter_health, 'jitter')
-        self.draw_health_bar(start_x + (bar_width + bar_spacing) * 2, bar_y, bar_width, bar_height, loss_health, 'packet_loss')
-        
-        # Helper function to draw metric with matching color and right alignment
-        def draw_metric(y, label, value, metric_type):
+        # Helper function to draw metric with matching color and horizontal alignment
+        def draw_metric(x, y, label, value, metric_type):
             color = self.get_outline_color(metric_type)
-            # Draw label
-            self.draw.text((self.WIDTH - 20, y), label, font=self.tiny_font, fill=color, anchor="rt")
-            # Draw value right-aligned
+            # Draw label centered above value
+            label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
+            label_width = label_bbox[2] - label_bbox[0]
+            self.draw.text((x + (40 - label_width) // 2, y), label, font=self.tiny_font, fill=color)
+            # Draw value centered below label
             value_text = str(round(value))
-            self.draw.text((self.WIDTH - 20, y + 12), value_text, font=self.number_font, fill=color, anchor="rt")
+            value_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
+            value_width = value_bbox[2] - value_bbox[0]
+            self.draw.text((x + (40 - value_width) // 2, y + 12), value_text, font=self.number_font, fill=color)
 
-        # Draw current stats on right side, evenly spaced vertically
-        total_metrics = 3
-        spacing = self.HEIGHT // (total_metrics + 2)  # Divide height into 5 parts for 3 metrics + top/bottom spacing
+        # Calculate metrics positioning
+        metrics_total_width = (3 * 40) + (2 * METRIC_SPACING)  # 3 metrics of 40px width each + spacing
+        metrics_start_x = (self.WIDTH - metrics_total_width) // 2
         
-        # Draw metrics evenly spaced (starting at 1/5, ending at 4/5)
-        draw_metric(spacing, "PING", stats.ping, 'ping')
-        draw_metric(spacing * 2, "JITTER", stats.jitter, 'jitter')
-        draw_metric(spacing * 3, "LOSS", stats.packet_loss, 'packet_loss')
+        # Draw metrics horizontally above face
+        draw_metric(metrics_start_x, start_y, "PING", stats.ping, 'ping')
+        draw_metric(metrics_start_x + 40 + METRIC_SPACING, start_y, "JITTER", stats.jitter, 'jitter')
+        draw_metric(metrics_start_x + (40 + METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss, 'packet_loss')
+        
+        # Set positions for face
+        face_x = (self.WIDTH - self.face_size) // 2
+        face_y = start_y + metrics_height  # Place face below metrics
         
         # Draw the face
         self.image.paste(face, (face_x, face_y), face)
         
         # Calculate and draw hearts below face
-        heart_spacing = 7  # Space between hearts
+        heart_spacing = 7
         hearts_total_width = (5 * self.heart_size) + (4 * heart_spacing)
-        
-        # Calculate hearts_x to align with face center
         face_center_x = face_x + (self.face_size // 2)
         hearts_x = face_center_x - (hearts_total_width // 2)
-        
-        hearts_y = face_y + self.face_size + HEART_SPACING 
+        hearts_y = face_y + self.face_size + HEART_SPACING
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
         if self.test_mode:
