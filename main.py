@@ -94,8 +94,12 @@ class Display:
     HEART_SIZE = 32        # Size of each heart
     
     # Metric dimensions
-    METRIC_SPACING = 60
+    METRIC_WIDTH = 60       # Width of each metric display
+    METRIC_SPACING = 40     # Space between metrics
     METRICS_HEIGHT = 40
+    
+    # History settings
+    RECENT_HISTORY_LENGTH = 20  # Number of samples to use for recent history
 
     def __init__(self, test_mode: bool = False, network_monitor=None):
         self.test_mode = test_mode
@@ -157,11 +161,11 @@ class Display:
             draw = ImageDraw.Draw(self.heart_image)
             draw.text((self.HEART_SIZE//2, self.HEART_SIZE//2), "♥", fill=(255, 0, 0, 255))
 
-    def calculate_network_health(self, stats: NetworkStats, history_length: int = 20) -> tuple[int, str]:
+    def calculate_network_health(self, stats: NetworkStats) -> tuple[int, str]:
         """Calculate network health based on recent history"""
-        ping_history = list(stats.ping_history)[-history_length:]
-        jitter_history = list(stats.jitter_history)[-history_length:]
-        loss_history = list(stats.packet_loss_history)[-history_length:]
+        ping_history = list(stats.ping_history)[-self.RECENT_HISTORY_LENGTH:]
+        jitter_history = list(stats.jitter_history)[-self.RECENT_HISTORY_LENGTH:]
+        loss_history = list(stats.packet_loss_history)[-self.RECENT_HISTORY_LENGTH:]
         
         # Calculate historical scores
         if ping_history:
@@ -282,7 +286,7 @@ class Display:
         remaining_width = self.WIDTH - bars_total_width
         
         # Calculate metrics positioning in remaining space
-        metrics_total_width = (3 * 40) + (2 * self.METRIC_SPACING)
+        metrics_total_width = (3 * self.METRIC_WIDTH) + (2 * self.METRIC_SPACING)
         metrics_start_x = bars_total_width + (remaining_width - metrics_total_width) // 2
         
         # Load fonts with smaller sizes
@@ -313,8 +317,8 @@ class Display:
             
             # Calculate stats
             current = history[-1]
-            min_val = min(list(history)[-20:])  # Last 20 values
-            max_val = max(list(history)[-20:])
+            min_val = min(list(history)[-self.RECENT_HISTORY_LENGTH:])
+            max_val = max(list(history)[-self.RECENT_HISTORY_LENGTH:])
             
             # Draw label centered
             label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
@@ -339,8 +343,8 @@ class Display:
 
         # Draw metrics horizontally above face
         draw_metric(metrics_start_x, start_y, "PING", stats.ping_history, 'ping')
-        draw_metric(metrics_start_x + 60 + self.METRIC_SPACING, start_y, "JITTER", stats.jitter_history, 'jitter')
-        draw_metric(metrics_start_x + (60 + self.METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss_history, 'packet_loss')
+        draw_metric(metrics_start_x + self.METRIC_WIDTH + self.METRIC_SPACING, start_y, "JITTER", stats.jitter_history, 'jitter')
+        draw_metric(metrics_start_x + (self.METRIC_WIDTH + self.METRIC_SPACING) * 2, start_y, "LOSS", stats.packet_loss_history, 'packet_loss')
         
         # Set positions for face centered in remaining space
         face_x = bars_total_width + (remaining_width - self.face_size) // 2
