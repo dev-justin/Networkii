@@ -7,27 +7,25 @@ from dataclasses import dataclass
 from collections import deque
 
 @dataclass
+class MetricStats:
+    current: float
+    min: float
+    max: float
+    avg: float
+
+@dataclass 
 class NetworkStats:
-    ping: float
-    jitter: float
-    packet_loss: float
-    min_ping: float
-    max_ping: float
-    avg_ping: float
-    min_jitter: float
-    max_jitter: float
-    avg_jitter: float
-    min_loss: float
-    max_loss: float
-    avg_loss: float
+    ping: MetricStats
+    jitter: MetricStats
+    packet_loss: MetricStats
     timestamp: float
 
 class NetworkMonitor:
-    def __init__(self, target_host: str = "1.1.1.1"):
+    def __init__(self, target_host: str = "1.1.1.1", history_length: int = 600):
         self.target_host = target_host
-        self.ping_history = deque(maxlen=500)
-        self.jitter_history = deque(maxlen=500)
-        self.packet_loss_history = deque(maxlen=500)
+        self.ping_history = deque(maxlen=history_length)
+        self.jitter_history = deque(maxlen=history_length)
+        self.packet_loss_history = deque(maxlen=history_length)
         
     def update_history(self, ping: float, jitter: float, packet_loss: float):
         """Update history and calculate statistics for all metrics"""
@@ -41,29 +39,29 @@ class NetworkMonitor:
         ping_stats = (
             min(self.ping_history) if self.ping_history else 0,
             max(self.ping_history) if self.ping_history else 0,
-            sum(self.ping_history) / len(self.ping_history) if self.ping_history else 0
+            statistics.mean(self.ping_history) if self.ping_history else 0
         )
         
         # Calculate stats for jitter
         jitter_stats = (
             min(self.jitter_history) if self.jitter_history else 0,
             max(self.jitter_history) if self.jitter_history else 0,
-            sum(self.jitter_history) / len(self.jitter_history) if self.jitter_history else 0
+            statistics.mean(self.jitter_history) if self.jitter_history else 0
         )
         
         # Calculate stats for packet loss
         loss_stats = (
             min(self.packet_loss_history) if self.packet_loss_history else 0,
             max(self.packet_loss_history) if self.packet_loss_history else 0,
-            sum(self.packet_loss_history) / len(self.packet_loss_history) if self.packet_loss_history else 0
+            statistics.mean(self.packet_loss_history) if self.packet_loss_history else 0
         )
-        
+
         return ping_stats, jitter_stats, loss_stats
         
-    def get_stats(self, count=3) -> NetworkStats:
+    def get_stats(self, count=3, ping_interval=0.25) -> NetworkStats:
         """Execute ping command and return network statistics"""
         try:
-            cmd = ['ping', '-c', str(count), self.target_host]
+            cmd = ['ping', '-c', str(count), '-i', str(ping_interval), self.target_host]
             result = subprocess.run(cmd, capture_output=True, text=True)
             
             # Initialize variables
@@ -77,62 +75,54 @@ class NetworkMonitor:
                     times.append(float(time_str))
                     packets_received += 1
             
-            # Calculate packet loss percentage
-            packet_loss = ((count - packets_received) / count) * 100
-            
             # Calculate current ping and jitter
             if times:
-                avg_ping = sum(times) / len(times)
+                avg_ping = statistics.mean(times)
                 jitter = statistics.stdev(times) if len(times) > 1 else 0
             else:
                 avg_ping = 0
                 jitter = 0
+
+            # Calculate packet loss percentage
+            packet_loss = ((count - packets_received) / count) * 100
             
             # Update history and get historical stats
             ping_stats, jitter_stats, loss_stats = self.update_history(avg_ping, jitter, packet_loss)
             
             return NetworkStats(
-                ping=avg_ping,
-                jitter=jitter,
-                packet_loss=packet_loss,
-                min_ping=ping_stats[0],
-                max_ping=ping_stats[1],
-                avg_ping=ping_stats[2],
-                min_jitter=jitter_stats[0],
-                max_jitter=jitter_stats[1],
-                avg_jitter=jitter_stats[2],
-                min_loss=loss_stats[0],
-                max_loss=loss_stats[1],
-                avg_loss=loss_stats[2],
+                ping=MetricStats(current=avg_ping, min=ping_stats[0], max=ping_stats[1], avg=ping_stats[2]),
+                jitter=MetricStats(current=jitter, min=jitter_stats[0], max=jitter_stats[1], avg=jitter_stats[2]),
+                packet_loss=MetricStats(current=packet_loss, min=loss_stats[0], max=loss_stats[1], avg=loss_stats[2]),
                 timestamp=time.time()
             )
             
         except Exception as e:
             print(f"Error during ping: {e}")
             return NetworkStats(
-                ping=0, jitter=0, packet_loss=100,
-                min_ping=0, max_ping=0, avg_ping=0,
+                ping=MetricStats(current=0, min=0, max=0, avg=0),
+                jitter=MetricStats(current=0, min=0, max=0, avg=0),
+                packet_loss=MetricStats(current=0, min=0, max=0, avg=0),
                 timestamp=time.time()
             )
 
 class Display:
+
+    # Display dimensions
+    WIDTH = 320 
+    HEIGHT = 240
+
     def __init__(self, test_mode: bool = False, network_monitor=None):
         self.test_mode = test_mode
         self.network_monitor = network_monitor  # Store reference to NetworkMonitor
         
-        # Display dimensions
-        self.width = 320
-        self.height = 240
-        
         # Create initial black canvas
-        self.image = Image.new('RGB', (self.width, self.height), (0, 0, 0))
-        self.draw = ImageDraw.Draw(self.image)
+        self.initImage = Image.new('RGB', (self.WIDTH, self.HEIGHT), (0, 0, 0))
+        self.draw = ImageDraw.Draw(self.initImage)
         
         if not test_mode:
             try:
                 from displayhatmini import DisplayHATMini
-                self.disp = DisplayHATMini(self.image)  # Pass the image as buffer
-                # Rotate display 180 degrees
+                self.disp = DisplayHATMini(self.initImage)  # Pass the image as buffer
                 self.disp.st7789._rotation = 2  # 0=0°, 1=90°, 2=180°, 3=270°
                 
             except ImportError as e:
@@ -224,7 +214,7 @@ class Display:
         
         return score, state
 
-    def calculate_bar_height(self, values: deque, max_value: float, bad_threshold: float) -> float:
+    def calculate_bar_height(self, values: deque, bad_threshold: float) -> float:
         """Calculate health bar height based on historical values"""
         if not values:
             return 1.0
@@ -281,7 +271,7 @@ class Display:
                 # Draw filled heart
                 self.image.paste(self.heart_image, (heart_x, y), self.heart_image)
             else:
-                # Draw empty heart (could be a different image or just outline)
+                # Draw empty heart (could be a different image or just outline) || TODO: Add half heart image
                 heart_outline = self.heart_image.copy()
                 # Make it semi-transparent for empty state
                 heart_outline.putalpha(50)
@@ -319,11 +309,11 @@ class Display:
         
         # Calculate health percentages using NetworkMonitor's history
         ping_health = self.calculate_bar_height(
-            self.network_monitor.ping_history, 100, 50)
+            self.network_monitor.ping_history, 50)  # Bad ping > 50ms
         jitter_health = self.calculate_bar_height(
-            self.network_monitor.jitter_history, 20, 10)
+            self.network_monitor.jitter_history, 10)  # Bad jitter > 10ms
         loss_health = self.calculate_bar_height(
-            self.network_monitor.packet_loss_history, 5, 1)
+            self.network_monitor.packet_loss_history, 1)  # Bad loss > 1%
         
         # Draw the three bars with spacing
         self.draw_health_bar(start_x, bar_y, bar_width, bar_height, ping_health, 'ping')
@@ -374,18 +364,16 @@ class Display:
 def main():
     parser = argparse.ArgumentParser(description='Network Monitor')
     parser.add_argument('--test', action='store_true', help='Run in test mode (no physical display)')
-    parser.add_argument('--host', default='1.1.1.1', help='Target host to ping (default: 1.1.1.1)')
-    parser.add_argument('--interval', type=float, default=1.0, help='Update interval in seconds (default: 1.0)')
     args = parser.parse_args()
 
-    network_monitor = NetworkMonitor(target_host=args.host)
+    network_monitor = NetworkMonitor()
     display = Display(test_mode=args.test, network_monitor=network_monitor)  # Pass NetworkMonitor instance
 
     try:
         while True:
             stats = network_monitor.get_stats()
             display.update(stats)
-            time.sleep(args.interval)
+            time.sleep(1) # Sleep for 1 second
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
     except Exception as e:
