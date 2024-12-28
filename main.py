@@ -135,7 +135,7 @@ class Display:
         # Load heart image
         try:
             self.heart_image = Image.open('assets/heart.png').convert('RGBA')
-            self.heart_size = 20  # Size to display hearts
+            self.heart_size = 32  # Size to display hearts
             self.heart_image = self.heart_image.resize((self.heart_size, self.heart_size))
         except Exception as e:
             print(f"Error loading heart image: {e}")
@@ -320,9 +320,9 @@ class Display:
         self.image.paste(face, (face_x, face_y), face)
         
         # Calculate and draw hearts below face with proper spacing
-        hearts_total_width = (5 * self.heart_size) + (4 * 5)  # 5 hearts with 5px spacing
+        hearts_total_width = (5 * self.heart_size) + (4 * 7)  # 5 hearts with 5px spacing
         hearts_x = (self.WIDTH - hearts_total_width) // 2
-        hearts_y = face_y + self.face_size + 15  # 15px spacing between face and hearts
+        hearts_y = face_y + self.face_size + 30  # 15px spacing between face and hearts
         self.draw_hearts(hearts_x, hearts_y, health_score)
         
         if self.test_mode:
