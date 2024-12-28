@@ -136,7 +136,7 @@ class Display:
         # Load heart image
         try:
             self.heart_image = Image.open('assets/heart.png').convert('RGBA')
-            self.heart_size = 26  # Size to display hearts
+            self.heart_size = 30  # Size to display hearts
             self.heart_image = self.heart_image.resize((self.heart_size, self.heart_size))
         except Exception as e:
             print(f"Error loading heart image: {e}")
