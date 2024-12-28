@@ -110,7 +110,7 @@ class Display:
             self.font = ImageFont.load_default()
 
         # Network health indicators with PNG faces
-        self.face_size = 32  # Size of the face in pixels
+        self.face_size = 92  # Size of the face in pixels
         self.network_states = {
             'excellent': 'assets/faces/excellent.png',
             'good': 'assets/faces/good.png',
@@ -123,7 +123,8 @@ class Display:
         self.face_images = {}
         for state, png_path in self.network_states.items():
             try:
-                self.face_images[state] = Image.open(png_path).convert('RGBA')
+                image = Image.open(png_path).convert('RGBA')
+                self.face_images[state] = image.resize((self.face_size, self.face_size), Image.Resampling.LANCZOS)
             except Exception as e:
                 print(f"Error loading face {png_path}: {e}")
                 # Create a fallback image
