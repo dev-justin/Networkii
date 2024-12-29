@@ -4,4 +4,3 @@ displayhatmini
 netifaces
 numpy
 speedtest-cli
-RPi.GPIO
