@@ -1,5 +1,6 @@
 import time
 import statistics
+from collections import deque
 from PIL import Image, ImageDraw, ImageFont
 from displayhatmini import DisplayHATMini
 from ..models.network_stats import NetworkStats
