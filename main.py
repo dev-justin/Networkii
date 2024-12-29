@@ -522,7 +522,7 @@ class Display:
             current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
             current_width = current_bbox[2] - current_bbox[0]
             self.draw.text(
-                (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y),  # Position closer to label
+                (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y),  
                 current_text,
                 font=self.number_font,
                 fill=color
@@ -531,7 +531,7 @@ class Display:
             # Draw historical values with fade
             history_values = list(history)[-8:]  # Show last 8 values
             value_spacing = VALUE_WIDTH // 8
-            history_start_x = LABEL_WIDTH + 40  # Start historical values further right
+            history_start_x = LABEL_WIDTH + 10  # Start historical values further right
             
             for i, value in enumerate(reversed(history_values[:-1]), 1):
                 fade_level = 0.7 - (i * 0.08)
