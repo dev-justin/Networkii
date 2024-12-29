@@ -54,19 +54,23 @@ if [ ! -f ${BOOT_PATH}/cmdline.txt.bak ]; then
 fi
 
 # Enable dwc2 overlay in /boot/firmware/config.txt
-if ! (grep -A1 "^\[all\]" ${BOOT_PATH}/config.txt | grep -q "dtoverlay=dwc2") && \
-   ! (grep -q "^dtoverlay=dwc2" ${BOOT_PATH}/config.txt); then
+if ! grep -q "^\[all\].*dtoverlay=dwc2" ${BOOT_PATH}/config.txt; then
     # Check if [all] section exists
     if grep -q "^\[all\]" ${BOOT_PATH}/config.txt; then
-        # Insert after [all] section
-        sudo sed -i '/^\[all\]/a dtoverlay=dwc2' ${BOOT_PATH}/config.txt
+        # Insert after [all] section if dtoverlay=dwc2 not already there
+        if ! grep -A1 "^\[all\]" ${BOOT_PATH}/config.txt | grep -q "dtoverlay=dwc2"; then
+            sudo sed -i '/^\[all\]/a dtoverlay=dwc2' ${BOOT_PATH}/config.txt
+            print_success "Added 'dtoverlay=dwc2' to ${BOOT_PATH}/config.txt under [all] section"
+        else
+            print_info "'dtoverlay=dwc2' already present under [all] section in ${BOOT_PATH}/config.txt"
+        fi
     else
         # Add [all] section with dtoverlay
         echo -e "\n[all]\ndtoverlay=dwc2" | sudo tee -a ${BOOT_PATH}/config.txt
+        print_success "Added '[all]' section with 'dtoverlay=dwc2' to ${BOOT_PATH}/config.txt"
     fi
-    print_success "Added 'dtoverlay=dwc2' to ${BOOT_PATH}/config.txt under [all] section"
 else
-    print_info "'dtoverlay=dwc2' already present in ${BOOT_PATH}/config.txt"
+    print_info "'dtoverlay=dwc2' already present under [all] section in ${BOOT_PATH}/config.txt"
 fi
 
 # Add dwc2,g_ether modules load to /boot/firmware/cmdline.txt
