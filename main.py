@@ -4,7 +4,6 @@ import statistics
 from PIL import Image, ImageDraw, ImageFont
 from dataclasses import dataclass
 from collections import deque
-import socket
 import netifaces
 from displayhatmini import DisplayHATMini
 
