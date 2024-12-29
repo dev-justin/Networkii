@@ -3,3 +3,4 @@ spidev
 displayhatmini
 netifaces
 numpy
+speedtest-cli

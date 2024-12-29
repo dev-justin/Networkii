@@ -7,6 +7,7 @@ from collections import deque
 import netifaces
 from displayhatmini import DisplayHATMini
 import argparse
+import speedtest
 
 @dataclass 
 class NetworkStats:
@@ -44,17 +45,41 @@ def get_preferred_interface():
     return 'wlan0'
 
 class NetworkMonitor:
-    def __init__(self, target_host: str = "1.1.1.1", history_length: int = 300):
+    def __init__(self, target_host: str = "1.1.1.1", history_length: int = 300, speed_test_interval: int = 30):
         self.target_host = target_host
         self.interface = get_preferred_interface()
         self.ping_history = deque(maxlen=history_length)
         self.jitter_history = deque(maxlen=history_length)
         self.packet_loss_history = deque(maxlen=history_length)
+        self.speed_test_interval = speed_test_interval * 60  # Convert minutes to seconds
+        self.last_speed_test = 0
+        self.download_speed = 0
+        self.upload_speed = 0
 
         print(f"Using interface: {self.interface}, target host: {self.target_host}")
     
+    def run_speed_test(self):
+        """Run speedtest and update speeds"""
+        try:
+            st = speedtest.Speedtest()
+            st.get_best_server()
+            
+            # Get download speed in Mbps
+            self.download_speed = st.download() / 1_000_000
+            # Get upload speed in Mbps
+            self.upload_speed = st.upload() / 1_000_000
+            
+            self.last_speed_test = time.time()
+            print(f"Speed test completed - Down: {self.download_speed:.1f} Mbps, Up: {self.upload_speed:.1f} Mbps")
+        except Exception as e:
+            print(f"Speed test failed: {e}")
+    
     def get_stats(self, count=5, ping_interval=0.2) -> NetworkStats:
         """Execute ping command and return network statistics"""
+        # Check if it's time for a speed test
+        if time.time() - self.last_speed_test > self.speed_test_interval:
+            self.run_speed_test()
+            
         try:
             cmd = ['ping', self.target_host, '-c', str(count), '-i', str(ping_interval), '-I', self.interface]
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -508,8 +533,8 @@ class Display:
         TOP_MARGIN = 10
         ROW_SPACING = 2   
         LABEL_WIDTH = 80
-        CURRENT_VALUE_SPACING = 8  # Space between label and current value
-        VALUE_WIDTH = self.WIDTH - LABEL_WIDTH - 20  # 20px right margin
+        CURRENT_VALUE_SPACING = 8
+        VALUE_WIDTH = self.WIDTH - LABEL_WIDTH - 20
         ROW_HEIGHT = 30
         
         # Helper function to draw a metric row
@@ -549,7 +574,7 @@ class Display:
         
         # Draw each metric
         draw_metric_row(
-            TOP_MARGIN,  # First row starts at top margin
+            TOP_MARGIN,
             "PING",
             stats.ping,
             stats.ping_history,
@@ -557,7 +582,7 @@ class Display:
         )
         
         draw_metric_row(
-            TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,  # Second row
+            TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,
             "JITTER",
             stats.jitter,
             stats.jitter_history,
@@ -565,12 +590,38 @@ class Display:
         )
         
         draw_metric_row(
-            TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,  # Third row
+            TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,
             "LOSS",
             stats.packet_loss,
             stats.packet_loss_history,
             self.get_outline_color('packet_loss')
         )
+        
+        # Draw speed test results
+        speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 20
+        if self.network_monitor.last_speed_test > 0:
+            time_since_test = (time.time() - self.network_monitor.last_speed_test) / 60  # Convert to minutes
+            
+            # Draw download speed
+            down_text = f"↓ {self.network_monitor.download_speed:.1f} Mbps"
+            self.draw.text((10, speed_y), down_text, font=self.message_font, fill=(0, 255, 127))
+            
+            # Draw upload speed
+            up_text = f"↑ {self.network_monitor.upload_speed:.1f} Mbps"
+            self.draw.text((10, speed_y + 30), up_text, font=self.message_font, fill=(255, 99, 71))
+            
+            # Draw last test time
+            time_text = f"Updated {int(time_since_test)}m ago"
+            time_bbox = self.draw.textbbox((0, 0), time_text, font=self.tiny_font)
+            time_width = time_bbox[2] - time_bbox[0]
+            self.draw.text(
+                (self.WIDTH - time_width - 10, speed_y + 15),
+                time_text,
+                font=self.tiny_font,
+                fill=(147, 112, 219)
+            )
+        else:
+            self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=(255, 255, 255))
         
         # Update display
         self.disp.st7789.set_window()
