@@ -6,11 +6,11 @@ from displayhatmini import DisplayHATMini
 from ..models.network_stats import NetworkStats
 from ..utils.metrics import NetworkMetrics
 from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE, 
-                     HEART_SPACING, HEART_GAP, NETWORK_STATES,
+                     HEART_SPACING, HEART_GAP, HEALTH_THRESHOLDS,
                      FONT_LARGE, FONT_MEDIUM, FONT_SMALL, FONT_MESSAGE, FONT_TITLE,
                      RECENT_HISTORY_LENGTH, METRIC_WIDTH, METRIC_SPACING, 
                      METRIC_RIGHT_MARGIN, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
-                     BAR_WIDTH, BAR_SPACING, BAR_START_X, HEALTH_THRESHOLDS, COLORS)
+                     BAR_WIDTH, BAR_SPACING, BAR_START_X, COLORS)
 
 class Display:
     def __init__(self, network_monitor=None):
@@ -38,7 +38,7 @@ class Display:
 
         # Load face images
         self.face_images = {}
-        for state, info in NETWORK_STATES.items():
+        for state, info in HEALTH_THRESHOLDS.items():
             try:
                 image = Image.open(info['face']).convert('RGBA')
                 self.face_images[state] = image.resize((FACE_SIZE, FACE_SIZE), Image.Resampling.LANCZOS)
@@ -80,7 +80,7 @@ class Display:
         final_score = ping_score + jitter_score + loss_score
         final_score = max(0, min(100, final_score))
         
-        state = next((state for state, info in NETWORK_STATES.items() if final_score >= info['threshold']), 'critical')
+        state = next((state for state, info in HEALTH_THRESHOLDS.items() if final_score >= info['threshold']), 'critical')
         
         return int(final_score), state
 
@@ -233,7 +233,7 @@ class Display:
         hearts_y = face_y + FACE_SIZE + HEART_SPACING
         
         health_score, health_state = self.calculate_network_health(stats)
-        message = NETWORK_STATES[health_state]['message']
+        message = HEALTH_THRESHOLDS[health_state]['message']
         message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = face_x + (FACE_SIZE - message_width) // 2
@@ -283,7 +283,7 @@ class Display:
         face_y = start_y + SCORE_HEIGHT + SPACING
         self.image.paste(face, (face_x, face_y), face)
         
-        message = NETWORK_STATES[health_state]['message']
+        message = HEALTH_THRESHOLDS[health_state]['message']
         message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
