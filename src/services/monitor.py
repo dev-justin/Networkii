@@ -8,16 +8,14 @@ from ..utils.interface import get_preferred_interface, get_interface_ip
 from ..config import DEFAULT_TARGET_HOST, DEFAULT_HISTORY_LENGTH, DEFAULT_SPEED_TEST_INTERVAL
 
 class NetworkMonitor:
-    def __init__(self, target_host: str = DEFAULT_TARGET_HOST, 
-                 history_length: int = DEFAULT_HISTORY_LENGTH, 
-                 speed_test_interval: int = DEFAULT_SPEED_TEST_INTERVAL):
-        self.target_host = target_host
+    def __init__(self):
+        self.target_host = DEFAULT_TARGET_HOST
         self.interface = get_preferred_interface()
         self.interface_ip = get_interface_ip(self.interface)
-        self.ping_history = deque(maxlen=history_length)
-        self.jitter_history = deque(maxlen=history_length)
-        self.packet_loss_history = deque(maxlen=history_length)
-        self.speed_test_interval = speed_test_interval * 60  # Convert minutes to seconds
+        self.ping_history = deque(maxlen=DEFAULT_HISTORY_LENGTH)
+        self.jitter_history = deque(maxlen=DEFAULT_HISTORY_LENGTH)
+        self.packet_loss_history = deque(maxlen=DEFAULT_HISTORY_LENGTH)
+        self.speed_test_interval = DEFAULT_SPEED_TEST_INTERVAL * 60  # Convert minutes to seconds
         self.last_speed_test = 0
         self.download_speed = 0
         self.upload_speed = 0

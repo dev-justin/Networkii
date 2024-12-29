@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from ..config import METRIC_THRESHOLDS
 
 @dataclass
 class MetricThresholds:
@@ -12,38 +13,19 @@ class MetricThresholds:
 class NetworkMetrics:
     """Centralized network metrics configuration"""
     
-    PING = MetricThresholds(
-        excellent=20,
-        good=30,
-        fair=60,
-        poor=100,
-        weight=0.4
-    )
-    
-    JITTER = MetricThresholds(
-        excellent=2,
-        good=5,
-        fair=10,
-        poor=20,
-        weight=0.4
-    )
-    
-    PACKET_LOSS = MetricThresholds(
-        excellent=0,
-        good=0.1,
-        fair=0.5,
-        poor=1,
-        weight=0.2
-    )
+    PING = MetricThresholds(**METRIC_THRESHOLDS['ping'])
+    JITTER = MetricThresholds(**METRIC_THRESHOLDS['jitter'])
+    PACKET_LOSS = MetricThresholds(**METRIC_THRESHOLDS['packet_loss'])
     
     @staticmethod
     def get_health_threshold(metric_type: str) -> float:
+        thresholds = METRIC_THRESHOLDS[metric_type]
         if metric_type == 'ping':
-            return NetworkMetrics.PING.good
+            return thresholds['good']
         elif metric_type == 'jitter':
-            return NetworkMetrics.JITTER.fair
+            return thresholds['fair']
         else:  # packet loss
-            return NetworkMetrics.PACKET_LOSS.excellent
+            return thresholds['excellent']
     
     @staticmethod
     def calculate_metric_score(value: float, thresholds: MetricThresholds) -> float:
