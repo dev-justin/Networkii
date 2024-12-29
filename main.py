@@ -8,6 +8,17 @@ import netifaces
 from displayhatmini import DisplayHATMini
 import argparse
 import speedtest
+import RPi.GPIO as GPIO
+
+BUTTON_B = 24  # Back button
+BUTTON_Y = 16  # Forward button
+TOTAL_SCREENS = 3
+
+def setup_buttons():
+    """Setup GPIO for button input"""
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(BUTTON_B, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BUTTON_Y, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 @dataclass 
 class NetworkStats:
@@ -689,45 +700,45 @@ class NetworkMetrics:
             return 0
 
 def main():
-    # Update argument parser
+    # Update argument parser to store current screen
     parser = argparse.ArgumentParser(description='Network Monitor')
     parser.add_argument('--screen', type=int, choices=[1, 2, 3], default=1,
                        help='Screen to display (1=metrics, 2=status, 3=detailed)')
     args = parser.parse_args()
-
-    print("\nNetwork Interfaces:")
     
-    # Print all network interfaces
-    for interface in netifaces.interfaces():
-        addrs = netifaces.ifaddresses(interface)
-        print(f"\nInterface: {interface}")
-        
-        # Print IPv4 addresses
-        if netifaces.AF_INET in addrs:
-            for addr in addrs[netifaces.AF_INET]:
-                print(f"  IPv4: {addr['addr']}")
-                if 'netmask' in addr:
-                    print(f"  Netmask: {addr['netmask']}")
-                if 'broadcast' in addr:
-                    print(f"  Broadcast: {addr['broadcast']}")
-
-    network_monitor = NetworkMonitor()
-    display = Display(network_monitor=network_monitor)
-
+    # Setup GPIO buttons
+    setup_buttons()
+    current_screen = args.screen
+    
     try:
+        # Print network interfaces...
+        network_monitor = NetworkMonitor()
+        display = Display(network_monitor=network_monitor)
+        
         while True:
+            # Check buttons
+            if not GPIO.input(BUTTON_B):  # Button is pressed (active low)
+                current_screen = max(1, current_screen - 1)
+                time.sleep(0.2)  # Debounce
+            elif not GPIO.input(BUTTON_Y):
+                current_screen = min(TOTAL_SCREENS, current_screen + 1)
+                time.sleep(0.2)  # Debounce
+            
             stats = network_monitor.get_stats()
-            if args.screen == 1:
+            if current_screen == 1:
                 display.show_home_screen(stats)
-            elif args.screen == 2:
+            elif current_screen == 2:
                 display.show_basic_screen(stats)
             else:
                 display.show_detailed_screen(stats)
             time.sleep(2)
+            
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
     except Exception as e:
         print(f"Error: {e}")
+    finally:
+        GPIO.cleanup()  # Clean up GPIO on exit
 
 if __name__ == "__main__":
     main()
