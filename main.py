@@ -77,6 +77,7 @@ class NetworkMonitor:
             if not self.interface_ip:
                 raise Exception("No valid IP address for interface")
                 
+            print(f"Using interface IP for speedtest: {self.interface_ip}")
             st = speedtest.Speedtest(source_address=self.interface_ip)
             st.get_best_server()
             
