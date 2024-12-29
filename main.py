@@ -505,10 +505,11 @@ class Display:
         self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
         # Define spacing and layout
-        SPACING = 15
+        TOP_MARGIN = 15
+        ROW_SPACING = 10  # Reduced spacing between rows
         LABEL_WIDTH = 80
         VALUE_WIDTH = self.WIDTH - LABEL_WIDTH - 20  # 20px right margin
-        ROW_HEIGHT = self.HEIGHT // 3
+        ROW_HEIGHT = 30  # Fixed height for each row instead of dividing screen
         
         # Helper function to draw a metric row
         def draw_metric_row(y: int, label: str, current_value: float, history: deque, color: tuple):
@@ -544,7 +545,7 @@ class Display:
         
         # Draw each metric
         draw_metric_row(
-            ROW_HEIGHT * 0 + SPACING,
+            TOP_MARGIN,  # First row starts at top margin
             "Ping:",
             stats.ping,
             stats.ping_history,
@@ -552,7 +553,7 @@ class Display:
         )
         
         draw_metric_row(
-            ROW_HEIGHT * 1 + SPACING,
+            TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,  # Second row
             "Jitter:",
             stats.jitter,
             stats.jitter_history,
@@ -560,7 +561,7 @@ class Display:
         )
         
         draw_metric_row(
-            ROW_HEIGHT * 2 + SPACING,
+            TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,  # Third row
             "Loss:",
             stats.packet_loss,
             stats.packet_loss_history,
