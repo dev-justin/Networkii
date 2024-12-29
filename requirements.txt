@@ -4,4 +4,4 @@ displayhatmini
 netifaces
 numpy
 speedtest-cli
-rpi-lgpio
+rpi-lgpio # for button support
