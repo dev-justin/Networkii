@@ -78,11 +78,24 @@ class NetworkMonitor:
                 raise Exception("No valid IP address for interface")
                 
             print(f"Using interface IP for speedtest: {self.interface_ip}")
-            st = speedtest.Speedtest(source_address=self.interface_ip)
+            
+            # Create speedtest instance with more configuration
+            st = speedtest.Speedtest(
+                source_address=self.interface_ip,
+                secure=True  # Use HTTPS
+            )
+            
+            # Configure client details
+            st.get_config()
+            
+            print("Finding best server...")
             st.get_best_server()
             
+            print("Starting download test...")
             # Get download speed in Mbps
             self.download_speed = st.download() / 1_000_000
+            
+            print("Starting upload test...")
             # Get upload speed in Mbps
             self.upload_speed = st.upload() / 1_000_000
             
@@ -90,6 +103,7 @@ class NetworkMonitor:
             print(f"Speed test completed - Down: {self.download_speed:.1f} Mbps, Up: {self.upload_speed:.1f} Mbps")
         except Exception as e:
             print(f"Speed test failed: {e}")
+            print("Try running 'speedtest-cli' from command line to verify connectivity")
     
     def get_stats(self, count=5, ping_interval=0.2) -> NetworkStats:
         """Execute ping command and return network statistics"""
