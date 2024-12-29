@@ -457,13 +457,21 @@ class Display:
                 fill=faded_color
             )
 
-    def show_status_screen(self, stats: NetworkStats):
+    def show_basic_screen(self, stats: NetworkStats):
         """Show the status screen with face and network state"""
         # Clear the image
         self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
         # Calculate network health and get state
         health_score, health_state = self.calculate_network_health(stats)
+        
+        # Draw the score above the face
+        score_text = f"Health: {health_score}%"
+        score_bbox = self.draw.textbbox((0, 0), score_text, font=self.message_font)
+        score_width = score_bbox[2] - score_bbox[0]
+        score_x = (self.WIDTH - score_width) // 2
+        score_y = (self.HEIGHT - self.FACE_SIZE) // 2 - 50  # Higher up than face
+        self.draw.text((score_x, score_y), score_text, font=self.message_font, fill=(255, 255, 255))
         
         # Draw the face centered
         face = self.face_images[health_state]
@@ -580,7 +588,7 @@ def main():
             if args.screen == 1:
                 display.show_home_screen(stats)
             else:
-                display.show_status_screen(stats)
+                display.show_basic_screen(stats)
             time.sleep(2)
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
