@@ -505,10 +505,10 @@ class Display:
         self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
         # Define spacing and layout
-        TOP_MARGIN = 15
-        ROW_SPACING = 6   
+        TOP_MARGIN = 10
+        ROW_SPACING = 2   
         LABEL_WIDTH = 80
-        CURRENT_VALUE_SPACING = 10  # Space between label and current value
+        CURRENT_VALUE_SPACING = 8  # Space between label and current value
         VALUE_WIDTH = self.WIDTH - LABEL_WIDTH - 20  # 20px right margin
         ROW_HEIGHT = 30
         
