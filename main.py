@@ -531,7 +531,7 @@ class Display:
             # Draw historical values with fade
             history_values = list(history)[-8:]  # Show last 8 values
             value_spacing = VALUE_WIDTH // 8
-            history_start_x = LABEL_WIDTH + 10  # Start historical values further right
+            history_start_x = LABEL_WIDTH
             
             for i, value in enumerate(reversed(history_values[:-1]), 1):
                 fade_level = 0.7 - (i * 0.08)
