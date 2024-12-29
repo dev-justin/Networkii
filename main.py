@@ -30,17 +30,32 @@ class NetworkStats:
         """Current packet loss"""
         return self.packet_loss_history[-1] if self.packet_loss_history else 0
 
+def get_preferred_interface():
+    """Get the preferred network interface (usb0 with ICS standard IPv4 if available, otherwise wlan0)"""
+    interfaces = netifaces.interfaces()
+    
+    if 'usb0' in interfaces:
+        addrs = netifaces.ifaddresses('usb0')
+        if netifaces.AF_INET in addrs:
+            for addr in addrs[netifaces.AF_INET]:
+                if addr['addr'].startswith('192.168.137.'):
+                    return 'usb0'
+    
+    return 'wlan0'
+
 class NetworkMonitor:
     def __init__(self, target_host: str = "1.1.1.1", history_length: int = 300):
         self.target_host = target_host
+        self.interface = get_preferred_interface()
         self.ping_history = deque(maxlen=history_length)
         self.jitter_history = deque(maxlen=history_length)
         self.packet_loss_history = deque(maxlen=history_length)
-        
+    
     def get_stats(self, count=3, ping_interval=0.25) -> NetworkStats:
         """Execute ping command and return network statistics"""
         try:
-            cmd = ['ping', '-c', str(count), '-i', str(ping_interval), self.target_host]
+            cmd = ['ping', self.target_host, '-c', str(count), '-i', str(ping_interval), '-I', self.interface]
+            print(f"Pinging {self.target_host} through {self.interface} interface...")
             result = subprocess.run(cmd, capture_output=True, text=True)
             
             times = []
@@ -502,24 +517,7 @@ class NetworkMetrics:
         else:
             return 0
 
-def get_gateway_ip():
-    """Get the default gateway IP address"""
-    try:
-        # Get default gateway
-        gateways = netifaces.gateways()
-        if 'default' in gateways and netifaces.AF_INET in gateways['default']:
-            return gateways['default'][netifaces.AF_INET][0]
-    except Exception as e:
-        print(f"Error getting gateway IP: {e}")
-    return "1.1.1.1"  # Fallback to Cloudflare DNS
-
 def main():
-    # Remove test mode argument
-    gateway_ip = get_gateway_ip()
-    local_ip = socket.gethostbyname(socket.gethostname())
-    
-    print(f"Local IP: {local_ip}")
-    print(f"Gateway IP: {gateway_ip}")
     print("\nNetwork Interfaces:")
     
     # Print all network interfaces
@@ -536,8 +534,11 @@ def main():
                 if 'broadcast' in addr:
                     print(f"  Broadcast: {addr['broadcast']}")
 
-    # Initialize monitor with gateway IP
-    network_monitor = NetworkMonitor(target_host=gateway_ip)
+    # Initialize monitor
+    network_monitor = NetworkMonitor()
+    print(f"\nUsing interface: {network_monitor.interface or 'default'}")
+    print(f"Target host: {network_monitor.target_host}")
+    
     display = Display(network_monitor=network_monitor)
 
     try:
