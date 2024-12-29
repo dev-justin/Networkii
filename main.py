@@ -506,18 +506,18 @@ class Display:
         
         # Define spacing and layout
         TOP_MARGIN = 15
-        ROW_SPACING = 10  # Reduced spacing between rows
+        ROW_SPACING = 6   # Reduced spacing between rows to 6px
         LABEL_WIDTH = 80
         VALUE_WIDTH = self.WIDTH - LABEL_WIDTH - 20  # 20px right margin
-        ROW_HEIGHT = 30  # Fixed height for each row instead of dividing screen
+        ROW_HEIGHT = 30
         
         # Helper function to draw a metric row
         def draw_metric_row(y: int, label: str, current_value: float, history: deque, color: tuple):
             # Draw label
             self.draw.text((10, y), label, font=self.message_font, fill=color)
             
-            # Draw current value larger
-            current_text = f"{round(current_value, 1)}"
+            # Draw current value larger, rounded to whole number
+            current_text = str(round(current_value))
             current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
             current_width = current_bbox[2] - current_bbox[0]
             self.draw.text(
@@ -532,12 +532,14 @@ class Display:
             value_spacing = VALUE_WIDTH // 8
             
             for i, value in enumerate(reversed(history_values[:-1]), 1):
-                fade_level = 0.7 - (i * 0.08)  # Start at 70% opacity
+                fade_level = 0.7 - (i * 0.08)
                 faded_color = tuple(int(c * fade_level) for c in color)
                 
-                value_text = str(round(value, 1))
+                # Round historical values to whole numbers
+                value_text = str(round(value))
+                x_pos = LABEL_WIDTH + (i * value_spacing)
                 self.draw.text(
-                    (LABEL_WIDTH + (i * value_spacing), y + 5),  # Slight vertical offset
+                    (x_pos, y + 5),
                     value_text,
                     font=self.tiny_font,
                     fill=faded_color
