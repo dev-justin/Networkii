@@ -499,6 +499,78 @@ class Display:
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
 
+    def show_detailed_screen(self, stats: NetworkStats):
+        """Show detailed network statistics with history"""
+        # Clear the image
+        self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
+        
+        # Define spacing and layout
+        SPACING = 15
+        LABEL_WIDTH = 80
+        VALUE_WIDTH = self.WIDTH - LABEL_WIDTH - 20  # 20px right margin
+        ROW_HEIGHT = self.HEIGHT // 3
+        
+        # Helper function to draw a metric row
+        def draw_metric_row(y: int, label: str, current_value: float, history: deque, color: tuple):
+            # Draw label
+            self.draw.text((10, y), label, font=self.message_font, fill=color)
+            
+            # Draw current value larger
+            current_text = f"{round(current_value, 1)}"
+            current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
+            current_width = current_bbox[2] - current_bbox[0]
+            self.draw.text(
+                (LABEL_WIDTH, y),
+                current_text,
+                font=self.number_font,
+                fill=color
+            )
+            
+            # Draw historical values with fade
+            history_values = list(history)[-8:]  # Show last 8 values
+            value_spacing = VALUE_WIDTH // 8
+            
+            for i, value in enumerate(reversed(history_values[:-1]), 1):
+                fade_level = 0.7 - (i * 0.08)  # Start at 70% opacity
+                faded_color = tuple(int(c * fade_level) for c in color)
+                
+                value_text = str(round(value, 1))
+                self.draw.text(
+                    (LABEL_WIDTH + (i * value_spacing), y + 5),  # Slight vertical offset
+                    value_text,
+                    font=self.tiny_font,
+                    fill=faded_color
+                )
+        
+        # Draw each metric
+        draw_metric_row(
+            ROW_HEIGHT * 0 + SPACING,
+            "Ping:",
+            stats.ping,
+            stats.ping_history,
+            self.get_outline_color('ping')
+        )
+        
+        draw_metric_row(
+            ROW_HEIGHT * 1 + SPACING,
+            "Jitter:",
+            stats.jitter,
+            stats.jitter_history,
+            self.get_outline_color('jitter')
+        )
+        
+        draw_metric_row(
+            ROW_HEIGHT * 2 + SPACING,
+            "Loss:",
+            stats.packet_loss,
+            stats.packet_loss_history,
+            self.get_outline_color('packet_loss')
+        )
+        
+        # Update display
+        self.disp.st7789.set_window()
+        self.disp.st7789.display(self.image)
+
 @dataclass
 class MetricThresholds:
     """Thresholds for network metrics"""
@@ -561,10 +633,10 @@ class NetworkMetrics:
             return 0
 
 def main():
-    # Add argument parser
+    # Update argument parser
     parser = argparse.ArgumentParser(description='Network Monitor')
-    parser.add_argument('--screen', type=int, choices=[1, 2], default=1,
-                       help='Screen to display (1=metrics, 2=status)')
+    parser.add_argument('--screen', type=int, choices=[1, 2, 3], default=1,
+                       help='Screen to display (1=metrics, 2=status, 3=detailed)')
     args = parser.parse_args()
 
     print("\nNetwork Interfaces:")
@@ -583,11 +655,7 @@ def main():
                 if 'broadcast' in addr:
                     print(f"  Broadcast: {addr['broadcast']}")
 
-    # Initialize monitor
     network_monitor = NetworkMonitor()
-    print(f"\nUsing interface: {network_monitor.interface or 'default'}")
-    print(f"Target host: {network_monitor.target_host}")
-    
     display = Display(network_monitor=network_monitor)
 
     try:
@@ -595,8 +663,10 @@ def main():
             stats = network_monitor.get_stats()
             if args.screen == 1:
                 display.show_home_screen(stats)
-            else:
+            elif args.screen == 2:
                 display.show_basic_screen(stats)
+            else:
+                display.show_detailed_screen(stats)
             time.sleep(2)
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
