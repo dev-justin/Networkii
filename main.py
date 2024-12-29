@@ -465,18 +465,26 @@ class Display:
         # Calculate network health and get state
         health_score, health_state = self.calculate_network_health(stats)
         
-        # Draw the score above the face
+        # Define element heights and spacing
+        SPACING = 20
+        SCORE_HEIGHT = self.message_font.size  # Font size is the height
+        MESSAGE_HEIGHT = self.message_font.size
+        
+        # Calculate total height and starting position
+        total_height = SCORE_HEIGHT + SPACING + self.FACE_SIZE + SPACING + MESSAGE_HEIGHT
+        start_y = (self.HEIGHT - total_height) // 2
+        
+        # Draw the score
         score_text = f"Health: {health_score}%"
         score_bbox = self.draw.textbbox((0, 0), score_text, font=self.message_font)
         score_width = score_bbox[2] - score_bbox[0]
         score_x = (self.WIDTH - score_width) // 2
-        score_y = (self.HEIGHT - self.FACE_SIZE) // 2 - 50  # Higher up than face
-        self.draw.text((score_x, score_y), score_text, font=self.message_font, fill=(255, 255, 255))
+        self.draw.text((score_x, start_y), score_text, font=self.message_font, fill=(255, 255, 255))
         
         # Draw the face centered
         face = self.face_images[health_state]
         face_x = (self.WIDTH - self.FACE_SIZE) // 2
-        face_y = (self.HEIGHT - self.FACE_SIZE) // 2 - 20
+        face_y = start_y + SCORE_HEIGHT + SPACING
         self.image.paste(face, (face_x, face_y), face)
         
         # Draw the status message
@@ -484,7 +492,7 @@ class Display:
         message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (self.WIDTH - message_width) // 2
-        message_y = face_y + self.FACE_SIZE + 20
+        message_y = face_y + self.FACE_SIZE + SPACING
         self.draw.text((message_x, message_y), message, font=self.message_font, fill=(255, 255, 255))
         
         # Update display
