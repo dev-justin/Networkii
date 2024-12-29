@@ -63,7 +63,7 @@ class NetworkMonitor:
     def run_speed_test(self):
         """Run speedtest and update speeds"""
         try:
-            st = speedtest.Speedtest()
+            st = speedtest.Speedtest(source_address=self.interface)
             st.get_best_server()
             
             # Get download speed in Mbps
