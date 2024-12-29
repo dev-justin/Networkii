@@ -701,9 +701,20 @@ def main():
     network_monitor = NetworkMonitor()
     display = Display(network_monitor=network_monitor)
 
+    # Add last press time variable
+    last_button_press = 0
+    DEBOUNCE_TIME = 0.3  # 300ms debounce
+
     # Setup button callbacks
     def button_handler(pin):
-        nonlocal current_screen
+        nonlocal current_screen, last_button_press
+        
+        # Simple debouncing
+        current_time = time.time()
+        if current_time - last_button_press < DEBOUNCE_TIME:
+            return
+        last_button_press = current_time
+
         if pin == display.disp.BUTTON_B:  # Back button
             current_screen = max(1, current_screen - 1)
             print(f"Button B pressed - switching to screen {current_screen}")
