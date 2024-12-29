@@ -46,10 +46,21 @@ def get_preferred_interface():
     
     return 'wlan0'
 
+def get_interface_ip(interface_name: str) -> str:
+    """Get IP address for the given interface"""
+    try:
+        addrs = netifaces.ifaddresses(interface_name)
+        if netifaces.AF_INET in addrs:
+            return addrs[netifaces.AF_INET][0]['addr']
+    except Exception as e:
+        print(f"Error getting IP for interface {interface_name}: {e}")
+    return None
+
 class NetworkMonitor:
     def __init__(self, target_host: str = "1.1.1.1", history_length: int = 300, speed_test_interval: int = 30):
         self.target_host = target_host
         self.interface = get_preferred_interface()
+        self.interface_ip = get_interface_ip(self.interface)
         self.ping_history = deque(maxlen=history_length)
         self.jitter_history = deque(maxlen=history_length)
         self.packet_loss_history = deque(maxlen=history_length)
@@ -58,12 +69,15 @@ class NetworkMonitor:
         self.download_speed = 0
         self.upload_speed = 0
 
-        print(f"Using interface: {self.interface}, target host: {self.target_host}")
+        print(f"Using interface: {self.interface} ({self.interface_ip}), target host: {self.target_host}")
     
     def run_speed_test(self):
         """Run speedtest and update speeds"""
         try:
-            st = speedtest.Speedtest(source_address=self.interface)
+            if not self.interface_ip:
+                raise Exception("No valid IP address for interface")
+                
+            st = speedtest.Speedtest(source_address=self.interface_ip)
             st.get_best_server()
             
             # Get download speed in Mbps
