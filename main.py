@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from collections import deque
 import netifaces
 from displayhatmini import DisplayHATMini
+import argparse
 
 @dataclass 
 class NetworkStats:
@@ -322,8 +323,8 @@ class Display:
                 heart_outline.putalpha(50)
                 self.image.paste(heart_outline, (heart_x, y), heart_outline)
 
-    def update(self, stats: NetworkStats):
-        """Update the display with network metrics"""
+    def show_home_screen(self, stats: NetworkStats):
+        """Update the home screen with network metrics"""
         # Clear the image
         self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
         
@@ -456,6 +457,32 @@ class Display:
                 fill=faded_color
             )
 
+    def show_status_screen(self, stats: NetworkStats):
+        """Show the status screen with face and network state"""
+        # Clear the image
+        self.draw.rectangle((0, 0, self.WIDTH, self.HEIGHT), fill=(0, 0, 0))
+        
+        # Calculate network health and get state
+        health_score, health_state = self.calculate_network_health(stats)
+        
+        # Draw the face centered
+        face = self.face_images[health_state]
+        face_x = (self.WIDTH - self.FACE_SIZE) // 2
+        face_y = (self.HEIGHT - self.FACE_SIZE) // 2 - 20
+        self.image.paste(face, (face_x, face_y), face)
+        
+        # Draw the status message
+        message = self.NETWORK_STATES[health_state]['message']
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
+        message_width = message_bbox[2] - message_bbox[0]
+        message_x = (self.WIDTH - message_width) // 2
+        message_y = face_y + self.FACE_SIZE + 20
+        self.draw.text((message_x, message_y), message, font=self.message_font, fill=(255, 255, 255))
+        
+        # Update display
+        self.disp.st7789.set_window()
+        self.disp.st7789.display(self.image)
+
 @dataclass
 class MetricThresholds:
     """Thresholds for network metrics"""
@@ -518,6 +545,12 @@ class NetworkMetrics:
             return 0
 
 def main():
+    # Add argument parser
+    parser = argparse.ArgumentParser(description='Network Monitor')
+    parser.add_argument('--screen', type=int, choices=[1, 2], default=1,
+                       help='Screen to display (1=metrics, 2=status)')
+    args = parser.parse_args()
+
     print("\nNetwork Interfaces:")
     
     # Print all network interfaces
@@ -544,7 +577,10 @@ def main():
     try:
         while True:
             stats = network_monitor.get_stats()
-            display.update(stats)
+            if args.screen == 1:
+                display.show_home_screen(stats)
+            else:
+                display.show_status_screen(stats)
             time.sleep(2)
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
