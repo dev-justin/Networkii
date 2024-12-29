@@ -50,12 +50,13 @@ class NetworkMonitor:
         self.ping_history = deque(maxlen=history_length)
         self.jitter_history = deque(maxlen=history_length)
         self.packet_loss_history = deque(maxlen=history_length)
+
+        print(f"Using interface: {self.interface}, target host: {self.target_host}")
     
-    def get_stats(self, count=3, ping_interval=0.25) -> NetworkStats:
+    def get_stats(self, count=5, ping_interval=0.2) -> NetworkStats:
         """Execute ping command and return network statistics"""
         try:
             cmd = ['ping', self.target_host, '-c', str(count), '-i', str(ping_interval), '-I', self.interface]
-            print(f"Pinging {self.target_host} through {self.interface} interface...")
             result = subprocess.run(cmd, capture_output=True, text=True)
             
             times = []
@@ -545,7 +546,7 @@ def main():
         while True:
             stats = network_monitor.get_stats()
             display.update(stats)
-            time.sleep(1)
+            time.sleep(2)
     except KeyboardInterrupt:
         print("\nProgram terminated by user")
     except Exception as e:
