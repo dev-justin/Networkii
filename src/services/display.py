@@ -148,7 +148,7 @@ class Display:
                 heart_outline.putalpha(50)
                 self.image.paste(heart_outline, (heart_x, y), heart_outline)
 
-    def draw_metric(self, x: int, y: int, label: str, history: deque, metric_type: str):
+    def draw_metric_col(self, x: int, y: int, label: str, history: deque, metric_type: str):
         """Draw metric column with values using full height"""
         if not history:
             return
@@ -199,6 +199,41 @@ class Display:
                 fill=faded_color
             )
 
+    def draw_metric_row(self, y: int, label: str, current_value: float, history: deque, color: tuple):
+        """Draw metric row with historical values"""
+        LABEL_WIDTH = 80
+        CURRENT_VALUE_SPACING = 8
+        VALUE_WIDTH = SCREEN_WIDTH - LABEL_WIDTH - 20
+        
+        self.draw.text((10, y), label, font=self.message_font, fill=color)
+        
+        current_text = str(round(current_value))
+        current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
+        current_width = current_bbox[2] - current_bbox[0]
+        self.draw.text(
+            (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y),  
+            current_text,
+            font=self.number_font,
+            fill=color
+        )
+        
+        history_values = list(history)[-8:]
+        value_spacing = VALUE_WIDTH // 8
+        history_start_x = LABEL_WIDTH
+        
+        for i, value in enumerate(reversed(history_values[:-1]), 1):
+            fade_level = 0.7 - (i * 0.08)
+            faded_color = tuple(int(c * fade_level) for c in color)
+            
+            value_text = str(round(value))
+            x_pos = history_start_x + (i * value_spacing)
+            self.draw.text(
+                (x_pos, y + 5),
+                value_text,
+                font=self.tiny_font,
+                fill=faded_color
+            )
+
     def show_home_screen(self, stats: NetworkStats):
         """Update the home screen with network metrics"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
@@ -212,9 +247,9 @@ class Display:
         
         metrics_x = SCREEN_WIDTH - metrics_width
         
-        self.draw_metric(metrics_x, 0, "P", stats.ping_history, 'ping')
-        self.draw_metric(metrics_x + METRIC_WIDTH + METRIC_SPACING, 0, "J", stats.jitter_history, 'jitter')
-        self.draw_metric(metrics_x + (METRIC_WIDTH + METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, 'packet_loss')
+        self.draw_metric_col(metrics_x, 0, "P", stats.ping_history, 'ping')
+        self.draw_metric_col(metrics_x + METRIC_WIDTH + METRIC_SPACING, 0, "J", stats.jitter_history, 'jitter')
+        self.draw_metric_col(metrics_x + (METRIC_WIDTH + METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, 'packet_loss')
         
         message_bbox = self.draw.textbbox((0, 0), "Test", font=self.tiny_font)
         message_height = message_bbox[3] - message_bbox[1]
@@ -299,63 +334,30 @@ class Display:
         
         TOP_MARGIN = 10
         ROW_SPACING = 2   
-        LABEL_WIDTH = 80
-        CURRENT_VALUE_SPACING = 8
-        VALUE_WIDTH = SCREEN_WIDTH - LABEL_WIDTH - 20
         ROW_HEIGHT = 30
         
-        def draw_metric_row(y: int, label: str, current_value: float, history: deque, color: tuple):
-            self.draw.text((10, y), label, font=self.message_font, fill=color)
-            
-            current_text = str(round(current_value))
-            current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
-            current_width = current_bbox[2] - current_bbox[0]
-            self.draw.text(
-                (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y),  
-                current_text,
-                font=self.number_font,
-                fill=color
-            )
-            
-            history_values = list(history)[-8:]
-            value_spacing = VALUE_WIDTH // 8
-            history_start_x = LABEL_WIDTH
-            
-            for i, value in enumerate(reversed(history_values[:-1]), 1):
-                fade_level = 0.7 - (i * 0.08)
-                faded_color = tuple(int(c * fade_level) for c in color)
-                
-                value_text = str(round(value))
-                x_pos = history_start_x + (i * value_spacing)
-                self.draw.text(
-                    (x_pos, y + 5),
-                    value_text,
-                    font=self.tiny_font,
-                    fill=faded_color
-                )
-        
-        draw_metric_row(
+        self.draw_metric_row(
             TOP_MARGIN,
             "PING",
             stats.ping,
             stats.ping_history,
-            self.get_outline_color('ping')
+            COLORS['ping']
         )
         
-        draw_metric_row(
+        self.draw_metric_row(
             TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,
             "JITTER",
             stats.jitter,
             stats.jitter_history,
-            self.get_outline_color('jitter')
+            COLORS['jitter']
         )
         
-        draw_metric_row(
+        self.draw_metric_row(
             TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,
             "LOSS",
             stats.packet_loss,
             stats.packet_loss_history,
-            self.get_outline_color('packet_loss')
+            COLORS['packet_loss']
         )
         
         speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 20
@@ -378,7 +380,7 @@ class Display:
                 fill=COLORS['time']
             )
         else:
-            self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=(255, 255, 255))
+            self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=COLORS['text'])
         
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
