@@ -711,12 +711,10 @@ def main():
             current_screen = min(TOTAL_SCREENS, current_screen + 1)
             print(f"Button Y pressed - switching to screen {current_screen}")
 
+    # Register button callback
+    display.disp.on_button_pressed(button_handler)
+    
     try:
-        # Initialize GPIO before setting up button handlers
-        display.disp.setup_buttons()
-        # Register button callback
-        display.disp.on_button_pressed(button_handler)
-        
         while True:
             stats = network_monitor.get_stats()
             if current_screen == 1:
