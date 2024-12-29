@@ -506,8 +506,9 @@ class Display:
         
         # Define spacing and layout
         TOP_MARGIN = 15
-        ROW_SPACING = 6   # Reduced spacing between rows to 6px
+        ROW_SPACING = 6   
         LABEL_WIDTH = 80
+        CURRENT_VALUE_SPACING = 10  # Space between label and current value
         VALUE_WIDTH = self.WIDTH - LABEL_WIDTH - 20  # 20px right margin
         ROW_HEIGHT = 30
         
@@ -521,7 +522,7 @@ class Display:
             current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
             current_width = current_bbox[2] - current_bbox[0]
             self.draw.text(
-                (LABEL_WIDTH, y),
+                (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y),  # Position closer to label
                 current_text,
                 font=self.number_font,
                 fill=color
@@ -530,6 +531,7 @@ class Display:
             # Draw historical values with fade
             history_values = list(history)[-8:]  # Show last 8 values
             value_spacing = VALUE_WIDTH // 8
+            history_start_x = LABEL_WIDTH + 40  # Start historical values further right
             
             for i, value in enumerate(reversed(history_values[:-1]), 1):
                 fade_level = 0.7 - (i * 0.08)
@@ -537,7 +539,7 @@ class Display:
                 
                 # Round historical values to whole numbers
                 value_text = str(round(value))
-                x_pos = LABEL_WIDTH + (i * value_spacing)
+                x_pos = history_start_x + (i * value_spacing)
                 self.draw.text(
                     (x_pos, y + 5),
                     value_text,
@@ -548,7 +550,7 @@ class Display:
         # Draw each metric
         draw_metric_row(
             TOP_MARGIN,  # First row starts at top margin
-            "Ping:",
+            "PING",
             stats.ping,
             stats.ping_history,
             self.get_outline_color('ping')
@@ -556,7 +558,7 @@ class Display:
         
         draw_metric_row(
             TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,  # Second row
-            "Jitter:",
+            "JITTER",
             stats.jitter,
             stats.jitter_history,
             self.get_outline_color('jitter')
@@ -564,7 +566,7 @@ class Display:
         
         draw_metric_row(
             TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,  # Third row
-            "Loss:",
+            "LOSS",
             stats.packet_loss,
             stats.packet_loss_history,
             self.get_outline_color('packet_loss')
