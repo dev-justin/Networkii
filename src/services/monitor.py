@@ -9,7 +9,6 @@ from ..config import DEFAULT_TARGET_HOST, DEFAULT_HISTORY_LENGTH, DEFAULT_SPEED_
 
 class NetworkMonitor:
     def __init__(self):
-        self.target_host = DEFAULT_TARGET_HOST
         self.interface = get_preferred_interface()
         self.interface_ip = get_interface_ip(self.interface)
         self.ping_history = deque(maxlen=DEFAULT_HISTORY_LENGTH)
@@ -20,7 +19,7 @@ class NetworkMonitor:
         self.download_speed = 0
         self.upload_speed = 0
 
-        print(f"Using interface: {self.interface} ({self.interface_ip}), target host: {self.target_host}")
+        print(f"Using interface: {self.interface} ({self.interface_ip}), target host: {DEFAULT_TARGET_HOST}") 
     
     def run_speed_test(self):
         """Run speedtest and update speeds"""
@@ -52,7 +51,7 @@ class NetworkMonitor:
             self.run_speed_test()
             
         try:
-            cmd = ['ping', self.target_host, '-c', str(count), '-i', str(ping_interval), '-I', self.interface]
+            cmd = ['ping', DEFAULT_TARGET_HOST, '-c', str(count), '-i', str(ping_interval), '-I', self.interface]
             result = subprocess.run(cmd, capture_output=True, text=True)
             
             times = []

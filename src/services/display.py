@@ -59,6 +59,8 @@ class Display:
             draw = ImageDraw.Draw(self.heart_image)
             draw.text((HEART_SIZE//2, HEART_SIZE//2), "♥", fill=(255, 0, 0, 255))
 
+    
+    # Calculate network health. [Used for: Face and Hearts] [Uses recent history]
     def calculate_network_health(self, stats: NetworkStats) -> tuple[int, str]:
         """Calculate network health based on recent history"""
         ping_history = list(stats.ping_history)[-RECENT_HISTORY_LENGTH:]
@@ -84,6 +86,7 @@ class Display:
         
         return int(final_score), state
 
+    # Calculate health bar height. [Used for: Health Bars] [Uses full history]
     def calculate_bar_height(self, values: deque, metric_type: str) -> float:
         """Calculate health bar height based on historical values"""
         if not values:
@@ -92,6 +95,7 @@ class Display:
         bad_count = sum(1 for v in values if v > threshold)
         return 1.0 - (bad_count / len(values))
 
+    # Draw health bar. [Used for: Health Bars]
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
         """Draw a retro-style health bar"""
         color = COLORS[metric_type]
@@ -134,6 +138,7 @@ class Display:
                     width=1
                 )
 
+    # Draw hearts. [Used for: Hearts]
     def draw_hearts(self, x: int, y: int, health_state: str):
         """Draw hearts based on network state"""
         total_hearts = 5
