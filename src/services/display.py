@@ -401,14 +401,14 @@ class Display:
         
         # Draw welcome message
         message = "Welcome! I'm Networkii"
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.medium_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
         message_y = 10
         self.draw.text((message_x, message_y), message, font=self.message_font, fill=COLORS['white'])
         
         # Calculate center position for smaller face
-        small_face_size = FACE_SIZE // 2  # Make face half the original size
+        small_face_size = FACE_SIZE // 1.5  # Make face 2/3 the original size
         face = self.face_images['excellent'].resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
         face_x = (SCREEN_WIDTH - small_face_size) // 2
         face_y = message_y + 30  # Closer to welcome message
@@ -434,15 +434,7 @@ class Display:
         ssid_x = left_column_x + (column_width - ssid_bbox[2]) // 2
         ssid_y = content_y + 25
         self.draw.text((ssid_x, ssid_y), ssid, font=self.message_font, fill=COLORS['green'])
-        
-        # Draw arrow
-        arrow_x = SCREEN_WIDTH // 2
-        arrow_y = content_y + 35
-        # Draw arrow line
-        self.draw.line([(arrow_x - 30, arrow_y), (arrow_x + 20, arrow_y)], fill=COLORS['white'], width=2)
-        # Draw arrow head
-        self.draw.line([(arrow_x + 15, arrow_y - 5), (arrow_x + 20, arrow_y), (arrow_x + 15, arrow_y + 5)], fill=COLORS['white'], width=2)
-        
+            
         # Draw right column (website)
         web_instructions = "2. Visit:"
         web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.tiny_font)
