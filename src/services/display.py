@@ -404,21 +404,22 @@ class Display:
         message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
-        message_y = 20
+        message_y = 10
         self.draw.text((message_x, message_y), message, font=self.message_font, fill=COLORS['white'])
         
-        # Calculate center position for face
-        face = self.face_images['excellent']
-        face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
-        face_y = message_y + 40  # Below welcome message
+        # Calculate center position for smaller face
+        small_face_size = FACE_SIZE // 2  # Make face half the original size
+        face = self.face_images['excellent'].resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
+        face_x = (SCREEN_WIDTH - small_face_size) // 2
+        face_y = message_y + 30  # Closer to welcome message
         self.image.paste(face, (face_x, face_y), face)
         
         # Draw instructions
-        instructions = "Connect to my WiFi to begin:"
+        instructions = "Connect to my WiFi:"
         instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.tiny_font)
         instructions_width = instructions_bbox[2] - instructions_bbox[0]
         instructions_x = (SCREEN_WIDTH - instructions_width) // 2
-        instructions_y = face_y + FACE_SIZE + 20  # Below face
+        instructions_y = face_y + small_face_size + 15
         self.draw.text((instructions_x, instructions_y), instructions, font=self.tiny_font, fill=COLORS['white'])
         
         # Draw SSID
@@ -426,8 +427,32 @@ class Display:
         ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.message_font)
         ssid_width = ssid_bbox[2] - ssid_bbox[0]
         ssid_x = (SCREEN_WIDTH - ssid_width) // 2
-        ssid_y = instructions_y + 30  # Below instructions
+        ssid_y = instructions_y + 20
         self.draw.text((ssid_x, ssid_y), ssid, font=self.message_font, fill=COLORS['green'])
+        
+        # Draw Password
+        password = "networkii"
+        password_bbox = self.draw.textbbox((0, 0), password, font=self.message_font)
+        password_width = password_bbox[2] - password_bbox[0]
+        password_x = (SCREEN_WIDTH - password_width) // 2
+        password_y = ssid_y + 30
+        self.draw.text((password_x, password_y), password, font=self.message_font, fill=COLORS['purple'])
+        
+        # Draw website instructions
+        web_instructions = "Then visit:"
+        web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.tiny_font)
+        web_instructions_width = web_instructions_bbox[2] - web_instructions_bbox[0]
+        web_instructions_x = (SCREEN_WIDTH - web_instructions_width) // 2
+        web_instructions_y = password_y + 30
+        self.draw.text((web_instructions_x, web_instructions_y), web_instructions, font=self.tiny_font, fill=COLORS['white'])
+        
+        # Draw website URL
+        url = "networkii.local"
+        url_bbox = self.draw.textbbox((0, 0), url, font=self.message_font)
+        url_width = url_bbox[2] - url_bbox[0]
+        url_x = (SCREEN_WIDTH - url_width) // 2
+        url_y = web_instructions_y + 20
+        self.draw.text((url_x, url_y), url, font=self.message_font, fill=COLORS['red'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
