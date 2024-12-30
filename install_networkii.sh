@@ -55,19 +55,19 @@ fi
 
 # Enable dwc2 overlay in /boot/firmware/config.txt
 # 1) Check if there's an [all] block at all
-if grep -q '^\[all\]' "$CONFIG_FILE"; then
+if grep -q '^\[all\]' "${BOOT_PATH}/config.txt"; then
     # 2) Extract lines from [all] up to the next bracketed section (or EOF)...
     #    Then check if "dtoverlay=dwc2" is already somewhere in there.
-    if sed -n '/^\[all\]/, /^\[.*\]/p' "$CONFIG_FILE" | grep -q '^dtoverlay=dwc2'; then
+    if sed -n '/^\[all\]/, /^\[.*\]/p' "${BOOT_PATH}/config.txt" | grep -q '^dtoverlay=dwc2'; then
         print_info "'dtoverlay=dwc2' is already present under [all]."
     else
         # Insert the line right after [all]
-        sudo sed -i '/^\[all\]/a dtoverlay=dwc2' "$CONFIG_FILE"
+        sudo sed -i '/^\[all\]/a dtoverlay=dwc2' "${BOOT_PATH}/config.txt"
         print_success "Added 'dtoverlay=dwc2' under [all]."
     fi
 else
     # 3) If no [all] section exists, create it
-    echo -e "\n[all]\ndtoverlay=dwc2" | sudo tee -a "$CONFIG_FILE"
+    echo -e "\n[all]\ndtoverlay=dwc2" | sudo tee -a "${BOOT_PATH}/config.txt"
     print_success "Added [all] section with 'dtoverlay=dwc2'."
 fi
 
