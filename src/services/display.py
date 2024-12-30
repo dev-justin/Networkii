@@ -421,36 +421,30 @@ class Display:
         # Start content after divider
         content_y = divider_y + 25
         
-        # Draw first instruction (WiFi connection)
+        # Calculate positions for first row (WiFi)
         instructions = "1. Connect to WiFi:"
-        instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.medium_font)
-        instructions_width = instructions_bbox[2] - instructions_bbox[0]
-        instructions_x = (SCREEN_WIDTH - instructions_width) // 2
-        self.draw.text((instructions_x, content_y), instructions, font=self.medium_font, fill=COLORS['white'])
-        
-        # Draw SSID
         ssid = "Networkii"
+        instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.medium_font)
         ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.message_font)
-        ssid_width = ssid_bbox[2] - ssid_bbox[0]
-        ssid_x = (SCREEN_WIDTH - ssid_width) // 2
-        ssid_y = content_y + 25
-        self.draw.text((ssid_x, ssid_y), ssid, font=self.message_font, fill=COLORS['green'])
+        total_width = instructions_bbox[2] + 15 + ssid_bbox[2]  # 15px spacing between text
+        start_x = (SCREEN_WIDTH - total_width) // 2
         
-        # Draw second instruction (website)
+        # Draw first row
+        self.draw.text((start_x, content_y), instructions, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((start_x + instructions_bbox[2] + 15, content_y), ssid, font=self.message_font, fill=COLORS['green'])
+        
+        # Calculate positions for second row (URL)
         web_instructions = "2. Visit:"
-        web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.medium_font)
-        web_instructions_width = web_instructions_bbox[2] - web_instructions_bbox[0]
-        web_instructions_x = (SCREEN_WIDTH - web_instructions_width) // 2
-        web_instructions_y = ssid_y + 40  # More space between sections
-        self.draw.text((web_instructions_x, web_instructions_y), web_instructions, font=self.medium_font, fill=COLORS['white'])
-        
-        # Draw URL
         url = "networkii.local"
+        web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.medium_font)
         url_bbox = self.draw.textbbox((0, 0), url, font=self.message_font)
-        url_width = url_bbox[2] - url_bbox[0]
-        url_x = (SCREEN_WIDTH - url_width) // 2
-        url_y = web_instructions_y + 25
-        self.draw.text((url_x, url_y), url, font=self.message_font, fill=COLORS['red'])
+        total_width = web_instructions_bbox[2] + 15 + url_bbox[2]  # 15px spacing between text
+        start_x = (SCREEN_WIDTH - total_width) // 2
+        
+        # Draw second row
+        web_instructions_y = content_y + 40  # Space between rows
+        self.draw.text((start_x, web_instructions_y), web_instructions, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((start_x + web_instructions_bbox[2] + 15, web_instructions_y), url, font=self.message_font, fill=COLORS['red'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
