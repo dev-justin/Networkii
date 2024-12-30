@@ -2,29 +2,25 @@ import subprocess
 import time
 import netifaces
 from ..utils.interface import get_preferred_interface
-import os
 
 class NetworkManager:
     def __init__(self):
-        self.ap_ssid = "NetworkiiAP"
-        self.ap_config_path = "/etc/hostapd/hostapd.conf"
-        self.network_config_path = "/etc/systemd/network/wlan0.network"
-        self.wpa_config_path = "/etc/wpa_supplicant/wpa_supplicant.conf"
+        self.ap_ssid = "Networkii"
+        self.ap_password = "networkii"
+        self.interface = get_preferred_interface()
         
     def check_connection(self) -> bool:
         """Check if we have a working network connection"""
-        interface = get_preferred_interface()
-        
-        # Check if interface exists and has an IP
-        if interface not in netifaces.interfaces():
-            return False
-            
-        addrs = netifaces.ifaddresses(interface)
-        if netifaces.AF_INET not in addrs:
-            return False
-            
-        # Test internet connectivity
         try:
+            # Check if interface exists and has an IP
+            if self.interface not in netifaces.interfaces():
+                return False
+                
+            addrs = netifaces.ifaddresses(self.interface)
+            if netifaces.AF_INET not in addrs:
+                return False
+                
+            # Test internet connectivity
             result = subprocess.run(
                 ['ping', '-c', '1', '-W', '2', '1.1.1.1'],
                 stdout=subprocess.DEVNULL,
@@ -35,131 +31,92 @@ class NetworkManager:
             return False
     
     def setup_ap_mode(self):
-        """Configure and start AP mode"""
-        print("Stopping network services")
+        """Configure and start AP mode using NetworkManager"""
+        print("Setting up AP mode...")
         
-        # Stop network services
-        subprocess.run(['sudo', 'systemctl', 'stop', 'wpa_supplicant'])
-        subprocess.run(['sudo', 'systemctl', 'stop', 'systemd-networkd'])
+        # Delete existing AP connection if it exists
+        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', self.ap_ssid], 
+                      stdout=subprocess.DEVNULL, 
+                      stderr=subprocess.DEVNULL)
         
-        # Bring down wlan0 and reconfigure
-        print("Reconfiguring wlan0 interface")
-        subprocess.run(['sudo', 'ip', 'link', 'set', 'wlan0', 'down'])
-        subprocess.run(['sudo', 'ip', 'addr', 'flush', 'dev', 'wlan0'])
-        time.sleep(1)
+        # Create new AP connection
+        print(f"Creating AP hotspot: {self.ap_ssid}")
+        result = subprocess.run([
+            'sudo', 'nmcli', 'connection', 'add',
+            'type', 'wifi',
+            'ifname', self.interface,
+            'con-name', self.ap_ssid,
+            'autoconnect', 'yes',
+            'ssid', self.ap_ssid,
+            'mode', 'ap',
+            'ipv4.method', 'shared',
+            'wifi-sec.key-mgmt', 'wpa-psk',
+            'wifi-sec.psk', self.ap_password
+        ], capture_output=True, text=True)
         
-        # Ensure directories exist
-        print("Creating configuration directories")
-        os.makedirs(os.path.dirname(self.network_config_path), exist_ok=True)
-        os.makedirs(os.path.dirname(self.ap_config_path), exist_ok=True)
-        
-        # Configure network
-        print("Writing network configuration")
-        network_config = """
-[Match]
-Name=wlan0
-
-[Network]
-Address=192.168.4.1/24
-DHCPServer=yes
-
-[DHCPServer]
-PoolOffset=2
-PoolSize=18
-EmitDNS=yes
-DNS=1.1.1.1
-"""
-        with open(self.network_config_path, 'w') as f:
-            f.write(network_config)
-        
-        # Configure hostapd
-        print("Writing hostapd configuration")
-        ap_config = f"""
-interface=wlan0
-driver=nl80211
-ssid={self.ap_ssid}
-hw_mode=g
-channel=7
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=networkii
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-country_code=US
-ieee80211n=1
-"""
-        with open(self.ap_config_path, 'w') as f:
-            f.write(ap_config)
-            
-        # Set up interface
-        print("Setting up wlan0 interface")
-        subprocess.run(['sudo', 'ip', 'link', 'set', 'wlan0', 'up'])
-        subprocess.run(['sudo', 'ip', 'addr', 'add', '192.168.4.1/24', 'dev', 'wlan0'])
-        
-        # Unmask and enable hostapd
-        print("Configuring hostapd service")
-        subprocess.run(['sudo', 'systemctl', 'unmask', 'hostapd'])
-        subprocess.run(['sudo', 'systemctl', 'enable', 'hostapd'])
-        
-        # Point hostapd to our config
-        print("Setting DAEMON_CONF in hostapd defaults")
-        subprocess.run(['sudo', 'sed', '-i', f's#^DAEMON_CONF=.*#DAEMON_CONF="{self.ap_config_path}"#', '/etc/default/hostapd'])
-            
-        # Start AP services
-        print("Starting network services")
-        subprocess.run(['sudo', 'systemctl', 'start', 'systemd-networkd'])
-        
-        print("Starting hostapd service")
-        result = subprocess.run(['sudo', 'systemctl', 'start', 'hostapd'], 
-                              capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"Error starting hostapd: {result.stderr}")
+            print(f"Error creating AP: {result.stderr}")
+            return
+            
+        # Activate the connection
+        print("Activating AP connection")
+        result = subprocess.run([
+            'sudo', 'nmcli', 'connection', 'up', self.ap_ssid
+        ], capture_output=True, text=True)
         
-        # Wait a bit for services to start
+        if result.returncode != 0:
+            print(f"Error activating AP: {result.stderr}")
+            return
+            
+        # Wait for AP to start
         time.sleep(5)
         
-        # Check if hostapd is running
-        result = subprocess.run(['sudo', 'systemctl', 'is-active', 'hostapd'], 
-                              capture_output=True, text=True)
-        if result.stdout.strip() != 'active':
-            print("Warning: hostapd service failed to start")
-            print("Checking service status...")
-            subprocess.run(['sudo', 'systemctl', 'status', 'hostapd'])
-            
-            print("\nChecking hostapd logs:")
-            subprocess.run(['sudo', 'journalctl', '-u', 'hostapd', '-n', '20'])
-            
-            print("\nChecking interface status:")
-            subprocess.run(['ip', 'addr', 'show', 'wlan0'])
+        # Check AP status
+        print("\nChecking AP status:")
+        subprocess.run(['sudo', 'nmcli', 'device', 'show', self.interface])
+        subprocess.run(['sudo', 'nmcli', 'connection', 'show', self.ap_ssid])
     
     def configure_wifi(self, ssid: str, password: str) -> bool:
-        """Configure WiFi with provided credentials"""
-        wpa_config = f"""
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-country=US
-
-network={{
-    ssid="{ssid}"
-    psk="{password}"
-    key_mgmt=WPA-PSK
-}}
-"""
-        try:
-            with open(self.wpa_config_path, 'w') as f:
-                f.write(wpa_config)
-                
-            # Restart networking
-            subprocess.run(['sudo', 'systemctl', 'stop', 'hostapd'])
-            subprocess.run(['sudo', 'systemctl', 'restart', 'systemd-networkd'])
-            subprocess.run(['sudo', 'systemctl', 'restart', 'wpa_supplicant'])
-            
-            # Wait for connection
-            time.sleep(10)
-            return self.check_connection()
-        except:
+        """Configure WiFi client connection using NetworkManager"""
+        print(f"Connecting to WiFi network: {ssid}")
+        
+        # Delete existing AP mode connection
+        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', self.ap_ssid],
+                      stdout=subprocess.DEVNULL,
+                      stderr=subprocess.DEVNULL)
+        
+        # Delete existing connection with same SSID if it exists
+        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', ssid],
+                      stdout=subprocess.DEVNULL,
+                      stderr=subprocess.DEVNULL)
+        
+        # Add new connection
+        result = subprocess.run([
+            'sudo', 'nmcli', 'connection', 'add',
+            'type', 'wifi',
+            'ifname', self.interface,
+            'con-name', ssid,
+            'autoconnect', 'yes',
+            'ssid', ssid,
+            'wifi-sec.key-mgmt', 'wpa-psk',
+            'wifi-sec.psk', password
+        ], capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            print(f"Error adding connection: {result.stderr}")
             return False
+            
+        # Activate the connection
+        result = subprocess.run([
+            'sudo', 'nmcli', 'connection', 'up', ssid
+        ], capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            print(f"Error connecting to network: {result.stderr}")
+            return False
+            
+        # Wait for connection
+        print("Waiting for connection...")
+        time.sleep(10)
+        
+        return self.check_connection()
