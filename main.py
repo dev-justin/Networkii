@@ -25,27 +25,48 @@ class NetworkiiApp:
     def set_mode(self, new_mode):
         """Change the app mode and update button handlers accordingly."""
         if new_mode == self.current_mode:
+            logger.debug(f"Mode already set to {new_mode}, skipping mode change")
             return  # No change needed
         
         logger.info(f"Changing mode from {self.current_mode} to {new_mode}")
         
         # Always clean up existing handler first
         if self.current_button_handler:
-            self.display.disp.on_button_pressed(None)
+            logger.debug("Removing existing button handler")
+            try:
+                self.display.disp.on_button_pressed(None)
+                logger.debug("Successfully removed button handler")
+            except Exception as e:
+                logger.warning(f"Error removing button handler: {e}")
             self.current_button_handler = None
 
-        # Clean up all GPIO events
+        # Clean up all GPIO events and configuration
         GPIO.setwarnings(False)  # Disable warnings as we're handling cleanup manually
         try:
+            # Remove all event detections first
+            button_pins = [self.display.disp.BUTTON_A, self.display.disp.BUTTON_B, 
+                          self.display.disp.BUTTON_X, self.display.disp.BUTTON_Y]
+            logger.debug(f"Cleaning up event detection for pins: {button_pins}")
+            for pin in button_pins:
+                try:
+                    GPIO.remove_event_detect(pin)
+                    logger.debug(f"Successfully removed event detection for pin {pin}")
+                except Exception as e:
+                    logger.warning(f"Error removing event detection for pin {pin}: {e}")
+            
+            logger.debug("Performing GPIO cleanup")
             GPIO.cleanup()
-        except:
-            pass  # Ignore cleanup errors
+            logger.debug("GPIO cleanup completed")
+        except Exception as e:
+            logger.warning(f"Error during GPIO cleanup: {e}")
         
         # Initialize GPIO for new mode if needed
         if new_mode in ['monitor', 'no_internet']:
+            logger.info(f"Setting up GPIO for mode: {new_mode}")
             try:
                 # Set up GPIO for button handling
                 GPIO.setmode(GPIO.BCM)
+                logger.debug("GPIO mode set to BCM")
                 
                 # Set up all button pins as inputs with pull-ups
                 button_pins = [
@@ -56,44 +77,60 @@ class NetworkiiApp:
                 ]
                 for pin in button_pins:
                     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                    logger.debug(f"Pin {pin} configured as input with pull-up")
                 
                 # Set up button handler
                 self.current_button_handler = self.universal_button_handler
                 self.display.disp.on_button_pressed(self.universal_button_handler)
-                logger.info(f"Button handler set up for mode: {new_mode}")
+                logger.info(f"Button handler successfully set up for mode: {new_mode}")
             except Exception as e:
-                logger.error(f"Error setting button handler: {e}")
+                logger.error(f"Error setting up button handler: {e}", exc_info=True)
                 self.current_button_handler = None
                 try:
+                    logger.debug("Attempting cleanup after button handler setup failure")
+                    for pin in button_pins:
+                        try:
+                            GPIO.remove_event_detect(pin)
+                            logger.debug(f"Cleaned up event detection for pin {pin}")
+                        except Exception as cleanup_error:
+                            logger.warning(f"Error cleaning up pin {pin}: {cleanup_error}")
                     GPIO.cleanup()
-                except:
-                    pass
+                    logger.debug("Emergency GPIO cleanup completed")
+                except Exception as cleanup_error:
+                    logger.error(f"Error during emergency cleanup: {cleanup_error}")
         
         self.current_mode = new_mode
+        logger.info(f"Mode successfully changed to: {new_mode}")
 
     def universal_button_handler(self, pin):
         """Single callback that knows how to behave based on the current app state/screen."""
         current_time = time.time()
         if current_time - self.last_button_press < DEBOUNCE_TIME:
+            logger.debug(f"Button press on pin {pin} debounced (last press: {self.last_button_press:.2f}s ago)")
             return
+        
         self.last_button_press = current_time
+        logger.debug(f"Button press detected on pin {pin} in mode: {self.current_mode}")
 
-        if self.current_mode == 'monitor':
-            # Handle monitor mode navigation
-            if pin == self.display.disp.BUTTON_B:
-                self.current_screen = max(1, self.current_screen - 1)
-                logger.info(f"Button B pressed - switching to screen {self.current_screen}")
-            elif pin == self.display.disp.BUTTON_Y:
-                self.current_screen = min(TOTAL_SCREENS, self.current_screen + 1)
-                logger.info(f"Button Y pressed - switching to screen {self.current_screen}")
-        
-        elif self.current_mode == 'no_internet':
-            # Handle no internet screen (reset WiFi)
-            if pin == self.display.disp.BUTTON_B:
-                logger.info("Button B pressed - resetting WiFi configuration")
-                self.reset_wifi_and_enter_ap()
-        
-        # AP mode has no button handlers
+        try:
+            if self.current_mode == 'monitor':
+                # Handle monitor mode navigation
+                if pin == self.display.disp.BUTTON_B:
+                    self.current_screen = max(1, self.current_screen - 1)
+                    logger.info(f"Button B pressed - switching to screen {self.current_screen}")
+                elif pin == self.display.disp.BUTTON_Y:
+                    self.current_screen = min(TOTAL_SCREENS, self.current_screen + 1)
+                    logger.info(f"Button Y pressed - switching to screen {self.current_screen}")
+            
+            elif self.current_mode == 'no_internet':
+                # Handle no internet screen (reset WiFi)
+                if pin == self.display.disp.BUTTON_B:
+                    logger.info("Button B pressed - initiating WiFi reset")
+                    self.reset_wifi_and_enter_ap()
+            
+            logger.debug(f"Button press on pin {pin} successfully handled")
+        except Exception as e:
+            logger.error(f"Error handling button press on pin {pin}: {e}", exc_info=True)
 
     def reset_wifi_and_enter_ap(self):
         """Reset WiFi credentials and enter AP mode"""
