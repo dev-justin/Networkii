@@ -415,7 +415,7 @@ class Display:
         instructions_y = message_y + 40
         self.draw.text((instructions_x, instructions_y), instructions, font=self.tiny_font, fill=COLORS['white'])
         
-        url = "192.168.4.1"
+        url = "10.42.0.1:80"
         url_bbox = self.draw.textbbox((0, 0), url, font=self.tiny_font)
         url_width = url_bbox[2] - url_bbox[0]
         url_x = (SCREEN_WIDTH - url_width) // 2
