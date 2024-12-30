@@ -50,7 +50,46 @@ def run_ap_mode(network_manager, display):
     logger.info("Starting AP mode...")
     network_manager.setup_ap_mode()
     display.show_no_connection_screen()
-    ap_server = APServer(network_manager)
+    
+    def on_wifi_configured():
+        logger.info("WiFi configured successfully, transitioning to monitor mode")
+        # Initialize and start monitor mode
+        current_screen = DEFAULT_SCREEN
+        network_monitor = NetworkMonitor()
+        
+        def button_handler(pin):
+            nonlocal current_screen
+            current_time = time.time()
+            if current_time - last_button_press < DEBOUNCE_TIME:
+                return
+            last_button_press = current_time
+
+            if pin == display.disp.BUTTON_B:
+                current_screen = max(1, current_screen - 1)
+                print(f"Button B pressed - switching to screen {current_screen}")
+            elif pin == display.disp.BUTTON_Y:
+                current_screen = min(TOTAL_SCREENS, current_screen + 1)
+                print(f"Button Y pressed - switching to screen {current_screen}")
+
+        # Register button handler
+        display.disp.on_button_pressed(button_handler)
+        
+        # Main monitoring loop
+        while True:
+            if not network_manager.check_connection():
+                logger.info("Network connection lost, returning to AP mode")
+                return run_ap_mode(network_manager, display)
+                
+            stats = network_monitor.get_stats()
+            if current_screen == 1:
+                display.show_home_screen(stats)
+            elif current_screen == 2:
+                display.show_basic_screen(stats)
+            else:
+                display.show_detailed_screen(stats)
+            time.sleep(2)
+    
+    ap_server = APServer(network_manager, on_wifi_configured)
     ap_server.start()
 
 def main():
@@ -64,31 +103,28 @@ def main():
     # Initialize network manager and display
     network_manager = NetworkManager()
     display = Display()
+    last_button_press = 0  # Move this here so it's accessible to both modes
     
-    # Start in AP mode if requested
-    if args.ap_mode:
-        logger.info("AP mode requested via command line argument")
+    # Start in AP mode if requested or if no connection
+    if args.ap_mode or not network_manager.check_connection():
+        logger.info("Starting in AP mode ({})", "CLI argument" if args.ap_mode else "No connection")
         print("Starting in AP mode...")
         run_ap_mode(network_manager, display)
         return
-    
-    # Check network connection
-    if not network_manager.check_connection():
-        logger.info("No network connection detected, switching to AP mode")
-        print("No network connection. Starting AP mode...")
-        run_ap_mode(network_manager, display)
-        return
 
-    # Network is connected, run main app
-    logger.info("Network connection available, starting monitor mode")
+    # If we get here, we're starting in monitor mode
+    logger.info("Starting in monitor mode")
+    run_monitor_mode(network_manager, display)
+
+def run_monitor_mode(network_manager, display):
+    """Run the main monitoring interface"""
+    logger.info("Starting monitor mode...")
     current_screen = DEFAULT_SCREEN
     network_monitor = NetworkMonitor()
-
     last_button_press = 0
 
     def button_handler(pin):
         nonlocal current_screen, last_button_press
-        
         current_time = time.time()
         if current_time - last_button_press < DEBOUNCE_TIME:
             return
@@ -109,6 +145,7 @@ def main():
         while True:
             # Check connection status
             if not network_manager.check_connection():
+                logger.info("Network connection lost, switching to AP mode")
                 print("Network connection lost. Starting AP mode...")
                 run_ap_mode(network_manager, display)
                 return
@@ -123,8 +160,10 @@ def main():
             time.sleep(2)
             
     except KeyboardInterrupt:
+        logger.info("Program terminated by user")
         print("\nProgram terminated by user")
     except Exception as e:
+        logger.error(f"Error in monitor mode: {e}")
         print(f"Error: {e}")
 
 if __name__ == "__main__":

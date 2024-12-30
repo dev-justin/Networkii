@@ -93,6 +93,12 @@ class APConfigHandler(BaseHTTPRequestHandler):
                     'message': 'Connected successfully!' if success else 'Connection failed. Please try again.'
                 }
                 self.wfile.write(json.dumps(response).encode())
+                
+                # If connection was successful and we have a callback, call it
+                if success and self.server.on_wifi_configured:
+                    logger.info("Calling transition callback")
+                    self.server.on_wifi_configured()
+                    
             except Exception as e:
                 logger.error(f"Error processing POST request: {str(e)}")
                 self._send_error_response(f"Internal error: {str(e)}")
@@ -108,16 +114,18 @@ class APConfigHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode())
 
 class APServer:
-    def __init__(self, network_manager, port=80):
+    def __init__(self, network_manager, on_wifi_configured=None, port=80):
         self.port = port
         self.network_manager = network_manager
         self.server = None
+        self.on_wifi_configured = on_wifi_configured
     
     def start(self):
         try:
             logger.info("Starting AP web server...")
             self.server = HTTPServer(('10.42.0.1', self.port), APConfigHandler)
             self.server.network_manager = self.network_manager
+            self.server.on_wifi_configured = self.on_wifi_configured
             logger.info(f"AP web server started successfully on http://10.42.0.1:{self.port}")
             print(f"Starting AP web server on http://10.42.0.1:{self.port}")
             self.server.serve_forever()
