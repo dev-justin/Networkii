@@ -399,28 +399,35 @@ class Display:
         """Show the no connection screen with AP mode instructions"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
-        # Draw main message
-        message = "No Connection"
+        # Draw welcome message
+        message = "Welcome! I'm Networkii"
         message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
-        message_y = SCREEN_HEIGHT // 3
-        self.draw.text((message_x, message_y), message, font=self.message_font, fill=COLORS['red'])
+        message_y = 20
+        self.draw.text((message_x, message_y), message, font=self.message_font, fill=COLORS['white'])
+        
+        # Calculate center position for face
+        face = self.face_images['excellent']
+        face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
+        face_y = message_y + 40  # Below welcome message
+        self.image.paste(face, (face_x, face_y), face)
         
         # Draw instructions
-        instructions = "Connect to NetworkiiAP"
+        instructions = "Connect to my WiFi to begin:"
         instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.tiny_font)
         instructions_width = instructions_bbox[2] - instructions_bbox[0]
         instructions_x = (SCREEN_WIDTH - instructions_width) // 2
-        instructions_y = message_y + 40
+        instructions_y = face_y + FACE_SIZE + 20  # Below face
         self.draw.text((instructions_x, instructions_y), instructions, font=self.tiny_font, fill=COLORS['white'])
         
-        url = "10.42.0.1:80"
-        url_bbox = self.draw.textbbox((0, 0), url, font=self.tiny_font)
-        url_width = url_bbox[2] - url_bbox[0]
-        url_x = (SCREEN_WIDTH - url_width) // 2
-        url_y = instructions_y + 20
-        self.draw.text((url_x, url_y), url, font=self.tiny_font, fill=COLORS['white'])
+        # Draw SSID
+        ssid = "NetworkiiAP"
+        ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.message_font)
+        ssid_width = ssid_bbox[2] - ssid_bbox[0]
+        ssid_x = (SCREEN_WIDTH - ssid_width) // 2
+        ssid_y = instructions_y + 30  # Below instructions
+        self.draw.text((ssid_x, ssid_y), ssid, font=self.message_font, fill=COLORS['green'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
