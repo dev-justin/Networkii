@@ -42,11 +42,19 @@ class NetworkManager:
         subprocess.run(['sudo', 'systemctl', 'stop', 'wpa_supplicant'])
         subprocess.run(['sudo', 'systemctl', 'stop', 'systemd-networkd'])
         
+        # Bring down wlan0 and reconfigure
+        print("Reconfiguring wlan0 interface")
+        subprocess.run(['sudo', 'ip', 'link', 'set', 'wlan0', 'down'])
+        subprocess.run(['sudo', 'ip', 'addr', 'flush', 'dev', 'wlan0'])
+        time.sleep(1)
+        
         # Ensure directories exist
+        print("Creating configuration directories")
         os.makedirs(os.path.dirname(self.network_config_path), exist_ok=True)
         os.makedirs(os.path.dirname(self.ap_config_path), exist_ok=True)
         
         # Configure network
+        print("Writing network configuration")
         network_config = """
 [Match]
 Name=wlan0
@@ -65,6 +73,7 @@ DNS=1.1.1.1
             f.write(network_config)
         
         # Configure hostapd
+        print("Writing hostapd configuration")
         ap_config = f"""
 interface=wlan0
 driver=nl80211
@@ -80,19 +89,35 @@ wpa_passphrase=networkii
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
+country_code=US
+ieee80211n=1
 """
         with open(self.ap_config_path, 'w') as f:
             f.write(ap_config)
             
+        # Set up interface
+        print("Setting up wlan0 interface")
+        subprocess.run(['sudo', 'ip', 'link', 'set', 'wlan0', 'up'])
+        subprocess.run(['sudo', 'ip', 'addr', 'add', '192.168.4.1/24', 'dev', 'wlan0'])
+        
         # Unmask and enable hostapd
         print("Configuring hostapd service")
         subprocess.run(['sudo', 'systemctl', 'unmask', 'hostapd'])
         subprocess.run(['sudo', 'systemctl', 'enable', 'hostapd'])
+        
+        # Point hostapd to our config
+        print("Setting DAEMON_CONF in hostapd defaults")
+        subprocess.run(['sudo', 'sed', '-i', f's#^DAEMON_CONF=.*#DAEMON_CONF="{self.ap_config_path}"#', '/etc/default/hostapd'])
             
         # Start AP services
-        print("Starting AP services")
+        print("Starting network services")
         subprocess.run(['sudo', 'systemctl', 'start', 'systemd-networkd'])
-        subprocess.run(['sudo', 'systemctl', 'start', 'hostapd'])
+        
+        print("Starting hostapd service")
+        result = subprocess.run(['sudo', 'systemctl', 'start', 'hostapd'], 
+                              capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error starting hostapd: {result.stderr}")
         
         # Wait a bit for services to start
         time.sleep(5)
@@ -104,6 +129,12 @@ rsn_pairwise=CCMP
             print("Warning: hostapd service failed to start")
             print("Checking service status...")
             subprocess.run(['sudo', 'systemctl', 'status', 'hostapd'])
+            
+            print("\nChecking hostapd logs:")
+            subprocess.run(['sudo', 'journalctl', '-u', 'hostapd', '-n', '20'])
+            
+            print("\nChecking interface status:")
+            subprocess.run(['ip', 'addr', 'show', 'wlan0'])
     
     def configure_wifi(self, ssid: str, password: str) -> bool:
         """Configure WiFi with provided credentials"""
