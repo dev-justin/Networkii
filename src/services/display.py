@@ -454,29 +454,8 @@ class Display:
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
 
-    def set_button_handler(self, handler=None):
-        """Set a new button handler, cleaning up any existing one"""
-        try:
-            # Remove existing handler and cleanup GPIO events
-            if self.current_button_handler:
-                self.disp.on_button_pressed(None)
-                # Clean up GPIO events for all buttons
-                for pin in [self.disp.BUTTON_A, self.disp.BUTTON_B, self.disp.BUTTON_X, self.disp.BUTTON_Y]:
-                    try:
-                        GPIO.remove_event_detect(pin)
-                    except:
-                        pass  # Ignore if event detection wasn't set
-            
-            # Set new handler
-            self.current_button_handler = handler
-            if handler:
-                self.disp.on_button_pressed(handler)
-        except Exception as e:
-            logger.error(f"Error setting button handler: {e}")
-            self.current_button_handler = None
-
-    def show_no_internet_screen(self, reset_callback=None):
-        """Show screen when we have WiFi but no internet connection"""
+    def show_no_internet_screen(self):
+        """Show the no internet screen"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
         # Draw title with reduced top margin
@@ -484,23 +463,23 @@ class Display:
         title_bbox = self.draw.textbbox((0, 0), title, font=self.font)
         title_width = title_bbox[2] - title_bbox[0]
         title_x = (SCREEN_WIDTH - title_width) // 2
-        title_y = 10  # Reduced from 15
+        title_y = 10
         self.draw.text((title_x, title_y), title, font=self.font, fill=COLORS['red'])
         
-        # Draw smaller sad face with reduced spacing
+        # Draw smaller sad face
         face = self.face_images['critical'].resize(((FACE_SIZE * 2) // 3, (FACE_SIZE * 2) // 3), Image.Resampling.LANCZOS)
         face_x = (SCREEN_WIDTH - face.size[0]) // 2
-        face_y = title_y + 30  # Reduced from 35
+        face_y = title_y + 30
         self.image.paste(face, (face_x, face_y), face)
         
-        # Draw divider with reduced spacing
-        divider_y = face_y + face.size[1] + 15  # Reduced from 25
+        # Draw divider
+        divider_y = face_y + face.size[1] + 15
         self.draw.line([(20, divider_y), (SCREEN_WIDTH - 20, divider_y)], fill=COLORS['gray'], width=1)
         
-        # Draw message with reduced spacing
+        # Draw messages
         message = "Connected to WiFi but"
         message2 = "can't reach the internet"
-        message_y = divider_y + 15  # Reduced from 25
+        message_y = divider_y + 15
         
         message_bbox = self.draw.textbbox((0, 0), message, font=self.medium_font)
         message_width = message_bbox[2] - message_bbox[0]
@@ -510,23 +489,15 @@ class Display:
         message2_bbox = self.draw.textbbox((0, 0), message2, font=self.medium_font)
         message2_width = message2_bbox[2] - message2_bbox[0]
         message2_x = (SCREEN_WIDTH - message2_width) // 2
-        self.draw.text((message2_x, message_y + 20), message2, font=self.medium_font, fill=COLORS['white'])  # Reduced from 25
+        self.draw.text((message2_x, message_y + 20), message2, font=self.medium_font, fill=COLORS['white'])
         
-        # Draw instruction with adjusted spacing
+        # Draw instruction
         instruction = "Press B to try new WiFi"
         instruction_bbox = self.draw.textbbox((0, 0), instruction, font=self.medium_font)
         instruction_width = instruction_bbox[2] - instruction_bbox[0]
         instruction_x = (SCREEN_WIDTH - instruction_width) // 2
-        instruction_y = message_y + 55  # Reduced from 70
+        instruction_y = message_y + 55
         self.draw.text((instruction_x, instruction_y), instruction, font=self.medium_font, fill=COLORS['green'])
-        
-        # Set up button handler for reset
-        if reset_callback:
-            def button_handler(pin):
-                if pin == self.disp.BUTTON_B:
-                    reset_callback()
-            
-            self.set_button_handler(button_handler)
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 

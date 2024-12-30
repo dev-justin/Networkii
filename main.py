@@ -18,33 +18,44 @@ class NetworkiiApp:
         self.current_screen = DEFAULT_SCREEN
         self.last_button_press = 0
         self.network_monitor = None
+        self.current_mode = 'monitor'  # Can be 'monitor', 'ap', or 'no_internet'
     
-    def setup_button_handler(self):
-        """Set up button handler for screen navigation"""
-        def button_handler(pin):
-            current_time = time.time()
-            if current_time - self.last_button_press < DEBOUNCE_TIME:
-                return
-            self.last_button_press = current_time
+    def universal_button_handler(self, pin):
+        current_time = time.time()
+        if current_time - self.last_button_press < DEBOUNCE_TIME:
+            return
+        self.last_button_press = current_time
 
+        if self.current_mode == 'monitor':
+            # Handle monitor mode navigation
             if pin == self.display.disp.BUTTON_B:
                 self.current_screen = max(1, self.current_screen - 1)
                 logger.info(f"Button B pressed - switching to screen {self.current_screen}")
             elif pin == self.display.disp.BUTTON_Y:
                 self.current_screen = min(TOTAL_SCREENS, self.current_screen + 1)
                 logger.info(f"Button Y pressed - switching to screen {self.current_screen}")
+        
+        elif self.current_mode == 'no_internet':
+            # Handle no internet screen (reset WiFi)
+            if pin == self.display.disp.BUTTON_B:
+                logger.info("Button B pressed - resetting WiFi configuration")
+                self.reset_wifi_and_enter_ap()
+        
+        # AP mode has no button handlers
 
-        self.display.set_button_handler(button_handler)
-    
+    def setup_button_handler(self):
+        """Set up the universal button handler"""
+        self.display.set_button_handler(self.universal_button_handler)
+
     def run_monitor_mode(self):
         """Run the main monitoring interface"""
         logger.info("Starting monitor mode...")
         self.current_screen = DEFAULT_SCREEN
+        self.current_mode = 'monitor'
         self.network_monitor = NetworkMonitor()
         
         # Track if we're in internet mode or no-internet mode
         in_internet_mode = True
-        self.setup_button_handler()
         
         try:
             while True:
@@ -61,11 +72,13 @@ class NetworkiiApp:
                 # Handle mode transitions
                 if has_internet and not in_internet_mode:
                     logger.info("Internet connection restored")
+                    self.current_mode = 'monitor'
                     self.setup_button_handler()
                     in_internet_mode = True
                 elif not has_internet and in_internet_mode:
                     logger.info("Internet connection lost")
-                    self.display.set_button_handler(None)
+                    self.current_mode = 'no_internet'
+                    self.setup_button_handler()
                     in_internet_mode = False
                 
                 # Show appropriate screen based on internet status
@@ -102,11 +115,13 @@ class NetworkiiApp:
     def run_ap_mode(self):
         """Run in AP mode for WiFi configuration"""
         logger.info("Starting AP mode...")
+        self.current_mode = 'ap'
         self.network_manager.setup_ap_mode()
         self.display.show_no_connection_screen()
         
         def on_wifi_configured():
             logger.info("WiFi configured successfully, transitioning to monitor mode")
+            self.current_mode = 'monitor'
             self.run_monitor_mode()
         
         ap_server = APServer(self.network_manager, on_wifi_configured)
