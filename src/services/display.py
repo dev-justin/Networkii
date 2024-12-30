@@ -11,6 +11,8 @@ from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE,
                      RECENT_HISTORY_LENGTH, METRIC_WIDTH, METRIC_SPACING, 
                      METRIC_RIGHT_MARGIN, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
                      BAR_WIDTH, BAR_SPACING, BAR_START_X, COLORS)
+import RPi.GPIO as GPIO
+from src.utils.logger import logger
 
 class Display:
     def __init__(self):
@@ -452,14 +454,24 @@ class Display:
 
     def set_button_handler(self, handler=None):
         """Set a new button handler, cleaning up any existing one"""
-        # Remove existing handler
-        if self.current_button_handler:
-            self.disp.on_button_pressed(None)
-        
-        # Set new handler
-        self.current_button_handler = handler
-        if handler:
-            self.disp.on_button_pressed(handler)
+        try:
+            # Remove existing handler and cleanup GPIO events
+            if self.current_button_handler:
+                self.disp.on_button_pressed(None)
+                # Clean up GPIO events for all buttons
+                for pin in [self.disp.BUTTON_A, self.disp.BUTTON_B, self.disp.BUTTON_X, self.disp.BUTTON_Y]:
+                    try:
+                        GPIO.remove_event_detect(pin)
+                    except:
+                        pass  # Ignore if event detection wasn't set
+            
+            # Set new handler
+            self.current_button_handler = handler
+            if handler:
+                self.disp.on_button_pressed(handler)
+        except Exception as e:
+            logger.error(f"Error setting button handler: {e}")
+            self.current_button_handler = None
 
     def show_no_internet_screen(self, reset_callback=None):
         """Show screen when we have WiFi but no internet connection"""
