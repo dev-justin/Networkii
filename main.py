@@ -62,7 +62,7 @@ class NetworkiiApp:
                 # First check if we have WiFi connection
                 if not self.network_manager.has_wifi_connection():
                     logger.info("No WiFi connection, switching to AP mode")
-                    self.display.set_button_handler(None)  # Clear any existing handlers
+                    self.current_mode = 'ap'
                     self.run_ap_mode()
                     return
                 
@@ -84,9 +84,9 @@ class NetworkiiApp:
                 # Show appropriate screen based on internet status
                 if not has_internet:
                     logger.info("WiFi connected but no internet, showing no internet screen")
-                    self.display.show_no_internet_screen(
-                        reset_callback=lambda: self.reset_wifi_and_enter_ap()
-                    )
+                    self.current_mode = 'no_internet'
+                    self.setup_button_handler()
+                    self.display.show_no_internet_screen()
                 else:
                     stats = self.network_monitor.get_stats()
                     if self.current_screen == 1:
