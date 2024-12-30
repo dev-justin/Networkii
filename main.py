@@ -41,6 +41,9 @@ class NetworkiiApp:
         logger.info("Starting monitor mode...")
         self.current_screen = DEFAULT_SCREEN
         self.network_monitor = NetworkMonitor()
+        
+        # Track if we're in internet mode or no-internet mode
+        in_internet_mode = True
         self.setup_button_handler()
         
         try:
@@ -53,30 +56,41 @@ class NetworkiiApp:
                     return
                 
                 # Then check if we have internet
-                if not self.network_manager.check_connection():
+                has_internet = self.network_manager.check_connection()
+                
+                # Handle mode transitions
+                if has_internet and not in_internet_mode:
+                    logger.info("Internet connection restored")
+                    self.setup_button_handler()
+                    in_internet_mode = True
+                elif not has_internet and in_internet_mode:
+                    logger.info("Internet connection lost")
+                    self.display.set_button_handler(None)
+                    in_internet_mode = False
+                
+                # Show appropriate screen based on internet status
+                if not has_internet:
                     logger.info("WiFi connected but no internet, showing no internet screen")
                     self.display.show_no_internet_screen(
                         reset_callback=lambda: self.reset_wifi_and_enter_ap()
                     )
-                    time.sleep(2)
-                    continue
-                    
-                # If we get here, we have internet, so restore normal button handler
-                self.setup_button_handler()
-                
-                stats = self.network_monitor.get_stats()
-                if self.current_screen == 1:
-                    self.display.show_home_screen(stats)
-                elif self.current_screen == 2:
-                    self.display.show_basic_screen(stats)
                 else:
-                    self.display.show_detailed_screen(stats)
+                    stats = self.network_monitor.get_stats()
+                    if self.current_screen == 1:
+                        self.display.show_home_screen(stats)
+                    elif self.current_screen == 2:
+                        self.display.show_basic_screen(stats)
+                    else:
+                        self.display.show_detailed_screen(stats)
+                
                 time.sleep(2)
                 
         except KeyboardInterrupt:
             logger.info("Program terminated by user")
         except Exception as e:
             logger.error(f"Error in monitor mode: {e}")
+            # Clean up handler on error
+            self.display.set_button_handler(None)
 
     def reset_wifi_and_enter_ap(self):
         """Reset WiFi credentials and enter AP mode"""
