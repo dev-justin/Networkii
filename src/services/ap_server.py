@@ -2,6 +2,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 import json
 import logging
+import os
 
 # Get logger for this module
 logger = logging.getLogger('ap_server')
@@ -18,43 +19,73 @@ class APConfigHandler(BaseHTTPRequestHandler):
             <html>
             <head>
                 <title>Networkii Setup</title>
-                <style>
-                    body { font-family: Arial; max-width: 500px; margin: 40px auto; padding: 20px; }
-                    input, button { width: 100%; padding: 10px; margin: 10px 0; }
-                    button { background: #4CAF50; color: white; border: none; cursor: pointer; }
-                </style>
+                <link rel="stylesheet" href="/styles.css">
             </head>
             <body>
-                <h1>Networkii WiFi Setup</h1>
-                <form id="wifi-form">
-                    <input type="text" name="ssid" placeholder="WiFi Name (SSID)" required>
-                    <input type="password" name="password" placeholder="WiFi Password" required>
-                    <button type="submit">Connect</button>
-                </form>
-                <div id="status"></div>
+                <div class="container">
+                    <div class="image-section">
+                        <div class="logo">NETWORKII</div>
+                    </div>
+                    <div class="form-section">
+                        <h1>WiFi Setup</h1>
+                        <form id="wifi-form">
+                            <div class="form-group">
+                                <input type="text" name="ssid" placeholder="WiFi Name (SSID)" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="password" name="password" placeholder="WiFi Password" required>
+                            </div>
+                            <button type="submit">Connect</button>
+                        </form>
+                        <div id="status"></div>
+                    </div>
+                </div>
                 <script>
                     document.getElementById('wifi-form').onsubmit = async (e) => {
                         e.preventDefault();
                         const form = e.target;
+                        const status = document.getElementById('status');
+                        
+                        // Show status with loading
+                        status.textContent = 'Connecting...';
+                        status.className = 'show';
+                        
                         const formData = new URLSearchParams();
                         formData.append('ssid', form.ssid.value);
                         formData.append('password', form.password.value);
                         
-                        const response = await fetch('/configure', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: formData.toString()
-                        });
-                        const result = await response.json();
-                        document.getElementById('status').textContent = result.message;
+                        try {
+                            const response = await fetch('/configure', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: formData.toString()
+                            });
+                            const result = await response.json();
+                            status.textContent = result.message;
+                            status.classList.add(result.success ? 'success' : 'error');
+                        } catch (error) {
+                            status.textContent = 'Connection failed. Please try again.';
+                            status.classList.add('error');
+                        }
                     };
                 </script>
             </body>
             </html>
             """
             self.wfile.write(html.encode())
+        elif self.path == '/styles.css':
+            try:
+                css_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'assets', 'styles.css')
+                with open(css_path, 'rb') as f:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/css')
+                    self.end_headers()
+                    self.wfile.write(f.read())
+            except Exception as e:
+                logger.error(f"Error serving CSS file: {e}")
+                self.send_error(404)
     
     def do_POST(self):
         logger.info(f"Received POST request for path: {self.path}")
@@ -71,14 +102,14 @@ class APConfigHandler(BaseHTTPRequestHandler):
                 ssid = params.get('ssid', [''])[0]
                 password = params.get('password', [''])[0]
                 
-                logger.info(f"Extracted SSID: {ssid}, password length: {len(password)}")
+                logger.info(f"Extracted SSID: {ssid}/{password}")
                 
                 if not ssid:
                     logger.error("No SSID provided")
                     self._send_error_response("No SSID provided")
                     return
                 
-                logger.info(f"Attempting to configure WiFi with SSID: {ssid}")
+                logger.info(f"Sending WiFi credentials to NetworkManager")
                 success = self.server.network_manager.configure_wifi(ssid, password)
                 logger.info(f"WiFi configuration {'successful' if success else 'failed'}")
                 
