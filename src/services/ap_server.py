@@ -2,8 +2,6 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 import json
 import logging
-import os
-import cgi
 
 # Get logger for this module
 logger = logging.getLogger('ap_server')
@@ -127,11 +125,9 @@ class APServer:
             self.server.network_manager = self.network_manager
             self.server.on_wifi_configured = self.on_wifi_configured
             logger.info(f"AP web server started successfully on http://10.42.0.1:{self.port}")
-            print(f"Starting AP web server on http://10.42.0.1:{self.port}")
             self.server.serve_forever()
         except Exception as e:
             logger.error(f"Failed to start AP web server: {str(e)}")
-            print(f"Failed to start AP web server: {e}")
             raise
     
     def shutdown(self):
