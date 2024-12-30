@@ -51,8 +51,7 @@ class NetworkManager:
         result = subprocess.run([
             'sudo', 'nmcli', 'device', 'wifi', 'hotspot',
             'ifname', self.interface,
-            'ssid', self.ap_ssid,
-            'password', self.ap_password
+            'ssid', self.ap_ssid
         ], capture_output=True, text=True)
         
         if result.returncode != 0:
