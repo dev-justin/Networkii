@@ -1,4 +1,5 @@
 import time
+import argparse
 from src.services.monitor import NetworkMonitor
 from src.services.display import Display
 from src.services.network_manager import NetworkManager
@@ -13,9 +14,20 @@ def run_ap_mode(network_manager, display):
     ap_server.start()
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Networkii - Network Monitor')
+    parser.add_argument('--ap-mode', action='store_true', help='Start directly in AP mode')
+    args = parser.parse_args()
+
     # Initialize network manager and display
     network_manager = NetworkManager()
     display = Display()
+    
+    # Start in AP mode if requested
+    if args.ap_mode:
+        print("Starting in AP mode...")
+        run_ap_mode(network_manager, display)
+        return
     
     # Check network connection
     if not network_manager.check_connection():
