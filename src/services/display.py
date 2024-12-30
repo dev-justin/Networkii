@@ -421,30 +421,30 @@ class Display:
         # Start content after divider
         content_y = divider_y + 25
         
-        # Calculate positions for first row (WiFi)
-        instructions = "1. Connect to WiFi:"
+        # Find the widest instruction to align both rows
+        instructions1 = "1. Connect to WiFi:"
+        instructions2 = "2. Visit:"
+        instructions1_bbox = self.draw.textbbox((0, 0), instructions1, font=self.medium_font)
+        instructions2_bbox = self.draw.textbbox((0, 0), instructions2, font=self.medium_font)
+        instruction_width = max(instructions1_bbox[2], instructions2_bbox[2])
+        
+        # Calculate left margin to center the entire content block
         ssid = "Networkii"
-        instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.medium_font)
+        url = "networkii.local"
         ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.message_font)
-        total_width = instructions_bbox[2] + 15 + ssid_bbox[2]  # 15px spacing between text
-        start_x = (SCREEN_WIDTH - total_width) // 2
+        url_bbox = self.draw.textbbox((0, 0), url, font=self.message_font)
+        max_value_width = max(ssid_bbox[2], url_bbox[2])
+        total_width = instruction_width + 15 + max_value_width  # 15px spacing between text
+        left_margin = (SCREEN_WIDTH - total_width) // 2
         
         # Draw first row
-        self.draw.text((start_x, content_y), instructions, font=self.medium_font, fill=COLORS['white'])
-        self.draw.text((start_x + instructions_bbox[2] + 15, content_y), ssid, font=self.message_font, fill=COLORS['green'])
-        
-        # Calculate positions for second row (URL)
-        web_instructions = "2. Visit:"
-        url = "networkii.local"
-        web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.medium_font)
-        url_bbox = self.draw.textbbox((0, 0), url, font=self.message_font)
-        total_width = web_instructions_bbox[2] + 15 + url_bbox[2]  # 15px spacing between text
-        start_x = (SCREEN_WIDTH - total_width) // 2
+        self.draw.text((left_margin, content_y), instructions1, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((left_margin + instruction_width + 15, content_y), ssid, font=self.message_font, fill=COLORS['green'])
         
         # Draw second row
-        web_instructions_y = content_y + 40  # Space between rows
-        self.draw.text((start_x, web_instructions_y), web_instructions, font=self.medium_font, fill=COLORS['white'])
-        self.draw.text((start_x + web_instructions_bbox[2] + 15, web_instructions_y), url, font=self.message_font, fill=COLORS['red'])
+        web_instructions_y = content_y + 30  # Reduced spacing between rows
+        self.draw.text((left_margin, web_instructions_y), instructions2, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((left_margin + instruction_width + 15, web_instructions_y), url, font=self.message_font, fill=COLORS['red'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
