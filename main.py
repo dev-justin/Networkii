@@ -1,14 +1,32 @@
 import time
+import threading
 from src.services.monitor import NetworkMonitor
 from src.services.display import Display
+from src.services.network_manager import NetworkManager
+from src.services.ap_server import APServer
 from src.config import TOTAL_SCREENS, DEBOUNCE_TIME, DEFAULT_SCREEN
 
-def main():
-    current_screen = DEFAULT_SCREEN
+def run_ap_mode(network_manager, display):
+    """Run in AP mode for WiFi configuration"""
+    network_manager.setup_ap_mode()
+    display.show_no_connection_screen()
+    ap_server = APServer(network_manager)
+    ap_server.start()
 
-    # Initialize services
-    network_monitor = NetworkMonitor()
+def main():
+    # Initialize network manager and display
+    network_manager = NetworkManager()
     display = Display()
+    
+    # Check network connection
+    if not network_manager.check_connection():
+        print("No network connection. Starting AP mode...")
+        run_ap_mode(network_manager, display)
+        return
+
+    # Network is connected, run main app
+    current_screen = DEFAULT_SCREEN
+    network_monitor = NetworkMonitor()
 
     last_button_press = 0
 
@@ -33,6 +51,12 @@ def main():
     # Main loop to fetch stats and update display
     try:
         while True:
+            # Check connection status
+            if not network_manager.check_connection():
+                print("Network connection lost. Starting AP mode...")
+                run_ap_mode(network_manager, display)
+                return
+                
             stats = network_monitor.get_stats()
             if current_screen == 1:
                 display.show_home_screen(stats)
