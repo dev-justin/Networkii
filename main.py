@@ -45,11 +45,20 @@ class NetworkiiApp:
         
         try:
             while True:
-                # Check connection status
-                if not self.network_manager.check_connection():
-                    logger.info("Network connection lost, switching to AP mode")
+                # First check if we have WiFi connection
+                if not self.network_manager.has_wifi_connection():
+                    logger.info("No WiFi connection, switching to AP mode")
                     self.run_ap_mode()
                     return
+                
+                # Then check if we have internet
+                if not self.network_manager.check_connection():
+                    logger.info("WiFi connected but no internet, showing no internet screen")
+                    self.display.show_no_internet_screen(
+                        reset_callback=lambda: self.reset_wifi_and_enter_ap()
+                    )
+                    time.sleep(2)
+                    continue
                     
                 stats = self.network_monitor.get_stats()
                 if self.current_screen == 1:
@@ -64,7 +73,13 @@ class NetworkiiApp:
             logger.info("Program terminated by user")
         except Exception as e:
             logger.error(f"Error in monitor mode: {e}")
-    
+
+    def reset_wifi_and_enter_ap(self):
+        """Reset WiFi credentials and enter AP mode"""
+        logger.info("Resetting WiFi credentials and entering AP mode")
+        self.network_manager.forget_wifi_connection()
+        self.run_ap_mode()
+
     def run_ap_mode(self):
         """Run in AP mode for WiFi configuration"""
         logger.info("Starting AP mode...")
@@ -82,9 +97,9 @@ class NetworkiiApp:
         """Main entry point for the application"""
         logger.info("Networkii starting up...")
         
-        # Start in AP mode if requested or if no connection
-        if ap_mode or not self.network_manager.check_connection():
-            logger.info("Starting in AP mode ({})", "CLI argument" if ap_mode else "No connection")
+        # Start in AP mode if requested or if no WiFi connection
+        if ap_mode or not self.network_manager.has_wifi_connection():
+            logger.info("Starting in AP mode ({})", "CLI argument" if ap_mode else "No WiFi connection")
             self.run_ap_mode()
         else:
             # If we get here, we're starting in monitor mode

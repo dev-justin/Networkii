@@ -122,3 +122,56 @@ class NetworkManager:
             logger.error(f"Exception during WiFi configuration: {str(e)}")
             print(f"Error during WiFi configuration: {e}")
             return False
+    
+    def has_wifi_connection(self) -> bool:
+        """Check if we have a WiFi connection (regardless of internet)"""
+        try:
+            # Check if interface exists and has an IP
+            if self.interface not in netifaces.interfaces():
+                logger.warning(f"Interface {self.interface} not found")
+                return False
+                
+            addrs = netifaces.ifaddresses(self.interface)
+            if netifaces.AF_INET not in addrs:
+                logger.warning(f"No IPv4 address found for interface {self.interface}")
+                return False
+            
+            # Check if we have a WiFi connection
+            result = subprocess.run(
+                ['nmcli', '-t', '-f', 'DEVICE,STATE', 'device'],
+                capture_output=True,
+                text=True
+            )
+            
+            for line in result.stdout.splitlines():
+                if line.startswith(f"{self.interface}:connected"):
+                    return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error checking WiFi connection: {str(e)}")
+            return False
+    
+    def forget_wifi_connection(self):
+        """Forget the current WiFi connection"""
+        try:
+            # Get current connection
+            result = subprocess.run(
+                ['nmcli', '-t', '-f', 'NAME,DEVICE', 'connection', 'show', '--active'],
+                capture_output=True,
+                text=True
+            )
+            
+            # Find and delete the connection for our interface
+            for line in result.stdout.splitlines():
+                if f":{self.interface}" in line:
+                    connection_name = line.split(':')[0]
+                    logger.info(f"Forgetting WiFi connection: {connection_name}")
+                    subprocess.run(['sudo', 'nmcli', 'connection', 'delete', connection_name],
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL)
+                    break
+                    
+        except Exception as e:
+            logger.error(f"Error forgetting WiFi connection: {str(e)}")
