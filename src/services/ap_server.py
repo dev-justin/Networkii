@@ -81,7 +81,7 @@ class APConfigHandler(BaseHTTPRequestHandler):
             self.wfile.write(html.encode())
         elif self.path == '/styles.css':
             try:
-                with open('static/styles.css', 'rb') as f:
+                with open('assets/styles.css', 'rb') as f:
                     self.send_response(200)
                     self.send_header('Content-type', 'text/css')
                     self.end_headers()
@@ -91,7 +91,7 @@ class APConfigHandler(BaseHTTPRequestHandler):
                 self.send_error(404)
         elif self.path == '/ap_background.jpg':
             try:
-                with open('static/ap_background.jpg', 'rb') as f:
+                with open('assets/ap_background.jpg', 'rb') as f:
                     self.send_response(200)
                     self.send_header('Content-type', 'image/jpeg')
                     self.end_headers()
