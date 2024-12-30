@@ -1,5 +1,4 @@
 import time
-import threading
 from src.services.monitor import NetworkMonitor
 from src.services.display import Display
 from src.services.network_manager import NetworkManager

@@ -35,6 +35,9 @@ class NetworkManager:
     
     def setup_ap_mode(self):
         """Configure and start AP mode"""
+
+        print("Stopping network services")
+
         # Stop network services
         subprocess.run(['sudo', 'systemctl', 'stop', 'wpa_supplicant'])
         subprocess.run(['sudo', 'systemctl', 'stop', 'systemd-networkd'])
@@ -78,6 +81,7 @@ rsn_pairwise=CCMP
             f.write(ap_config)
             
         # Start AP services
+        print("Starting AP services")
         subprocess.run(['sudo', 'systemctl', 'start', 'systemd-networkd'])
         subprocess.run(['sudo', 'systemctl', 'start', 'hostapd'])
     
