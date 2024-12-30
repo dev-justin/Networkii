@@ -414,36 +414,44 @@ class Display:
         face_y = message_y + 30  # Closer to welcome message
         self.image.paste(face, (face_x, face_y), face)
         
-        # Draw instructions
-        instructions = "Connect to my open WiFi:"
-        instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.tiny_font)
-        instructions_width = instructions_bbox[2] - instructions_bbox[0]
-        instructions_x = (SCREEN_WIDTH - instructions_width) // 2
-        instructions_y = face_y + small_face_size + 15
-        self.draw.text((instructions_x, instructions_y), instructions, font=self.tiny_font, fill=COLORS['white'])
+        # Draw divider line
+        divider_y = face_y + small_face_size + 20
+        self.draw.line([(20, divider_y), (SCREEN_WIDTH - 20, divider_y)], fill=COLORS['gray'], width=1)
         
-        # Draw SSID
-        ssid = "NetworkiiAP"
+        # Calculate column widths and positions
+        column_width = (SCREEN_WIDTH - 80) // 2  # 40px padding on each side
+        left_column_x = 40
+        right_column_x = SCREEN_WIDTH - 40 - column_width
+        content_y = divider_y + 20
+        
+        # Draw left column (WiFi connection)
+        instructions = "1. Connect to WiFi:"
+        instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.tiny_font)
+        self.draw.text((left_column_x, content_y), instructions, font=self.tiny_font, fill=COLORS['white'])
+        
+        ssid = "Networkii"
         ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.message_font)
-        ssid_width = ssid_bbox[2] - ssid_bbox[0]
-        ssid_x = (SCREEN_WIDTH - ssid_width) // 2
-        ssid_y = instructions_y + 20
+        ssid_x = left_column_x + (column_width - ssid_bbox[2]) // 2
+        ssid_y = content_y + 25
         self.draw.text((ssid_x, ssid_y), ssid, font=self.message_font, fill=COLORS['green'])
         
-        # Draw website instructions
-        web_instructions = "Then visit:"
-        web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.tiny_font)
-        web_instructions_width = web_instructions_bbox[2] - web_instructions_bbox[0]
-        web_instructions_x = (SCREEN_WIDTH - web_instructions_width) // 2
-        web_instructions_y = ssid_y + 30
-        self.draw.text((web_instructions_x, web_instructions_y), web_instructions, font=self.tiny_font, fill=COLORS['white'])
+        # Draw arrow
+        arrow_x = SCREEN_WIDTH // 2
+        arrow_y = content_y + 35
+        # Draw arrow line
+        self.draw.line([(arrow_x - 30, arrow_y), (arrow_x + 20, arrow_y)], fill=COLORS['white'], width=2)
+        # Draw arrow head
+        self.draw.line([(arrow_x + 15, arrow_y - 5), (arrow_x + 20, arrow_y), (arrow_x + 15, arrow_y + 5)], fill=COLORS['white'], width=2)
         
-        # Draw website URL
+        # Draw right column (website)
+        web_instructions = "2. Visit:"
+        web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.tiny_font)
+        self.draw.text((right_column_x, content_y), web_instructions, font=self.tiny_font, fill=COLORS['white'])
+        
         url = "networkii.local"
         url_bbox = self.draw.textbbox((0, 0), url, font=self.message_font)
-        url_width = url_bbox[2] - url_bbox[0]
-        url_x = (SCREEN_WIDTH - url_width) // 2
-        url_y = web_instructions_y + 20
+        url_x = right_column_x + (column_width - url_bbox[2]) // 2
+        url_y = content_y + 25
         self.draw.text((url_x, url_y), url, font=self.message_font, fill=COLORS['red'])
 
         self.disp.st7789.set_window()

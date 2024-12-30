@@ -9,8 +9,7 @@ logger = logging.getLogger('network_manager')
 
 class NetworkManager:
     def __init__(self):
-        self.ap_ssid = "NetworkiiAP"
-        self.ap_password = "networkii"
+        self.ap_ssid = "Networkii"
         self.interface = get_preferred_interface()
         logger.info(f"NetworkManager initialized with interface: {self.interface}")
         
