@@ -34,38 +34,17 @@ class NetworkManager:
         """Configure and start AP mode using NetworkManager"""
         print("Setting up AP mode...")
         
-        # Delete existing AP connection if it exists
-        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', self.ap_ssid], 
-                      stdout=subprocess.DEVNULL, 
-                      stderr=subprocess.DEVNULL)
-        
-        # Create new AP connection
+        # Create hotspot using the simplified command
         print(f"Creating AP hotspot: {self.ap_ssid}")
         result = subprocess.run([
-            'sudo', 'nmcli', 'connection', 'add',
-            'type', 'wifi',
+            'sudo', 'nmcli', 'device', 'wifi', 'hotspot',
             'ifname', self.interface,
-            'con-name', self.ap_ssid,
-            'autoconnect', 'yes',
             'ssid', self.ap_ssid,
-            'mode', 'ap',
-            'ipv4.method', 'shared',
-            'wifi-sec.key-mgmt', 'wpa-psk',
-            'wifi-sec.psk', self.ap_password
+            'password', self.ap_password
         ], capture_output=True, text=True)
         
         if result.returncode != 0:
-            print(f"Error creating AP: {result.stderr}")
-            return
-            
-        # Activate the connection
-        print("Activating AP connection")
-        result = subprocess.run([
-            'sudo', 'nmcli', 'connection', 'up', self.ap_ssid
-        ], capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            print(f"Error activating AP: {result.stderr}")
+            print(f"Error creating AP hotspot: {result.stderr}")
             return
             
         # Wait for AP to start
@@ -74,41 +53,20 @@ class NetworkManager:
         # Check AP status
         print("\nChecking AP status:")
         subprocess.run(['sudo', 'nmcli', 'device', 'show', self.interface])
-        subprocess.run(['sudo', 'nmcli', 'connection', 'show', self.ap_ssid])
     
     def configure_wifi(self, ssid: str, password: str) -> bool:
         """Configure WiFi client connection using NetworkManager"""
         print(f"Connecting to WiFi network: {ssid}")
         
-        # Delete existing AP mode connection
-        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', self.ap_ssid],
-                      stdout=subprocess.DEVNULL,
+        # Stop AP mode
+        subprocess.run(['sudo', 'nmcli', 'connection', 'down', 'Hotspot'], 
+                      stdout=subprocess.DEVNULL, 
                       stderr=subprocess.DEVNULL)
         
-        # Delete existing connection with same SSID if it exists
-        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', ssid],
-                      stdout=subprocess.DEVNULL,
-                      stderr=subprocess.DEVNULL)
-        
-        # Add new connection
+        # Connect to the new network
         result = subprocess.run([
-            'sudo', 'nmcli', 'connection', 'add',
-            'type', 'wifi',
-            'ifname', self.interface,
-            'con-name', ssid,
-            'autoconnect', 'yes',
-            'ssid', ssid,
-            'wifi-sec.key-mgmt', 'wpa-psk',
-            'wifi-sec.psk', password
-        ], capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            print(f"Error adding connection: {result.stderr}")
-            return False
-            
-        # Activate the connection
-        result = subprocess.run([
-            'sudo', 'nmcli', 'connection', 'up', ssid
+            'sudo', 'nmcli', 'device', 'wifi', 'connect', ssid,
+            'password', password
         ], capture_output=True, text=True)
         
         if result.returncode != 0:
