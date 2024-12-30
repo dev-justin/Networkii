@@ -29,10 +29,10 @@ class NetworkiiApp:
 
             if pin == self.display.disp.BUTTON_B:
                 self.current_screen = max(1, self.current_screen - 1)
-                print(f"Button B pressed - switching to screen {self.current_screen}")
+                logger.info(f"Button B pressed - switching to screen {self.current_screen}")
             elif pin == self.display.disp.BUTTON_Y:
                 self.current_screen = min(TOTAL_SCREENS, self.current_screen + 1)
-                print(f"Button Y pressed - switching to screen {self.current_screen}")
+                logger.info(f"Button Y pressed - switching to screen {self.current_screen}")
 
         self.display.disp.on_button_pressed(button_handler)
     
@@ -48,7 +48,6 @@ class NetworkiiApp:
                 # Check connection status
                 if not self.network_manager.check_connection():
                     logger.info("Network connection lost, switching to AP mode")
-                    print("Network connection lost. Starting AP mode...")
                     self.run_ap_mode()
                     return
                     
@@ -63,10 +62,8 @@ class NetworkiiApp:
                 
         except KeyboardInterrupt:
             logger.info("Program terminated by user")
-            print("\nProgram terminated by user")
         except Exception as e:
             logger.error(f"Error in monitor mode: {e}")
-            print(f"Error: {e}")
     
     def run_ap_mode(self):
         """Run in AP mode for WiFi configuration"""
@@ -88,7 +85,6 @@ class NetworkiiApp:
         # Start in AP mode if requested or if no connection
         if ap_mode or not self.network_manager.check_connection():
             logger.info("Starting in AP mode ({})", "CLI argument" if ap_mode else "No connection")
-            print("Starting in AP mode...")
             self.run_ap_mode()
         else:
             # If we get here, we're starting in monitor mode
