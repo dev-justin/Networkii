@@ -34,7 +34,7 @@ class NetworkiiApp:
                 self.current_screen = min(TOTAL_SCREENS, self.current_screen + 1)
                 logger.info(f"Button Y pressed - switching to screen {self.current_screen}")
 
-        self.display.disp.on_button_pressed(button_handler)
+        self.display.set_button_handler(button_handler)
     
     def run_monitor_mode(self):
         """Run the main monitoring interface"""
@@ -48,6 +48,7 @@ class NetworkiiApp:
                 # First check if we have WiFi connection
                 if not self.network_manager.has_wifi_connection():
                     logger.info("No WiFi connection, switching to AP mode")
+                    self.display.set_button_handler(None)  # Clear any existing handlers
                     self.run_ap_mode()
                     return
                 
@@ -60,6 +61,9 @@ class NetworkiiApp:
                     time.sleep(2)
                     continue
                     
+                # If we get here, we have internet, so restore normal button handler
+                self.setup_button_handler()
+                
                 stats = self.network_monitor.get_stats()
                 if self.current_screen == 1:
                     self.display.show_home_screen(stats)
@@ -77,6 +81,7 @@ class NetworkiiApp:
     def reset_wifi_and_enter_ap(self):
         """Reset WiFi credentials and enter AP mode"""
         logger.info("Resetting WiFi credentials and entering AP mode")
+        self.display.set_button_handler(None)  # Clear any existing handlers
         self.network_manager.forget_wifi_connection()
         self.run_ap_mode()
 

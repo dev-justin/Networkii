@@ -18,6 +18,7 @@ class Display:
         self.image = Image.new('RGB', (SCREEN_WIDTH, SCREEN_HEIGHT), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
         self.disp = DisplayHATMini(self.image)
+        self.current_button_handler = None
         
         # Load fonts
         try:
@@ -449,6 +450,17 @@ class Display:
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
 
+    def set_button_handler(self, handler=None):
+        """Set a new button handler, cleaning up any existing one"""
+        # Remove existing handler
+        if self.current_button_handler:
+            self.disp.on_button_pressed(None)
+        
+        # Set new handler
+        self.current_button_handler = handler
+        if handler:
+            self.disp.on_button_pressed(handler)
+
     def show_no_internet_screen(self, reset_callback=None):
         """Show screen when we have WiFi but no internet connection"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
@@ -500,7 +512,7 @@ class Display:
                 if pin == self.disp.BUTTON_B:
                     reset_callback()
             
-            self.disp.on_button_pressed(button_handler)
+            self.set_button_handler(button_handler)
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
