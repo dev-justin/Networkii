@@ -46,6 +46,18 @@ class NetworkiiApp:
             try:
                 # Set up GPIO for button handling
                 GPIO.setmode(GPIO.BCM)
+                
+                # Set up all button pins as inputs with pull-ups
+                button_pins = [
+                    self.display.disp.BUTTON_A,
+                    self.display.disp.BUTTON_B,
+                    self.display.disp.BUTTON_X,
+                    self.display.disp.BUTTON_Y
+                ]
+                for pin in button_pins:
+                    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                
+                # Set up button handler
                 self.current_button_handler = self.universal_button_handler
                 self.display.disp.on_button_pressed(self.universal_button_handler)
                 logger.info(f"Button handler set up for mode: {new_mode}")
