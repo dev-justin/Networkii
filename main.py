@@ -125,8 +125,10 @@ class NetworkiiApp:
                 # Show appropriate screen based on internet status
                 if not has_internet:
                     logger.info("WiFi connected but no internet, showing no internet screen")
+                    self.set_mode('no_internet')
                     self.display.show_no_internet_screen()
                 else:
+                    self.set_mode('monitor')
                     stats = self.network_monitor.get_stats()
                     if self.current_screen == 1:
                         self.display.show_home_screen(stats)
