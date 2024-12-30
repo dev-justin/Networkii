@@ -479,28 +479,28 @@ class Display:
         """Show screen when we have WiFi but no internet connection"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
-        # Draw title
+        # Draw title with reduced top margin
         title = "No Internet Connection"
         title_bbox = self.draw.textbbox((0, 0), title, font=self.font)
         title_width = title_bbox[2] - title_bbox[0]
         title_x = (SCREEN_WIDTH - title_width) // 2
-        title_y = 15
+        title_y = 10  # Reduced from 15
         self.draw.text((title_x, title_y), title, font=self.font, fill=COLORS['red'])
         
-        # Draw sad face
+        # Draw smaller sad face with reduced spacing
         face = self.face_images['critical'].resize(((FACE_SIZE * 2) // 3, (FACE_SIZE * 2) // 3), Image.Resampling.LANCZOS)
         face_x = (SCREEN_WIDTH - face.size[0]) // 2
-        face_y = title_y + 35
+        face_y = title_y + 30  # Reduced from 35
         self.image.paste(face, (face_x, face_y), face)
         
-        # Draw divider
-        divider_y = face_y + face.size[1] + 25
+        # Draw divider with reduced spacing
+        divider_y = face_y + face.size[1] + 15  # Reduced from 25
         self.draw.line([(20, divider_y), (SCREEN_WIDTH - 20, divider_y)], fill=COLORS['gray'], width=1)
         
-        # Draw message
+        # Draw message with reduced spacing
         message = "Connected to WiFi but"
         message2 = "can't reach the internet"
-        message_y = divider_y + 25
+        message_y = divider_y + 15  # Reduced from 25
         
         message_bbox = self.draw.textbbox((0, 0), message, font=self.medium_font)
         message_width = message_bbox[2] - message_bbox[0]
@@ -510,14 +510,14 @@ class Display:
         message2_bbox = self.draw.textbbox((0, 0), message2, font=self.medium_font)
         message2_width = message2_bbox[2] - message2_bbox[0]
         message2_x = (SCREEN_WIDTH - message2_width) // 2
-        self.draw.text((message2_x, message_y + 25), message2, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((message2_x, message_y + 20), message2, font=self.medium_font, fill=COLORS['white'])  # Reduced from 25
         
-        # Draw instruction
+        # Draw instruction with adjusted spacing
         instruction = "Press B to try new WiFi"
         instruction_bbox = self.draw.textbbox((0, 0), instruction, font=self.medium_font)
         instruction_width = instruction_bbox[2] - instruction_bbox[0]
         instruction_x = (SCREEN_WIDTH - instruction_width) // 2
-        instruction_y = message_y + 70
+        instruction_y = message_y + 55  # Reduced from 70
         self.draw.text((instruction_x, instruction_y), instruction, font=self.medium_font, fill=COLORS['green'])
         
         # Set up button handler for reset
