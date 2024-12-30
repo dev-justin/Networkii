@@ -3,6 +3,7 @@ from urllib.parse import parse_qs
 import json
 import logging
 import os
+import cgi
 
 # Get logger for this module
 logger = logging.getLogger('ap_server')
@@ -37,9 +38,16 @@ class APConfigHandler(BaseHTTPRequestHandler):
                     document.getElementById('wifi-form').onsubmit = async (e) => {
                         e.preventDefault();
                         const form = e.target;
+                        const formData = new URLSearchParams();
+                        formData.append('ssid', form.ssid.value);
+                        formData.append('password', form.password.value);
+                        
                         const response = await fetch('/configure', {
                             method: 'POST',
-                            body: new FormData(form)
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: formData.toString()
                         });
                         const result = await response.json();
                         document.getElementById('status').textContent = result.message;
@@ -58,12 +66,14 @@ class APConfigHandler(BaseHTTPRequestHandler):
                 post_data = self.rfile.read(content_length).decode('utf-8')
                 logger.info(f"Raw POST data: {post_data}")
                 
-                # Parse form data
+                # Parse URL-encoded form data
                 params = parse_qs(post_data)
                 logger.info(f"Parsed params: {params}")
                 
                 ssid = params.get('ssid', [''])[0]
                 password = params.get('password', [''])[0]
+                
+                logger.info(f"Extracted SSID: {ssid}, password length: {len(password)}")
                 
                 if not ssid:
                     logger.error("No SSID provided")
