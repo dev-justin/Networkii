@@ -7,6 +7,10 @@ class NetworkStats:
     ping_history: deque
     jitter_history: deque
     packet_loss_history: deque
+    speed_test_status: bool  # True if test is running
+    speed_test_timestamp: float  # Last completed test time
+    download_speed: float
+    upload_speed: float
     
     @property
     def ping(self) -> float:

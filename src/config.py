@@ -38,14 +38,11 @@ HEART_GAP = 8
 
 # Colors
 COLORS = {
-    'ping': (0, 255, 127),      # Spring Green
-    'jitter': (255, 99, 71),    # Tomato Red
-    'packet_loss': (147, 112, 219),  # Medium Purple
-    'border': (80, 80, 80),     # Dark Gray
-    'text': (255, 255, 255),    # White
-    'download': (0, 255, 127),  # Spring Green
-    'upload': (255, 99, 71),    # Tomato Red
-    'time': (147, 112, 219)     # Medium Purple
+    'green': (0, 255, 127),
+    'red': (255, 99, 71),
+    'purple': (147, 112, 219),
+    'gray': (80, 80, 80),
+    'white': (255, 255, 255),
 }
 
 # Network metric thresholds

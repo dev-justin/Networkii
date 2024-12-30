@@ -8,7 +8,7 @@ def main():
 
     # Initialize services
     network_monitor = NetworkMonitor()
-    display = Display(network_monitor=network_monitor)
+    display = Display()
 
     last_button_press = 0
 

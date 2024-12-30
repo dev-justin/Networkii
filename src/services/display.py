@@ -13,10 +13,7 @@ from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE,
                      BAR_WIDTH, BAR_SPACING, BAR_START_X, COLORS)
 
 class Display:
-    def __init__(self, network_monitor=None):
-        
-        self.network_monitor = network_monitor
-
+    def __init__(self):
         # Initialize display
         self.image = Image.new('RGB', (SCREEN_WIDTH, SCREEN_HEIGHT), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
@@ -98,12 +95,18 @@ class Display:
     # Draw health bar. [Used for: Health Bars]
     def draw_health_bar(self, x: int, y: int, width: int, height: int, health: float, metric_type: str):
         """Draw a retro-style health bar"""
-        color = COLORS[metric_type]
+        if metric_type == 'ping':
+            color = COLORS['green']
+        elif metric_type == 'jitter':
+            color = COLORS['red']
+        else:  # packet_loss
+            color = COLORS['purple']
+            
         dim_color = tuple(max(0, c // 3) for c in color)
         
         self.draw.rectangle(
             (x - 2, y - 2, x + width + 2, y + height + 2),
-            outline=COLORS['border'],
+            outline=COLORS['gray'],
             width=1
         )
         
@@ -153,17 +156,15 @@ class Display:
                 heart_outline.putalpha(50)
                 self.image.paste(heart_outline, (heart_x, y), heart_outline)
 
-    def draw_metric_col(self, x: int, y: int, label: str, history: deque, metric_type: str):
+    def draw_metric_col(self, x: int, y: int, label: str, history: deque, color: tuple):
         """Draw metric column with values using full height"""
         if not history:
             return
-            
-        color = COLORS[metric_type]
         
         label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
         label_width = label_bbox[2] - label_bbox[0]
         self.draw.text(
-            (x + (METRIC_WIDTH - label_width) // 2, METRIC_TOP_MARGIN),
+            (x + (METRIC_WIDTH - label_width) // 2, y + METRIC_TOP_MARGIN),
             label,
             font=self.tiny_font,
             fill=color
@@ -173,7 +174,7 @@ class Display:
         if len(last_values) < 10:
             last_values = [0] * (10 - len(last_values)) + last_values
         
-        available_height = SCREEN_HEIGHT - METRIC_TOP_MARGIN - METRIC_BOTTOM_MARGIN
+        available_height = SCREEN_HEIGHT - (y + METRIC_TOP_MARGIN) - METRIC_BOTTOM_MARGIN
         value_spacing = (available_height - 45) // 9
         
         current_value = str(round(last_values[-1]))
@@ -252,9 +253,9 @@ class Display:
         
         metrics_x = SCREEN_WIDTH - metrics_width
         
-        self.draw_metric_col(metrics_x, 0, "P", stats.ping_history, 'ping')
-        self.draw_metric_col(metrics_x + METRIC_WIDTH + METRIC_SPACING, 0, "J", stats.jitter_history, 'jitter')
-        self.draw_metric_col(metrics_x + (METRIC_WIDTH + METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, 'packet_loss')
+        self.draw_metric_col(metrics_x, 0, "P", stats.ping_history, COLORS['green'])
+        self.draw_metric_col(metrics_x + METRIC_WIDTH + METRIC_SPACING, 0, "J", stats.jitter_history, COLORS['red'])
+        self.draw_metric_col(metrics_x + (METRIC_WIDTH + METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, COLORS['purple'])
         
         message_bbox = self.draw.textbbox((0, 0), "Test", font=self.tiny_font)
         message_height = message_bbox[3] - message_bbox[1]
@@ -286,11 +287,11 @@ class Display:
         self.draw_hearts(hearts_x, hearts_y, health_state)
         
         ping_health = self.calculate_bar_height(
-            self.network_monitor.ping_history, 'ping')
+            stats.ping_history, 'ping')
         jitter_health = self.calculate_bar_height(
-            self.network_monitor.jitter_history, 'jitter')
+            stats.jitter_history, 'jitter')
         loss_health = self.calculate_bar_height(
-            self.network_monitor.packet_loss_history, 'packet_loss')
+            stats.packet_loss_history, 'packet_loss')
         
         self.draw_health_bar(BAR_START_X, 0, BAR_WIDTH, SCREEN_HEIGHT, ping_health, 'ping')
         self.draw_health_bar(BAR_START_X + BAR_WIDTH + BAR_SPACING, 0, BAR_WIDTH, SCREEN_HEIGHT, jitter_health, 'jitter')
@@ -316,7 +317,7 @@ class Display:
         score_bbox = self.draw.textbbox((0, 0), score_text, font=self.message_font)
         score_width = score_bbox[2] - score_bbox[0]
         score_x = (SCREEN_WIDTH - score_width) // 2
-        self.draw.text((score_x, start_y), score_text, font=self.message_font, fill=COLORS['text'])
+        self.draw.text((score_x, start_y), score_text, font=self.message_font, fill=COLORS['white'])
         
         face = self.face_images[health_state]
         face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
@@ -328,7 +329,7 @@ class Display:
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
         message_y = face_y + FACE_SIZE + SPACING
-        self.draw.text((message_x, message_y), message, font=self.message_font, fill=(255, 255, 255))
+        self.draw.text((message_x, message_y), message, font=self.message_font, fill=COLORS['white'])
         
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
@@ -346,7 +347,7 @@ class Display:
             "PING",
             stats.ping,
             stats.ping_history,
-            COLORS['ping']
+            COLORS['green']
         )
         
         self.draw_metric_row(
@@ -354,7 +355,7 @@ class Display:
             "JITTER",
             stats.jitter,
             stats.jitter_history,
-            COLORS['jitter']
+            COLORS['red']
         )
         
         self.draw_metric_row(
@@ -362,18 +363,23 @@ class Display:
             "LOSS",
             stats.packet_loss,
             stats.packet_loss_history,
-            COLORS['packet_loss']
+            COLORS['purple']
         )
         
         speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 20
-        if self.network_monitor.last_speed_test > 0:
-            time_since_test = (time.time() - self.network_monitor.last_speed_test) / 60
+        if stats.speed_test_status:
+            dots = "." * (int(time.time() * 2) % 4)
+            status_text = f"Speed test in progress{dots}"
+            self.draw.text((10, speed_y), status_text, font=self.message_font, fill=COLORS['white'])
             
-            down_text = f"↓ {self.network_monitor.download_speed:.1f} Mbps"
-            self.draw.text((10, speed_y), down_text, font=self.message_font, fill=COLORS['download'])
+        elif stats.speed_test_timestamp > 0:
+            time_since_test = (time.time() - stats.speed_test_timestamp) / 60
             
-            up_text = f"↑ {self.network_monitor.upload_speed:.1f} Mbps"
-            self.draw.text((10, speed_y + 30), up_text, font=self.message_font, fill=COLORS['upload'])
+            down_text = f"↓ {stats.download_speed:.1f} Mbps"
+            self.draw.text((10, speed_y), down_text, font=self.message_font, fill=COLORS['green'])
+            
+            up_text = f"↑ {stats.upload_speed:.1f} Mbps"
+            self.draw.text((10, speed_y + 30), up_text, font=self.message_font, fill=COLORS['red'])
             
             time_text = f"Updated {int(time_since_test)}m ago"
             time_bbox = self.draw.textbbox((0, 0), time_text, font=self.tiny_font)
@@ -382,10 +388,10 @@ class Display:
                 (SCREEN_WIDTH - time_width - 10, speed_y + 15),
                 time_text,
                 font=self.tiny_font,
-                fill=COLORS['time']
+                fill=COLORS['purple']
             )
         else:
-            self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=COLORS['text'])
+            self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=COLORS['white'])
         
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
