@@ -42,11 +42,9 @@ class NetworkManager:
     def setup_ap_mode(self):
         """Configure and start AP mode using NetworkManager"""
         logger.info("Setting up AP mode...")
-        print("Setting up AP mode...")
         
         # Create hotspot using the simplified command
         logger.info(f"Creating AP hotspot with SSID: {self.ap_ssid}")
-        print(f"Creating AP hotspot: {self.ap_ssid}")
         result = subprocess.run([
             'sudo', 'nmcli', 'device', 'wifi', 'hotspot',
             'ifname', self.interface,
@@ -56,7 +54,6 @@ class NetworkManager:
         if result.returncode != 0:
             error_msg = f"Error creating AP hotspot: {result.stderr}"
             logger.error(error_msg)
-            print(error_msg)
             return
             
         # Wait for AP to start
@@ -164,6 +161,7 @@ class NetworkManager:
             )
             
             # Find and delete the connection for our interface
+            logger.info(f"Current connection: {result.stdout}")
             for line in result.stdout.splitlines():
                 if f":{self.interface}" in line:
                     connection_name = line.split(':')[0]
@@ -172,6 +170,6 @@ class NetworkManager:
                                 stdout=subprocess.DEVNULL,
                                 stderr=subprocess.DEVNULL)
                     break
-                    
+            logger.info("Forgetting WiFi connection complete")
         except Exception as e:
             logger.error(f"Error forgetting WiFi connection: {str(e)}")
