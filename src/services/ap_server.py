@@ -68,8 +68,20 @@ class APConfigHandler(BaseHTTPRequestHandler):
 class APServer:
     def __init__(self, network_manager, port=80):
         self.port = port
-        self.server = HTTPServer(('192.168.4.1', port), APConfigHandler)
-        self.server.network_manager = network_manager
+        self.network_manager = network_manager
+        self.server = None
     
     def start(self):
-        self.server.serve_forever() 
+        try:
+            self.server = HTTPServer(('10.42.0.1', self.port), APConfigHandler)
+            self.server.network_manager = self.network_manager
+            print(f"Starting AP web server on http://10.42.0.1:{self.port}")
+            self.server.serve_forever()
+        except Exception as e:
+            print(f"Failed to start AP web server: {e}")
+            raise
+    
+    def shutdown(self):
+        if self.server:
+            self.server.shutdown()
+            self.server.server_close() 
