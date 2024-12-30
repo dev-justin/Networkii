@@ -415,7 +415,7 @@ class Display:
         self.image.paste(face, (face_x, face_y), face)
         
         # Draw instructions
-        instructions = "Connect to my WiFi:"
+        instructions = "Connect to my open WiFi:"
         instructions_bbox = self.draw.textbbox((0, 0), instructions, font=self.tiny_font)
         instructions_width = instructions_bbox[2] - instructions_bbox[0]
         instructions_x = (SCREEN_WIDTH - instructions_width) // 2
@@ -430,20 +430,12 @@ class Display:
         ssid_y = instructions_y + 20
         self.draw.text((ssid_x, ssid_y), ssid, font=self.message_font, fill=COLORS['green'])
         
-        # Draw Password
-        password = "networkii"
-        password_bbox = self.draw.textbbox((0, 0), password, font=self.message_font)
-        password_width = password_bbox[2] - password_bbox[0]
-        password_x = (SCREEN_WIDTH - password_width) // 2
-        password_y = ssid_y + 30
-        self.draw.text((password_x, password_y), password, font=self.message_font, fill=COLORS['purple'])
-        
         # Draw website instructions
         web_instructions = "Then visit:"
         web_instructions_bbox = self.draw.textbbox((0, 0), web_instructions, font=self.tiny_font)
         web_instructions_width = web_instructions_bbox[2] - web_instructions_bbox[0]
         web_instructions_x = (SCREEN_WIDTH - web_instructions_width) // 2
-        web_instructions_y = password_y + 30
+        web_instructions_y = ssid_y + 30
         self.draw.text((web_instructions_x, web_instructions_y), web_instructions, font=self.tiny_font, fill=COLORS['white'])
         
         # Draw website URL
