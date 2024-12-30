@@ -399,30 +399,30 @@ class Display:
         """Show the no connection screen with AP mode instructions"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
-        # Draw welcome message
+        # Draw welcome message with larger font
         message = "Welcome! I'm Networkii"
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.medium_font)
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.font)  # Using title font
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
-        message_y = 10
-        self.draw.text((message_x, message_y), message, font=self.message_font, fill=COLORS['white'])
+        message_y = 15  # Slightly more top margin
+        self.draw.text((message_x, message_y), message, font=self.font, fill=COLORS['white'])
         
         # Calculate center position for smaller face (2/3 of original size)
         small_face_size = (FACE_SIZE * 2) // 3  # Integer division for 2/3 size
         face = self.face_images['excellent'].resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
         face_x = (SCREEN_WIDTH - small_face_size) // 2
-        face_y = message_y + 30  # Closer to welcome message
+        face_y = message_y + 35  # More space after larger title
         self.image.paste(face, (face_x, face_y), face)
         
         # Draw divider line
-        divider_y = face_y + small_face_size + 20
+        divider_y = face_y + small_face_size + 25  # More space before divider
         self.draw.line([(20, divider_y), (SCREEN_WIDTH - 20, divider_y)], fill=COLORS['gray'], width=1)
         
-        # Calculate column widths and positions
-        column_width = (SCREEN_WIDTH - 80) // 2  # 40px padding on each side
-        left_column_x = 40
-        right_column_x = SCREEN_WIDTH - 40 - column_width
-        content_y = divider_y + 20
+        # Calculate column widths and positions with more spacing
+        column_width = (SCREEN_WIDTH - 100) // 2  # 50px padding on each side for more space between columns
+        left_column_x = 50
+        right_column_x = SCREEN_WIDTH - 50 - column_width
+        content_y = divider_y + 25  # More space after divider
         
         # Draw left column (WiFi connection)
         instructions = "1. Connect to WiFi:"
