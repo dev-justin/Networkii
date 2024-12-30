@@ -48,7 +48,8 @@ class NetworkManager:
         result = subprocess.run([
             'sudo', 'nmcli', 'device', 'wifi', 'hotspot',
             'ifname', self.interface,
-            'ssid', self.ap_ssid
+            'ssid', self.ap_ssid,
+            '802-11-wireless-security.key-mgmt', 'none'
         ], capture_output=True, text=True)
         
         if result.returncode != 0:
