@@ -78,10 +78,10 @@ class NetworkManager:
         print(f"Connecting to WiFi network: {ssid}")
         
         try:
-            # Stop AP mode and delete connection if it exists
+            # Stop AP mode and delete connection
             logger.info("Stopping AP mode...")
-            subprocess.run(['sudo', 'nmcli', 'connection', 'down', 'Hotspot'], 
-                         stdout=subprocess.DEVNULL, 
+            subprocess.run(['sudo', 'nmcli', 'connection', 'delete', 'Hotspot'],
+                         stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
             
             # Delete any existing connection with the same SSID to ensure fresh connection
