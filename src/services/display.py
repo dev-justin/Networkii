@@ -12,7 +12,9 @@ from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE,
                      METRIC_RIGHT_MARGIN, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
                      BAR_WIDTH, BAR_SPACING, BAR_START_X, COLORS)
 import RPi.GPIO as GPIO
-from src.utils.logger import logger
+import logging
+
+logger = logging.getLogger('display')
 
 class Display:
     def __init__(self):
