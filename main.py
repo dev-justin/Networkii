@@ -32,27 +32,32 @@ class NetworkiiApp:
         # Always clean up existing handler first
         if self.current_button_handler:
             self.display.disp.on_button_pressed(None)
-            # Clean up GPIO events for all buttons
-            for pin in [self.display.disp.BUTTON_A, self.display.disp.BUTTON_B, 
-                      self.display.disp.BUTTON_X, self.display.disp.BUTTON_Y]:
-                try:
-                    GPIO.remove_event_detect(pin)
-                except:
-                    pass  # Ignore if event detection wasn't set
             self.current_button_handler = None
+
+        # Clean up all GPIO events
+        GPIO.setwarnings(False)  # Disable warnings as we're handling cleanup manually
+        try:
+            GPIO.cleanup()
+        except:
+            pass  # Ignore cleanup errors
         
-        self.current_mode = new_mode
-        
-        # Set up new handler based on mode
-        if new_mode in ['monitor', 'no_internet']:  # These modes need button handling
+        # Initialize GPIO for new mode if needed
+        if new_mode in ['monitor', 'no_internet']:
             try:
+                # Set up GPIO for button handling
+                GPIO.setmode(GPIO.BCM)
                 self.current_button_handler = self.universal_button_handler
                 self.display.disp.on_button_pressed(self.universal_button_handler)
                 logger.info(f"Button handler set up for mode: {new_mode}")
             except Exception as e:
                 logger.error(f"Error setting button handler: {e}")
                 self.current_button_handler = None
-        # AP mode doesn't need button handling
+                try:
+                    GPIO.cleanup()
+                except:
+                    pass
+        
+        self.current_mode = new_mode
 
     def universal_button_handler(self, pin):
         """Single callback that knows how to behave based on the current app state/screen."""
