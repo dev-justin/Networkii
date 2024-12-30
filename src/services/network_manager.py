@@ -71,8 +71,7 @@ class NetworkManager:
     def configure_wifi(self, ssid: str, password: str) -> bool:
         """Configure WiFi client connection using NetworkManager"""
         logger.info(f"Attempting to connect to WiFi network: {ssid}")
-        print(f"Connecting to WiFi network: {ssid}")
-        
+    
         try:
             # Stop AP mode and delete connection
             logger.info("Stopping AP mode...")
@@ -87,6 +86,10 @@ class NetworkManager:
                          stderr=subprocess.DEVNULL)
             
             # Connect to the new network
+            logger.info("Rescanning WiFi networks...")
+            subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
             logger.info("Connecting to new network...")
             result = subprocess.run([
                 'sudo', 'nmcli', 'device', 'wifi', 'connect', ssid,
