@@ -124,7 +124,7 @@ class NetworkiiApp:
                 # Then check if we have internet
                 has_internet = self.network_manager.check_connection()
                 
-                # Handle mode transitions
+                # Handle mode transitions only when status changes
                 if has_internet and not in_internet_mode:
                     logger.info("Internet connection restored")
                     self.set_mode('monitor')
@@ -135,12 +135,11 @@ class NetworkiiApp:
                     in_internet_mode = False
                 
                 # Show appropriate screen based on internet status
+                # Don't change modes here since we already handled transitions above
                 if not has_internet:
                     logger.info("WiFi connected but no internet, showing no internet screen")
-                    self.set_mode('no_internet')
                     self.display.show_no_internet_screen()
                 else:
-                    self.set_mode('monitor')
                     stats = self.network_monitor.get_stats()
                     if self.current_screen == 1:
                         self.display.show_home_screen(stats)
