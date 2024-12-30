@@ -368,8 +368,7 @@ class Display:
         
         speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 20
         if stats.speed_test_status:
-            dots = "." * (int(time.time() * 2) % 4)
-            status_text = f"Speed test in progress{dots}"
+            status_text = f"Speed test in progress..."
             self.draw.text((10, speed_y), status_text, font=self.message_font, fill=COLORS['white'])
             
         elif stats.speed_test_timestamp > 0:
