@@ -19,6 +19,7 @@ class APConfigHandler(BaseHTTPRequestHandler):
             <html>
             <head>
                 <title>Networkii Setup</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <link rel="stylesheet" href="/styles.css">
             </head>
             <body>
@@ -27,15 +28,18 @@ class APConfigHandler(BaseHTTPRequestHandler):
                         <div class="logo">NETWORKII</div>
                     </div>
                     <div class="form-section">
-                        <h1>WiFi Setup</h1>
+                        <h1>Welcome to Networkii</h1>
+                        <p class="subtitle">Connect your device to a WiFi network to begin monitoring.</p>
                         <form id="wifi-form">
                             <div class="form-group">
-                                <input type="text" name="ssid" placeholder="WiFi Name (SSID)" required>
+                                <label for="ssid">Network Name</label>
+                                <input type="text" id="ssid" name="ssid" placeholder="Enter WiFi name" required>
                             </div>
                             <div class="form-group">
-                                <input type="password" name="password" placeholder="WiFi Password" required>
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Enter WiFi password" required>
                             </div>
-                            <button type="submit">Connect</button>
+                            <button type="submit">Connect to Network</button>
                         </form>
                         <div id="status"></div>
                     </div>
@@ -77,14 +81,23 @@ class APConfigHandler(BaseHTTPRequestHandler):
             self.wfile.write(html.encode())
         elif self.path == '/styles.css':
             try:
-                css_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'assets', 'styles.css')
-                with open(css_path, 'rb') as f:
+                with open('static/styles.css', 'rb') as f:
                     self.send_response(200)
                     self.send_header('Content-type', 'text/css')
                     self.end_headers()
                     self.wfile.write(f.read())
             except Exception as e:
                 logger.error(f"Error serving CSS file: {e}")
+                self.send_error(404)
+        elif self.path == '/ap_background.jpg':
+            try:
+                with open('static/ap_background.jpg', 'rb') as f:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'image/jpeg')
+                    self.end_headers()
+                    self.wfile.write(f.read())
+            except Exception as e:
+                logger.error(f"Error serving background image: {e}")
                 self.send_error(404)
     
     def do_POST(self):
