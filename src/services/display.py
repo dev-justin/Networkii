@@ -21,8 +21,7 @@ class Display:
         # Initialize display
         self.image = Image.new('RGB', (SCREEN_WIDTH, SCREEN_HEIGHT), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
-        self.disp = DisplayHATMini(self.image)
-        self.current_button_handler = None
+        self.disp = DisplayHATMini(self.image)  # Exposed for button handling by NetworkiiApp
         
         # Load fonts
         try:
@@ -61,7 +60,36 @@ class Display:
             draw = ImageDraw.Draw(self.heart_image)
             draw.text((HEART_SIZE//2, HEART_SIZE//2), "♥", fill=(255, 0, 0, 255))
 
-    
+    def set_button_handler(self, handler=None):
+        """Set up the display's button handler.
+        
+        This method is used to set up a single, universal button handler that will be used
+        throughout the application's lifecycle. The handler should be an instance method
+        of NetworkiiApp that knows how to handle button presses based on the current
+        application mode.
+        
+        Args:
+            handler: The universal button handler function, or None to clear the handler
+        """
+        try:
+            # Remove existing handler if any
+            if self.current_button_handler:
+                self.disp.on_button_pressed(None)
+                # Clean up GPIO events for all buttons
+                for pin in [self.disp.BUTTON_A, self.disp.BUTTON_B, self.disp.BUTTON_X, self.disp.BUTTON_Y]:
+                    try:
+                        GPIO.remove_event_detect(pin)
+                    except:
+                        pass  # Ignore if event detection wasn't set
+            
+            # Set new handler
+            self.current_button_handler = handler
+            if handler:
+                self.disp.on_button_pressed(handler)
+        except Exception as e:
+            logger.error(f"Error setting button handler: {e}")
+            self.current_button_handler = None
+
     # Calculate network health. [Used for: Face and Hearts] [Uses recent history]
     def calculate_network_health(self, stats: NetworkStats) -> tuple[int, str]:
         """Calculate network health based on recent history"""

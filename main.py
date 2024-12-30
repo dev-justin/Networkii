@@ -6,6 +6,7 @@ from src.services.network_manager import NetworkManager
 from src.services.ap_server import APServer
 from src.config import TOTAL_SCREENS, DEBOUNCE_TIME, DEFAULT_SCREEN
 from src.utils.logger import get_logger
+import RPi.GPIO as GPIO
 
 # Get logger for main module
 logger = get_logger('main')
@@ -19,8 +20,31 @@ class NetworkiiApp:
         self.last_button_press = 0
         self.network_monitor = None
         self.current_mode = 'monitor'  # Can be 'monitor', 'ap', or 'no_internet'
+        self.current_button_handler = None
     
+    def setup_button_handler(self):
+        """Set up the universal button handler"""
+        try:
+            # Remove existing handler if any
+            if self.current_button_handler:
+                self.display.disp.on_button_pressed(None)
+                # Clean up GPIO events for all buttons
+                for pin in [self.display.disp.BUTTON_A, self.display.disp.BUTTON_B, 
+                          self.display.disp.BUTTON_X, self.display.disp.BUTTON_Y]:
+                    try:
+                        GPIO.remove_event_detect(pin)
+                    except:
+                        pass  # Ignore if event detection wasn't set
+            
+            # Set new handler
+            self.current_button_handler = self.universal_button_handler
+            self.display.disp.on_button_pressed(self.universal_button_handler)
+        except Exception as e:
+            logger.error(f"Error setting button handler: {e}")
+            self.current_button_handler = None
+
     def universal_button_handler(self, pin):
+        """Single callback that knows how to behave based on the current app state/screen."""
         current_time = time.time()
         if current_time - self.last_button_press < DEBOUNCE_TIME:
             return
@@ -43,9 +67,13 @@ class NetworkiiApp:
         
         # AP mode has no button handlers
 
-    def setup_button_handler(self):
-        """Set up the universal button handler"""
-        self.display.set_button_handler(self.universal_button_handler)
+    def reset_wifi_and_enter_ap(self):
+        """Reset WiFi credentials and enter AP mode"""
+        logger.info("Resetting WiFi credentials and entering AP mode")
+        self.display.disp.on_button_pressed(None)  # Clear button handler
+        self.current_button_handler = None
+        self.network_manager.forget_wifi_connection()
+        self.run_ap_mode()
 
     def run_monitor_mode(self):
         """Run the main monitoring interface"""
@@ -56,6 +84,7 @@ class NetworkiiApp:
         
         # Track if we're in internet mode or no-internet mode
         in_internet_mode = True
+        self.setup_button_handler()  # Set up initial button handler
         
         try:
             while True:
@@ -63,6 +92,8 @@ class NetworkiiApp:
                 if not self.network_manager.has_wifi_connection():
                     logger.info("No WiFi connection, switching to AP mode")
                     self.current_mode = 'ap'
+                    self.display.disp.on_button_pressed(None)  # Clear button handler
+                    self.current_button_handler = None
                     self.run_ap_mode()
                     return
                 
@@ -104,13 +135,6 @@ class NetworkiiApp:
             logger.error(f"Error in monitor mode: {e}")
             # Clean up handler on error
             self.display.set_button_handler(None)
-
-    def reset_wifi_and_enter_ap(self):
-        """Reset WiFi credentials and enter AP mode"""
-        logger.info("Resetting WiFi credentials and entering AP mode")
-        self.display.set_button_handler(None)  # Clear any existing handlers
-        self.network_manager.forget_wifi_connection()
-        self.run_ap_mode()
 
     def run_ap_mode(self):
         """Run in AP mode for WiFi configuration"""
