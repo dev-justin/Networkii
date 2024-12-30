@@ -2,6 +2,7 @@ import subprocess
 import time
 import netifaces
 from ..utils.interface import get_preferred_interface
+import os
 
 class NetworkManager:
     def __init__(self):
@@ -35,12 +36,15 @@ class NetworkManager:
     
     def setup_ap_mode(self):
         """Configure and start AP mode"""
-
         print("Stopping network services")
-
+        
         # Stop network services
         subprocess.run(['sudo', 'systemctl', 'stop', 'wpa_supplicant'])
         subprocess.run(['sudo', 'systemctl', 'stop', 'systemd-networkd'])
+        
+        # Ensure directories exist
+        os.makedirs(os.path.dirname(self.network_config_path), exist_ok=True)
+        os.makedirs(os.path.dirname(self.ap_config_path), exist_ok=True)
         
         # Configure network
         network_config = """
@@ -80,10 +84,26 @@ rsn_pairwise=CCMP
         with open(self.ap_config_path, 'w') as f:
             f.write(ap_config)
             
+        # Unmask and enable hostapd
+        print("Configuring hostapd service")
+        subprocess.run(['sudo', 'systemctl', 'unmask', 'hostapd'])
+        subprocess.run(['sudo', 'systemctl', 'enable', 'hostapd'])
+            
         # Start AP services
         print("Starting AP services")
         subprocess.run(['sudo', 'systemctl', 'start', 'systemd-networkd'])
         subprocess.run(['sudo', 'systemctl', 'start', 'hostapd'])
+        
+        # Wait a bit for services to start
+        time.sleep(5)
+        
+        # Check if hostapd is running
+        result = subprocess.run(['sudo', 'systemctl', 'is-active', 'hostapd'], 
+                              capture_output=True, text=True)
+        if result.stdout.strip() != 'active':
+            print("Warning: hostapd service failed to start")
+            print("Checking service status...")
+            subprocess.run(['sudo', 'systemctl', 'status', 'hostapd'])
     
     def configure_wifi(self, ssid: str, password: str) -> bool:
         """Configure WiFi with provided credentials"""
