@@ -2,23 +2,48 @@ import time
 import argparse
 import os
 import logging
+from pathlib import Path
 from src.services.monitor import NetworkMonitor
 from src.services.display import Display
 from src.services.network_manager import NetworkManager
 from src.services.ap_server import APServer
 from src.config import TOTAL_SCREENS, DEBOUNCE_TIME, DEFAULT_SCREEN
 
-# Ensure log directory exists with proper permissions
-os.makedirs('logs', exist_ok=True)
-os.chmod('logs', 0o777)  # Allow all users to write to logs directory
+# Set up logging directory in /var/log
+LOG_DIR = '/var/log/networkii'
+LOG_FILE = os.path.join(LOG_DIR, 'networkii.log')
+
+# Create log directory with proper permissions
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+    os.chmod(LOG_DIR, 0o777)
+    # Touch the log file if it doesn't exist and set permissions
+    Path(LOG_FILE).touch(exist_ok=True)
+    os.chmod(LOG_FILE, 0o666)
+except Exception as e:
+    print(f"Error setting up log directory: {e}")
+    # Fallback to current directory if we can't write to /var/log
+    LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+    LOG_FILE = os.path.join(LOG_DIR, 'networkii.log')
+    os.makedirs(LOG_DIR, exist_ok=True)
+    Path(LOG_FILE).touch(exist_ok=True)
 
 # Set up logging
 logging.basicConfig(
-    filename='logs/networkii.log',
+    filename=LOG_FILE,
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger('main')
+
+# Add console handler to see logs in terminal
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logging.getLogger('').addHandler(console_handler)
+
+logger.info("Starting Networkii with logging configured to: %s", LOG_FILE)
 
 def run_ap_mode(network_manager, display):
     """Run in AP mode for WiFi configuration"""

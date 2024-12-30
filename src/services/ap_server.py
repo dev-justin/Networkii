@@ -4,12 +4,7 @@ import json
 import logging
 import os
 
-# Set up logging
-logging.basicConfig(
-    filename='networkii.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Get logger for this module
 logger = logging.getLogger('ap_server')
 
 class APConfigHandler(BaseHTTPRequestHandler):
@@ -58,26 +53,49 @@ class APConfigHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         logger.info(f"Received POST request for path: {self.path}")
         if self.path == '/configure':
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length).decode('utf-8')
-            params = parse_qs(post_data)
-            
-            ssid = params.get('ssid', [''])[0]
-            password = params.get('password', [''])[0]
-            
-            logger.info(f"Attempting to configure WiFi with SSID: {ssid}")
-            success = self.server.network_manager.configure_wifi(ssid, password)
-            logger.info(f"WiFi configuration {'successful' if success else 'failed'}")
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            
-            response = {
-                'success': success,
-                'message': 'Connected successfully!' if success else 'Connection failed. Please try again.'
-            }
-            self.wfile.write(json.dumps(response).encode())
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length).decode('utf-8')
+                logger.info(f"Raw POST data: {post_data}")
+                
+                # Parse form data
+                params = parse_qs(post_data)
+                logger.info(f"Parsed params: {params}")
+                
+                ssid = params.get('ssid', [''])[0]
+                password = params.get('password', [''])[0]
+                
+                if not ssid:
+                    logger.error("No SSID provided")
+                    self._send_error_response("No SSID provided")
+                    return
+                
+                logger.info(f"Attempting to configure WiFi with SSID: {ssid}")
+                success = self.server.network_manager.configure_wifi(ssid, password)
+                logger.info(f"WiFi configuration {'successful' if success else 'failed'}")
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                
+                response = {
+                    'success': success,
+                    'message': 'Connected successfully!' if success else 'Connection failed. Please try again.'
+                }
+                self.wfile.write(json.dumps(response).encode())
+            except Exception as e:
+                logger.error(f"Error processing POST request: {str(e)}")
+                self._send_error_response(f"Internal error: {str(e)}")
+    
+    def _send_error_response(self, message):
+        self.send_response(400)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        response = {
+            'success': False,
+            'message': message
+        }
+        self.wfile.write(json.dumps(response).encode())
 
 class APServer:
     def __init__(self, network_manager, port=80):

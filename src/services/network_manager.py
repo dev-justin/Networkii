@@ -4,12 +4,7 @@ import netifaces
 import logging
 from ..utils.interface import get_preferred_interface
 
-# Set up logging
-logging.basicConfig(
-    filename='networkii.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Get logger for this module
 logger = logging.getLogger('network_manager')
 
 class NetworkManager:
@@ -82,30 +77,50 @@ class NetworkManager:
         logger.info(f"Attempting to connect to WiFi network: {ssid}")
         print(f"Connecting to WiFi network: {ssid}")
         
-        # Stop AP mode
-        logger.info("Stopping AP mode...")
-        subprocess.run(['sudo', 'nmcli', 'connection', 'down', 'Hotspot'], 
-                      stdout=subprocess.DEVNULL, 
-                      stderr=subprocess.DEVNULL)
-        
-        # Connect to the new network
-        logger.info("Connecting to new network...")
-        result = subprocess.run([
-            'sudo', 'nmcli', 'device', 'wifi', 'connect', ssid,
-            'password', password
-        ], capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            error_msg = f"Error connecting to network: {result.stderr}"
-            logger.error(error_msg)
-            print(error_msg)
+        try:
+            # Stop AP mode and delete connection if it exists
+            logger.info("Stopping AP mode...")
+            subprocess.run(['sudo', 'nmcli', 'connection', 'down', 'Hotspot'], 
+                         stdout=subprocess.DEVNULL, 
+                         stderr=subprocess.DEVNULL)
+            
+            # Delete any existing connection with the same SSID to ensure fresh connection
+            logger.info(f"Deleting any existing connection for {ssid}")
+            subprocess.run(['sudo', 'nmcli', 'connection', 'delete', ssid],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+            
+            # Connect to the new network
+            logger.info("Connecting to new network...")
+            result = subprocess.run([
+                'sudo', 'nmcli', 'device', 'wifi', 'connect', ssid,
+                'password', password,
+                'ifname', self.interface
+            ], capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                error_msg = f"Error connecting to network: {result.stderr}"
+                logger.error(error_msg)
+                print(error_msg)
+                return False
+            
+            # Wait for connection to establish
+            logger.info("Waiting for connection to establish...")
+            print("Waiting for connection...")
+            
+            # Check connection status multiple times
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                time.sleep(5)  # Wait between checks
+                logger.info(f"Connection check attempt {attempt + 1}/{max_attempts}")
+                if self.check_connection():
+                    logger.info("Successfully connected to WiFi network")
+                    return True
+            
+            logger.error("Failed to establish connection after multiple attempts")
             return False
             
-        # Wait for connection
-        logger.info("Waiting for connection to establish...")
-        print("Waiting for connection...")
-        time.sleep(10)
-        
-        connection_status = self.check_connection()
-        logger.info(f"WiFi configuration {'successful' if connection_status else 'failed'}")
-        return connection_status
+        except Exception as e:
+            logger.error(f"Exception during WiFi configuration: {str(e)}")
+            print(f"Error during WiFi configuration: {e}")
+            return False
