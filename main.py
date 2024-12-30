@@ -1,13 +1,28 @@
 import time
 import argparse
+import os
+import logging
 from src.services.monitor import NetworkMonitor
 from src.services.display import Display
 from src.services.network_manager import NetworkManager
 from src.services.ap_server import APServer
 from src.config import TOTAL_SCREENS, DEBOUNCE_TIME, DEFAULT_SCREEN
 
+# Ensure log directory exists with proper permissions
+os.makedirs('logs', exist_ok=True)
+os.chmod('logs', 0o777)  # Allow all users to write to logs directory
+
+# Set up logging
+logging.basicConfig(
+    filename='logs/networkii.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('main')
+
 def run_ap_mode(network_manager, display):
     """Run in AP mode for WiFi configuration"""
+    logger.info("Starting AP mode...")
     network_manager.setup_ap_mode()
     display.show_no_connection_screen()
     ap_server = APServer(network_manager)
@@ -19,23 +34,28 @@ def main():
     parser.add_argument('--ap-mode', action='store_true', help='Start directly in AP mode')
     args = parser.parse_args()
 
+    logger.info("Networkii starting up...")
+    
     # Initialize network manager and display
     network_manager = NetworkManager()
     display = Display()
     
     # Start in AP mode if requested
     if args.ap_mode:
+        logger.info("AP mode requested via command line argument")
         print("Starting in AP mode...")
         run_ap_mode(network_manager, display)
         return
     
     # Check network connection
     if not network_manager.check_connection():
+        logger.info("No network connection detected, switching to AP mode")
         print("No network connection. Starting AP mode...")
         run_ap_mode(network_manager, display)
         return
 
     # Network is connected, run main app
+    logger.info("Network connection available, starting monitor mode")
     current_screen = DEFAULT_SCREEN
     network_monitor = NetworkMonitor()
 

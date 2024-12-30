@@ -1,9 +1,20 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 import json
+import logging
+import os
+
+# Set up logging
+logging.basicConfig(
+    filename='networkii.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('ap_server')
 
 class APConfigHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        logger.info(f"Received GET request for path: {self.path}")
         if self.path == '/':
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -45,6 +56,7 @@ class APConfigHandler(BaseHTTPRequestHandler):
             self.wfile.write(html.encode())
     
     def do_POST(self):
+        logger.info(f"Received POST request for path: {self.path}")
         if self.path == '/configure':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length).decode('utf-8')
@@ -53,7 +65,9 @@ class APConfigHandler(BaseHTTPRequestHandler):
             ssid = params.get('ssid', [''])[0]
             password = params.get('password', [''])[0]
             
+            logger.info(f"Attempting to configure WiFi with SSID: {ssid}")
             success = self.server.network_manager.configure_wifi(ssid, password)
+            logger.info(f"WiFi configuration {'successful' if success else 'failed'}")
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -73,15 +87,20 @@ class APServer:
     
     def start(self):
         try:
+            logger.info("Starting AP web server...")
             self.server = HTTPServer(('10.42.0.1', self.port), APConfigHandler)
             self.server.network_manager = self.network_manager
+            logger.info(f"AP web server started successfully on http://10.42.0.1:{self.port}")
             print(f"Starting AP web server on http://10.42.0.1:{self.port}")
             self.server.serve_forever()
         except Exception as e:
+            logger.error(f"Failed to start AP web server: {str(e)}")
             print(f"Failed to start AP web server: {e}")
             raise
     
     def shutdown(self):
         if self.server:
+            logger.info("Shutting down AP web server...")
             self.server.shutdown()
-            self.server.server_close() 
+            self.server.server_close()
+            logger.info("AP web server shutdown complete") 
