@@ -415,7 +415,7 @@ class Display:
         self.image.paste(face, (face_x, face_y), face)
         
         # Draw divider line
-        divider_y = face_y + small_face_size + 25  # More space before divider
+        divider_y = face_y + small_face_size + 20  # More space before divider
         self.draw.line([(20, divider_y), (SCREEN_WIDTH - 20, divider_y)], fill=COLORS['gray'], width=1)
         
         # Start content after divider
@@ -423,7 +423,7 @@ class Display:
         
         # Find the widest instruction to align both rows
         instructions1 = "1. Connect to WiFi:"
-        instructions2 = "2. Visit:"
+        instructions2 = "2. Then Visit:"
         instructions1_bbox = self.draw.textbbox((0, 0), instructions1, font=self.medium_font)
         instructions2_bbox = self.draw.textbbox((0, 0), instructions2, font=self.medium_font)
         instruction_width = max(instructions1_bbox[2], instructions2_bbox[2])
