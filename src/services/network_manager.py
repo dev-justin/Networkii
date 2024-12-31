@@ -89,8 +89,7 @@ class NetworkManager:
             available_networks = subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'list'],
                          stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
-            logger.info("Available networks:")
-            logger.info(available_networks.stdout)
+            logger.info(f"Available networks: {available_networks.stdout}")
             
 
             # 4. Attempt to connect to the new network

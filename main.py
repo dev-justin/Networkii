@@ -19,27 +19,20 @@ class NetworkiiApp:
         self.current_mode = None  # Can be 'monitor', 'ap', or 'no_internet'
         self.button_handler = ButtonHandler(self.display, self.network_manager)
     
-    def set_mode(self, new_mode):
+    def set_button_config(self, new_mode):
         """Change the app mode and update handlers."""
         if new_mode == self.current_mode:
             return
         
         logger.info(f"Changing mode from {self.current_mode} to {new_mode}")
-        self.button_handler.set_mode(new_mode)
+        self.button_handler.set_button_config(new_mode)
         self.current_mode = new_mode
-
-    def reset_wifi_and_enter_ap(self):
-        """Reset WiFi credentials and enter AP mode"""
-        logger.info("Resetting WiFi credentials and entering AP mode")
-        self.set_mode('ap')
-        self.network_manager.forget_wifi_connection()
-        self.run_ap_mode()
 
     def run_monitor_mode(self):
         """Run the main monitoring interface"""
         logger.info("Starting monitor mode...")
         self.network_monitor = NetworkMonitor()
-        self.set_mode('monitor')
+        self.set_button_config('monitor')
         
         # Track if we're in internet mode or no-internet mode
         in_internet_mode = True
@@ -49,21 +42,21 @@ class NetworkiiApp:
                 # First check if we have WiFi connection
                 if not self.network_manager.has_wifi_connection():
                     logger.info("No WiFi connection, switching to AP mode")
-                    self.set_mode('ap')
+                    self.set_button_config('ap')
                     self.run_ap_mode()
                     return
                 
-                # Then check if we have internet
+                # Check if we have internet on preferred interface (wlan0 or usb0)
                 has_internet = self.network_manager.check_connection()
                 
                 # Handle mode transitions only when status changes
                 if has_internet and not in_internet_mode:
                     logger.info("Internet connection restored")
-                    self.set_mode('monitor')
+                    self.set_button_config('monitor')
                     in_internet_mode = True
                 elif not has_internet and in_internet_mode:
                     logger.info("Internet connection lost")
-                    self.set_mode('no_internet')
+                    self.set_button_config('no_internet')
                     in_internet_mode = False
                 
                 # Show appropriate screen based on internet status
@@ -87,12 +80,12 @@ class NetworkiiApp:
         except Exception as e:
             logger.error(f"Error in monitor mode: {e}")
         finally:
-            self.set_mode(None)  # Clean up handlers
+            self.set_button_config(None)  # Clean up handlers
 
     def run_ap_mode(self):
         """Run in AP mode for WiFi configuration"""
         logger.info("Starting AP mode...")
-        self.set_mode('ap')
+        self.set_button_config('ap')
         self.display.show_no_connection_screen()
         self.network_manager.setup_ap_mode()
         
