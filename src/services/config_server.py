@@ -96,8 +96,8 @@ class ConfigHandler(BaseHTTPRequestHandler):
             <body>
                 <div class="container">
                     <div class="warning">
-                        Note: This configuration interface uses HTTP (not HTTPS). 
-                        Make sure to use http:// in your browser's address bar.
+                        Note: This site uses a self-signed certificate for security.
+                        You may need to accept the security warning in your browser.
                     </div>
                     <h1>Networkii Configuration</h1>
                     <form id="config-form">
@@ -115,11 +115,6 @@ class ConfigHandler(BaseHTTPRequestHandler):
                 </div>
                 
                 <script>
-                    // Ensure we're using HTTP
-                    if (window.location.protocol === 'https:') {
-                        window.location.href = 'http://' + window.location.host + window.location.pathname;
-                    }
-                    
                     // Load current configuration
                     fetch('/config')
                         .then(response => response.json())
