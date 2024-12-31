@@ -93,8 +93,8 @@ class NetworkiiApp:
         """Run in AP mode for WiFi configuration"""
         logger.info("Starting AP mode...")
         self.set_mode('ap')
-        self.network_manager.setup_ap_mode()
         self.display.show_no_connection_screen()
+        self.network_manager.setup_ap_mode()
         
         def on_wifi_configured():
             logger.info("WiFi configured successfully, transitioning to monitor mode")
