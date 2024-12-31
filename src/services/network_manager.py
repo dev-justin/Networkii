@@ -2,6 +2,7 @@ import subprocess
 import time
 import netifaces
 import logging
+from ..utils.interface import get_preferred_interface
 
 # Get logger for this module
 logger = logging.getLogger('network_manager')
@@ -20,13 +21,14 @@ class NetworkManager:
         
         try:
             # Check if interface exists and has an IP
-            if self.INTERFACE not in netifaces.interfaces():
-                logger.warning(f"Interface {self.INTERFACE} not found")
+            preferred_interface = get_preferred_interface()
+            if preferred_interface not in netifaces.interfaces():
+                logger.warning(f"Interface {preferred_interface} not found")
                 return False
                 
-            addrs = netifaces.ifaddresses(self.INTERFACE)
+            addrs = netifaces.ifaddresses(preferred_interface)
             if netifaces.AF_INET not in addrs:
-                logger.warning(f"No IPv4 address found for interface {self.INTERFACE}")
+                logger.warning(f"No IPv4 address found for interface {preferred_interface}")
                 return False
                 
             # Test internet connectivity
@@ -59,19 +61,11 @@ class NetworkManager:
             logger.error(error_msg)
             return
             
-        # Wait for AP to start
-        logger.info("Waiting for AP to start...")
+        logger.info("AP hotspot created successfully, waiting 3 seconds for it to start")
         time.sleep(3)
-        
-        # Check AP status
-        logger.info("Checking AP status...")
-        status_result = subprocess.run(['sudo', 'nmcli', 'device', 'show', self.INTERFACE], capture_output=True, text=True)
-        logger.info(f"AP Status:\n{status_result.stdout}")
     
     def configure_wifi(self, ssid: str, password: str) -> bool:
         """Configure WiFi client connection using NetworkManager"""
-
-        logger.info(f"Attempting to connect to WiFi network: {ssid}")
     
         try:
             # 1. Tear down AP so we have access to the interface
