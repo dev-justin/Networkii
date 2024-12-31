@@ -98,5 +98,8 @@ class NetworkMonitor:
             speed_test_status=self.is_speed_testing,
             speed_test_timestamp=self.last_speed_test,
             download_speed=self.download_speed,
-            upload_speed=self.upload_speed
+            upload_speed=self.upload_speed,
+            interface=self.interface,
+            interface_ip=self.interface_ip,
+            ping_target=config_manager.get_setting('ping_target')
         ) 

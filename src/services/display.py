@@ -350,8 +350,17 @@ class Display:
         ROW_SPACING = 2   
         ROW_HEIGHT = 30
         
+        # Draw interface info
+        interface_text = f"Interface: {stats.interface} ({stats.interface_ip})"
+        target_text = f"Target: {stats.ping_target}"
+        self.draw.text((10, 5), interface_text, font=self.tiny_font, fill=COLORS['white'])
+        self.draw.text((10, 20), target_text, font=self.tiny_font, fill=COLORS['white'])
+        
+        # Adjust top margin to account for new info
+        METRICS_START = 45
+        
         self.draw_metric_row(
-            TOP_MARGIN,
+            METRICS_START,
             "PING",
             stats.ping,
             stats.ping_history,
@@ -359,7 +368,7 @@ class Display:
         )
         
         self.draw_metric_row(
-            TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,
+            METRICS_START + ROW_HEIGHT + ROW_SPACING,
             "JITTER",
             stats.jitter,
             stats.jitter_history,
@@ -367,14 +376,14 @@ class Display:
         )
         
         self.draw_metric_row(
-            TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,
+            METRICS_START + (ROW_HEIGHT + ROW_SPACING) * 2,
             "LOSS",
             stats.packet_loss,
             stats.packet_loss_history,
             COLORS['purple']
         )
         
-        speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 20
+        speed_y = METRICS_START + (ROW_HEIGHT + ROW_SPACING) * 3 + 20
         if stats.speed_test_status:
             status_text = f"Speed test in progress..."
             self.draw.text((10, speed_y), status_text, font=self.message_font, fill=COLORS['white'])
@@ -401,7 +410,7 @@ class Display:
             self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=COLORS['white'])
 
         self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image) 
+        self.disp.st7789.display(self.image)
 
     def show_no_connection_screen(self):
         """Show the no connection screen with AP mode instructions"""
