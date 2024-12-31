@@ -10,7 +10,8 @@ class ConfigManager:
     }
     
     def __init__(self):
-        self.config_dir = '/etc/networkii'
+        # Use ~/.config/networkii for configuration
+        self.config_dir = os.path.expanduser('~/.config/networkii')
         self.config_file = os.path.join(self.config_dir, 'config.json')
         self.config = self.DEFAULT_CONFIG.copy()
         self.load_config()
