@@ -37,7 +37,7 @@ class NetworkManager:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
-            print(f"Ping result: {result.stdout}, {preferred_interface}")
+            print(f"Ping result: {result}, {preferred_interface}")
             return result.returncode == 0
         except Exception as e:
             logger.error(f"Error checking connection: {str(e)}")
