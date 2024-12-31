@@ -85,8 +85,19 @@ fi
 print_success "USB OTG (RNDIS) is now enabled. A reboot is recommended to apply changes."
 print_info "To complete setup, run: ${BOLD}sudo reboot${NC}"
 
+
 #------------------------------
-# 2. UPDATE SYSTEM
+# 2. UPDATE hostname
+#------------------------------
+print_header "Updating hostname"
+
+print_info "Setting hostname to 'networkii'"
+sudo hostnamectl set-hostname networkii
+print_success "Hostname updated to 'networkii'"
+
+
+#------------------------------
+# 3. UPDATE SYSTEM
 #------------------------------
 print_header "Updating System Packages"
 
@@ -99,7 +110,7 @@ sudo apt-get upgrade -y
 print_success "System packages upgraded"
 
 #------------------------------
-# 3. INSTALL AND SETUP APP REQUIREMENTS    
+# 4. INSTALL AND SETUP APP REQUIREMENTS    
 #------------------------------
 print_header "Installing Python Requirements"
 pushd "$PROJECT_DIR" > /dev/null
