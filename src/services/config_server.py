@@ -91,6 +91,10 @@ class ConfigHandler(BaseHTTPRequestHandler):
                             <label for="ping_target">Ping Target</label>
                             <input type="text" id="ping_target" name="ping_target" placeholder="e.g. 1.1.1.1" required>
                         </div>
+                        <div class="form-group">
+                            <label for="speed_test_interval">Speed Test Interval (minutes)</label>
+                            <input type="number" id="speed_test_interval" name="speed_test_interval" min="5" max="1440" required>
+                        </div>
                         <button type="submit">Save Configuration</button>
                     </form>
                     <div id="status"></div>
@@ -114,7 +118,8 @@ class ConfigHandler(BaseHTTPRequestHandler):
                         const status = document.getElementById('status');
                         
                         const config = {
-                            ping_target: form.ping_target.value
+                            ping_target: form.ping_target.value,
+                            speed_test_interval: parseInt(form.speed_test_interval.value, 10)
                         };
                         
                         try {

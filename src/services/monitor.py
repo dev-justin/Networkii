@@ -7,7 +7,10 @@ from collections import deque
 from ..models.network_stats import NetworkStats
 from ..utils.interface import get_preferred_interface, get_interface_ip
 from ..utils.config_manager import config_manager
-from ..config import DEFAULT_HISTORY_LENGTH, DEFAULT_SPEED_TEST_INTERVAL
+from ..config import DEFAULT_HISTORY_LENGTH
+import logging
+
+logger = logging.getLogger('monitor')
 
 class NetworkMonitor:
     def __init__(self):
@@ -16,14 +19,13 @@ class NetworkMonitor:
         self.ping_history = deque(maxlen=DEFAULT_HISTORY_LENGTH)
         self.jitter_history = deque(maxlen=DEFAULT_HISTORY_LENGTH)
         self.packet_loss_history = deque(maxlen=DEFAULT_HISTORY_LENGTH)
-        self.speed_test_interval = DEFAULT_SPEED_TEST_INTERVAL * 60
         self.last_speed_test = 0
         self.download_speed = 0
         self.upload_speed = 0
         self.is_speed_testing = False
         self.speed_test_thread = None
 
-        print(f"Using interface: {self.interface} ({self.interface_ip}), target host: {config_manager.get_ping_target()}")
+        print(f"Using interface: {self.interface} ({self.interface_ip}), target host: {config_manager.get_setting('ping_target')}")
     
     def run_speed_test(self):
         """Start a speed test in a separate thread"""
@@ -35,24 +37,18 @@ class NetworkMonitor:
             try:
                 if not self.interface_ip:
                     raise Exception("No valid IP address for interface")
-                    
-                print(f"Using interface IP for speedtest: {self.interface_ip}")
+                
                 st = speedtest.Speedtest(secure=True)
                 st.get_config()
-                
-                print("Finding best server...")
                 st.get_best_server()
                 
-                print("Starting download test...")
                 self.download_speed = st.download() / 1_000_000
-                
-                print("Starting upload test...")
                 self.upload_speed = st.upload() / 1_000_000
                 
                 self.last_speed_test = time.time()
-                print(f"Speed test completed - Down: {self.download_speed:.1f} Mbps, Up: {self.upload_speed:.1f} Mbps")
+                logger.info(f"Speed test completed - Down: {self.download_speed:.1f} Mbps, Up: {self.upload_speed:.1f} Mbps")
             except Exception as e:
-                print(f"Speed test failed: {e}")
+                logger.error(f"Speed test failed: {e}")
             finally:
                 self.is_speed_testing = False
 
@@ -62,11 +58,12 @@ class NetworkMonitor:
 
     def get_stats(self, count=5, ping_interval=0.2) -> NetworkStats:
         """Execute ping command and return network statistics"""
-        if time.time() - self.last_speed_test > self.speed_test_interval and not self.is_speed_testing:
+        speed_test_interval = config_manager.get_setting('speed_test_interval') * 60  # Convert minutes to seconds
+        if time.time() - self.last_speed_test > speed_test_interval and not self.is_speed_testing:
             self.run_speed_test()
             
         try:
-            ping_target = config_manager.get_ping_target()
+            ping_target = config_manager.get_setting('ping_target')
             cmd = ['ping', ping_target, '-c', str(count), '-i', str(ping_interval), '-I', self.interface]
             result = subprocess.run(cmd, capture_output=True, text=True)
             
@@ -90,7 +87,7 @@ class NetworkMonitor:
             self.packet_loss_history.append(packet_loss)
             
         except Exception as e:
-            print(f"Error during ping: {e}")
+            logger.error(f"Error during ping: {e}")
 
         return NetworkStats(
             timestamp=time.time(),

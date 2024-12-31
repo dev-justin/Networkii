@@ -1,19 +1,16 @@
 import os
 import json
 import logging
+from ..config import USER_DEFAULTS
 
 logger = logging.getLogger('config_manager')
 
 class ConfigManager:
-    DEFAULT_CONFIG = {
-        'ping_target': '1.1.1.1'
-    }
-    
     def __init__(self):
         # Use ~/.config/networkii for configuration
         self.config_dir = os.path.expanduser('~/.config/networkii')
         self.config_file = os.path.join(self.config_dir, 'config.json')
-        self.config = self.DEFAULT_CONFIG.copy()
+        self.config = USER_DEFAULTS.copy()
         self.load_config()
     
     def load_config(self):
@@ -57,9 +54,9 @@ class ConfigManager:
         self.save_config()
         logger.info(f"Configuration updated: {self.config}")
     
-    def get_ping_target(self):
-        """Get the configured ping target"""
-        return self.config.get('ping_target', self.DEFAULT_CONFIG['ping_target'])
+    def get_setting(self, key):
+        """Get a configuration setting by key, falling back to default if not found"""
+        return self.config.get(key, USER_DEFAULTS.get(key))
 
 # Create a singleton instance
 config_manager = ConfigManager() 

@@ -1,3 +1,10 @@
+# User configurable defaults
+# These values can be changed through the web interface
+USER_DEFAULTS = {
+    'ping_target': '1.1.1.1',
+    'speed_test_interval': 30  # minutes
+}
+
 # Display settings
 TOTAL_SCREENS = 3
 DEFAULT_SCREEN = 1
@@ -5,9 +12,7 @@ SCREEN_WIDTH = 320
 SCREEN_HEIGHT = 240
 
 # Network settings
-DEFAULT_TARGET_HOST = "1.1.1.1"
 DEFAULT_HISTORY_LENGTH = 300
-DEFAULT_SPEED_TEST_INTERVAL = 30  # minutes
 RECENT_HISTORY_LENGTH = 20  # Number of samples for health calculation
 
 # Button settings
