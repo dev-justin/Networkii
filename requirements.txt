@@ -4,5 +4,4 @@ displayhatmini
 netifaces
 numpy
 speedtest-cli
-pyOpenSSL
 rpi-lgpio
