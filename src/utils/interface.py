@@ -4,9 +4,12 @@ from typing import Optional
 def get_preferred_interface() -> str:
     """Get the preferred network interface (usb0 with ICS standard IPv4 if available, otherwise wlan0)"""
     interfaces = netifaces.interfaces()
+
+    print(f"Interfaces: {interfaces}")
     
     if 'usb0' in interfaces:
         addrs = netifaces.ifaddresses('usb0')
+        print(f"USB0 addresses: {addrs}")
         if netifaces.AF_INET in addrs:
             for addr in addrs[netifaces.AF_INET]:
                 if addr['addr'].startswith('192.168.137.'):
