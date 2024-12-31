@@ -7,6 +7,17 @@ from ..utils.config_manager import config_manager
 logger = logging.getLogger('config_server')
 
 class ConfigHandler(BaseHTTPRequestHandler):
+    def handle_one_request(self):
+        """Override to handle HTTPS requests gracefully"""
+        try:
+            return super().handle_one_request()
+        except UnicodeError:
+            # This is likely an HTTPS request
+            self.send_error(400, "This server only supports HTTP. Please use http:// instead of https://")
+        except Exception as e:
+            logger.error(f"Error handling request: {e}")
+            self.send_error(500, "Internal server error")
+
     def do_GET(self):
         """Handle GET requests"""
         logger.debug(f"Received GET request for path: {self.path}")
@@ -34,6 +45,14 @@ class ConfigHandler(BaseHTTPRequestHandler):
                         padding: 20px;
                         border-radius: 8px;
                         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .warning {
+                        background: #fff3cd;
+                        color: #856404;
+                        padding: 10px;
+                        border-radius: 4px;
+                        margin-bottom: 20px;
+                        border: 1px solid #ffeeba;
                     }
                     h1 {
                         color: #333;
@@ -85,6 +104,10 @@ class ConfigHandler(BaseHTTPRequestHandler):
             </head>
             <body>
                 <div class="container">
+                    <div class="warning">
+                        Note: This configuration interface uses HTTP (not HTTPS). 
+                        Make sure to use http:// in your browser's address bar.
+                    </div>
                     <h1>Networkii Configuration</h1>
                     <form id="config-form">
                         <div class="form-group">
@@ -101,11 +124,17 @@ class ConfigHandler(BaseHTTPRequestHandler):
                 </div>
                 
                 <script>
+                    // Ensure we're using HTTP
+                    if (window.location.protocol === 'https:') {
+                        window.location.href = 'http://' + window.location.host + window.location.pathname;
+                    }
+                    
                     // Load current configuration
                     fetch('/config')
                         .then(response => response.json())
                         .then(config => {
                             document.getElementById('ping_target').value = config.ping_target;
+                            document.getElementById('speed_test_interval').value = config.speed_test_interval;
                         })
                         .catch(error => {
                             console.error('Error loading configuration:', error);
