@@ -33,7 +33,7 @@ class NetworkManager:
                 return False
                 
             # Test internet connectivity using configured target
-            ping_target = config_manager.get_ping_target()
+            ping_target = config_manager.get_setting('ping_target')
             result = subprocess.run(
                 ['ping', '-c', '1', '-W', '1', ping_target, '-I', preferred_interface],
                 stdout=subprocess.DEVNULL,

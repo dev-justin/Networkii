@@ -91,9 +91,24 @@ print_info "To complete setup, run: ${BOLD}sudo reboot${NC}"
 #------------------------------
 print_header "Updating hostname"
 
-print_info "Setting hostname to 'networkii'"
-sudo hostnamectl set-hostname networkii
-print_success "Hostname updated to 'networkii'"
+NEW_HOSTNAME="networkii"
+
+# Update hostname using hostnamectl
+print_info "Setting hostname to '$NEW_HOSTNAME'"
+sudo hostnamectl set-hostname $NEW_HOSTNAME
+
+# Update /etc/hosts
+print_info "Updating /etc/hosts"
+# Backup hosts file
+if [ ! -f /etc/hosts.bak ]; then
+    sudo cp /etc/hosts /etc/hosts.bak
+    print_info "Backed up /etc/hosts to /etc/hosts.bak"
+fi
+
+# Replace old hostname with new one in /etc/hosts
+sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$NEW_HOSTNAME/g" /etc/hosts
+
+print_success "Hostname updated to '$NEW_HOSTNAME' in both hostname and /etc/hosts"
 
 
 #------------------------------
