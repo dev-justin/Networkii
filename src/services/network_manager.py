@@ -83,8 +83,17 @@ class NetworkManager:
             subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'],
                          stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
+            
+        
+            # 3. List available networks for logger
+            available_networks = subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'list'],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+            logger.info("Available networks:")
+            logger.info(available_networks.stdout)
+            
 
-            # 3. Attempt to connect to the new network
+            # 4. Attempt to connect to the new network
             logger.info("Attempting to connect to new network...")
             result = subprocess.run([
                 'sudo', 'nmcli', 'device', 'wifi', 'connect', ssid,
@@ -97,7 +106,7 @@ class NetworkManager:
                 self.setup_ap_mode()
                 return False
                 
-            # 4. Check connection status multiple times
+            # 5. Check connection status multiple times
             logger.info("Waiting for connection to establish...")
             max_attempts = 3
             connection_successful = False
