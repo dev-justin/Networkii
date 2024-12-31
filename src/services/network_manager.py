@@ -9,7 +9,7 @@ logger = logging.getLogger('network_manager')
 
 class NetworkManager:
     def __init__(self):
-        self.ap_ssid = "Networkii"
+        self.ap_ssid = "networkii"
         self.interface = get_preferred_interface()
         logger.info(f"NetworkManager initialized with interface: {self.interface}")
         
@@ -49,7 +49,7 @@ class NetworkManager:
             'sudo', 'nmcli', 'device', 'wifi', 'hotspot',
             'ifname', self.interface,
             'ssid', self.ap_ssid,
-            '802-11-wireless-security.key-mgmt', 'none'
+            'password', self.ap_ssid
         ], capture_output=True, text=True)
         
         if result.returncode != 0:
