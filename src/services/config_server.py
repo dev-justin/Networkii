@@ -9,17 +9,6 @@ from ..utils.config_manager import config_manager
 logger = logging.getLogger('config_server')
 
 class ConfigHandler(BaseHTTPRequestHandler):
-    def handle_one_request(self):
-        """Override to handle HTTPS requests gracefully"""
-        try:
-            return super().handle_one_request()
-        except UnicodeError:
-            # This is likely an HTTPS request
-            self.send_error(400, "This server only supports HTTP. Please use http:// instead of https://")
-        except Exception as e:
-            logger.error(f"Error handling request: {e}")
-            self.send_error(500, "Internal server error")
-
     def do_GET(self):
         """Handle GET requests"""
         logger.debug(f"Received GET request for path: {self.path}")
@@ -263,23 +252,42 @@ class ConfigServer:
                 self.generate_self_signed_cert()
                 
                 logger.info(f"Starting HTTPS configuration server on port {self.port}")
-                self.server = HTTPServer(('0.0.0.0', self.port), ConfigHandler)
+                
+                # Get all network interfaces for debugging
+                import netifaces
+                interfaces = netifaces.interfaces()
+                for iface in interfaces:
+                    addrs = netifaces.ifaddresses(iface)
+                    if netifaces.AF_INET in addrs:
+                        for addr in addrs[netifaces.AF_INET]:
+                            logger.info(f"Interface {iface}: {addr['addr']}")
+                
+                self.server = HTTPServer(('', self.port), ConfigHandler)
+                logger.info(f"Server bound to port {self.port}")
                 
                 # Wrap socket with SSL
                 self.server.socket = ssl.wrap_socket(
                     self.server.socket,
                     keyfile=self.key_file,
                     certfile=self.cert_file,
-                    server_side=True
+                    server_side=True,
+                    ssl_version=ssl.PROTOCOL_TLS_SERVER
                 )
+                logger.info("SSL wrapper configured")
                 
+                logger.info("Server is ready to accept connections")
                 self.server.serve_forever()
             except Exception as e:
-                logger.error(f"Error starting HTTPS server: {e}")
+                logger.error(f"Error starting HTTPS server: {e}", exc_info=True)
+                raise  # Re-raise to see full traceback
         
-        self.server_thread = threading.Thread(target=run_server)
-        self.server_thread.daemon = True
-        self.server_thread.start()
+        try:
+            self.server_thread = threading.Thread(target=run_server)
+            self.server_thread.daemon = True
+            self.server_thread.start()
+            logger.info("Server thread started")
+        except Exception as e:
+            logger.error(f"Error starting server thread: {e}", exc_info=True)
     
     def stop(self):
         """Stop the configuration web server"""
