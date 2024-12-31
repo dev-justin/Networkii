@@ -3,6 +3,8 @@ from urllib.parse import parse_qs
 import json
 import logging
 import os
+import subprocess
+import time
 
 # Get logger for this module
 logger = logging.getLogger('ap_server')
@@ -162,9 +164,32 @@ class APServer:
         self.server = None
         self.on_wifi_configured = on_wifi_configured
     
+    def _force_clear_port(self):
+        """Force kill any process using port 80"""
+        try:
+            # Find process using port 80
+            cmd = "lsof -i :80 | grep LISTEN | awk '{print $2}'"
+            process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            pid = process.stdout.strip()
+            
+            if pid:
+                logger.info(f"Found process {pid} using port 80, killing it...")
+                # Kill the process
+                subprocess.run(f"kill -9 {pid}", shell=True)
+                logger.info("Process killed successfully")
+        except Exception as e:
+            logger.warning(f"Error while trying to clear port 80: {e}")
+    
     def start(self):
         try:
             logger.info("Starting AP web server...")
+            
+            # Force clear port 80 if it's in use
+            self._force_clear_port()
+            
+            # Small delay to ensure port is released
+            time.sleep(1)
+            
             self.server = HTTPServer(('10.42.0.1', self.port), APConfigHandler)
             self.server.network_manager = self.network_manager
             self.server.on_wifi_configured = self.on_wifi_configured
@@ -177,6 +202,9 @@ class APServer:
     def shutdown(self):
         if self.server:
             logger.info("Shutting down AP web server...")
-            self.server.shutdown()
-            self.server.server_close()
-            logger.info("AP web server shutdown complete") 
+            try:
+                self.server.shutdown()
+                self.server.server_close()
+                logger.info("AP web server shutdown complete")
+            except Exception as e:
+                logger.error(f"Error during server shutdown: {e}") 
