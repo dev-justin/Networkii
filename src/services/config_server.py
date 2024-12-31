@@ -2,6 +2,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import logging
 import threading
+import ssl
+import os
 from ..utils.config_manager import config_manager
 
 logger = logging.getLogger('config_server')
@@ -228,13 +230,52 @@ class ConfigServer:
         self.port = port
         self.server = None
         self.server_thread = None
+        self.cert_file = os.path.expanduser('~/.config/networkii/cert.pem')
+        self.key_file = os.path.expanduser('~/.config/networkii/key.pem')
+    
+    def generate_self_signed_cert(self):
+        """Generate a self-signed certificate if it doesn't exist"""
+        if not os.path.exists(self.cert_file) or not os.path.exists(self.key_file):
+            logger.info("Generating self-signed certificate...")
+            config_dir = os.path.dirname(self.cert_file)
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir)
+            
+            # Generate private key and certificate
+            cmd = [
+                'openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-keyout', self.key_file,
+                '-out', self.cert_file, '-days', '365', '-nodes',
+                '-subj', '/CN=networkii.local'
+            ]
+            try:
+                import subprocess
+                subprocess.run(cmd, check=True, capture_output=True)
+                logger.info("Self-signed certificate generated successfully")
+            except Exception as e:
+                logger.error(f"Error generating certificate: {e}")
+                raise
     
     def start(self):
         """Start the configuration web server in a background thread"""
         def run_server():
-            logger.info(f"Starting configuration server on port {self.port}")
-            self.server = HTTPServer(('0.0.0.0', self.port), ConfigHandler)
-            self.server.serve_forever()
+            try:
+                # Generate certificate if needed
+                self.generate_self_signed_cert()
+                
+                logger.info(f"Starting HTTPS configuration server on port {self.port}")
+                self.server = HTTPServer(('0.0.0.0', self.port), ConfigHandler)
+                
+                # Wrap socket with SSL
+                self.server.socket = ssl.wrap_socket(
+                    self.server.socket,
+                    keyfile=self.key_file,
+                    certfile=self.cert_file,
+                    server_side=True
+                )
+                
+                self.server.serve_forever()
+            except Exception as e:
+                logger.error(f"Error starting HTTPS server: {e}")
         
         self.server_thread = threading.Thread(target=run_server)
         self.server_thread.daemon = True
