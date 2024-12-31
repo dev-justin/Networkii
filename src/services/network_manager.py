@@ -3,6 +3,7 @@ import time
 import netifaces
 import logging
 from ..utils.interface import get_preferred_interface
+from ..utils.config_manager import config_manager
 
 # Get logger for this module
 logger = logging.getLogger('network_manager')
@@ -31,9 +32,10 @@ class NetworkManager:
                 logger.error(f"No IPv4 address found for interface {preferred_interface}")
                 return False
                 
-            # Test internet connectivity
+            # Test internet connectivity using configured target
+            ping_target = config_manager.get_ping_target()
             result = subprocess.run(
-                ['ping', '-c', '1', '-W', '1', '1.1.1.1', '-I', preferred_interface],
+                ['ping', '-c', '1', '-W', '1', ping_target, '-I', preferred_interface],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
