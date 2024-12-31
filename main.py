@@ -28,13 +28,13 @@ class NetworkiiApp:
         if new_config == self.button_config:
             return
         
-        logger.info(f"Changing mode from {self.button_config} to {new_config}")
+        logger.debug(f"Changing mode from {self.button_config} to {new_config}")
         self.button_handler.set_button_config(new_config)
         self.button_config = new_config
 
     def monitor_loop(self):
         """Background thread for network monitoring"""
-        logger.info("Network monitor thread started")
+        logger.debug("Network monitor thread started")
         while self.monitor_running:
             try:
                 self.latest_stats = self.network_monitor.get_stats()
@@ -45,7 +45,7 @@ class NetworkiiApp:
 
     def run_monitor_mode(self):
         """Run the main monitoring interface"""
-        logger.info("Starting monitor mode...")
+        logger.info("Starting monitor mode")
         self.network_monitor = NetworkMonitor()
         self.set_button_config('monitor')
         
@@ -85,7 +85,7 @@ class NetworkiiApp:
                 
                 # Show appropriate screen based on internet status
                 if not has_internet:
-                    logger.info("WiFi connected but no internet, showing no internet screen")
+                    logger.debug("WiFi connected but no internet, showing no internet screen")
                     self.display.show_no_internet_screen()
                 elif self.latest_stats:  # Only update if we have stats
                     current_screen = self.button_handler.get_current_screen()
@@ -110,7 +110,7 @@ class NetworkiiApp:
 
     def run_ap_mode(self):
         """Run in AP mode for WiFi configuration"""
-        logger.info("Starting AP mode...")
+        logger.info("Starting AP mode")
         self.set_button_config('ap')
         self.display.show_no_connection_screen()
         self.network_manager.setup_ap_mode()
@@ -124,15 +124,15 @@ class NetworkiiApp:
     
     def run(self, ap_mode=False):
         """Main entry point for the application"""
-        logger.info("Networkii starting up...")
+        logger.debug("Networkii starting up...")
         
         try:
             # Start in AP mode if requested or if no WiFi connection
             if ap_mode or not self.network_manager.has_wifi_connection():
-                logger.info("Booting into AP mode (%s)", "CLI argument" if ap_mode else "No WiFi connection")
+                logger.info("Starting in AP mode (%s)", "CLI argument" if ap_mode else "No WiFi connection")
                 self.run_ap_mode()
             else:
-                logger.info("Booting into monitor mode")
+                logger.info("Starting in monitor mode")
                 self.run_monitor_mode()
         finally:
             self.monitor_running = False

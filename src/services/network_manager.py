@@ -13,7 +13,7 @@ class NetworkManager:
     INTERFACE = "wlan0"
     
     def __init__(self):
-        logger.info(f"NetworkManager initialized with interface: {self.INTERFACE}")
+        logger.debug(f"NetworkManager initialized with interface: {self.INTERFACE}")
         
     # Checks if we have a valid connection by checking if we have an IPv4 address and if we can ping 1.1.1.1
     def check_connection(self) -> bool:
@@ -23,12 +23,12 @@ class NetworkManager:
             # Check if interface exists and has an IP
             preferred_interface = get_preferred_interface()
             if preferred_interface not in netifaces.interfaces():
-                logger.warning(f"Interface {preferred_interface} not found")
+                logger.error(f"Interface {preferred_interface} not found")
                 return False
                 
             addrs = netifaces.ifaddresses(preferred_interface)
             if netifaces.AF_INET not in addrs:
-                logger.warning(f"No IPv4 address found for interface {preferred_interface}")
+                logger.error(f"No IPv4 address found for interface {preferred_interface}")
                 return False
                 
             # Test internet connectivity
@@ -37,9 +37,7 @@ class NetworkManager:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
-            is_connected = result.returncode == 0
-            logger.info(f"Connection check result: {'Connected' if is_connected else 'Disconnected'}")
-            return is_connected
+            return result.returncode == 0
         except Exception as e:
             logger.error(f"Error checking connection: {str(e)}")
             return False
@@ -61,7 +59,7 @@ class NetworkManager:
             logger.error(error_msg)
             return
             
-        logger.info("AP hotspot created successfully, waiting 3 seconds for it to start")
+        logger.debug("AP hotspot created successfully, waiting for startup")
         time.sleep(3)
     
     def configure_wifi(self, ssid: str, password: str) -> bool:
@@ -69,8 +67,8 @@ class NetworkManager:
     
         try:
             # 1. Tear down AP so we have access to the interface
-            logger.info("Tearing down AP mode...")
-            result =subprocess.run(['sudo', 'nmcli', 'connection', 'delete', 'Hotspot'],
+            logger.debug("Tearing down AP mode...")
+            result = subprocess.run(['sudo', 'nmcli', 'connection', 'delete', 'Hotspot'],
                          stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
             
@@ -79,19 +77,17 @@ class NetworkManager:
                 return False
             
             # 2. Rescan WiFi networks
-            logger.info("Rescanning WiFi networks...")
+            logger.debug("Rescanning WiFi networks...")
             subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'],
                          stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
             
-        
             # 3. List available networks for logger
             available_networks = subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'list'],
                          stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL)
-            logger.info(f"Available networks: {available_networks.stdout}")
+            logger.debug(f"Available networks: {available_networks.stdout}")
             
-
             # 4. Attempt to connect to the new network
             logger.info("Attempting to connect to new network...")
             result = subprocess.run([
@@ -106,11 +102,11 @@ class NetworkManager:
                 return False
                 
             # 5. Check connection status multiple times
-            logger.info("Waiting for connection to establish...")
+            logger.debug("Waiting for connection to establish...")
             max_attempts = 3
             connection_successful = False
             for attempt in range(max_attempts):
-                logger.info(f"Connection check attempt {attempt + 1}/{max_attempts}")
+                logger.debug(f"Connection check attempt {attempt + 1}/{max_attempts}")
                 time.sleep(2)  # Wait between checks
                 if self.check_connection():
                     connection_successful = True
@@ -134,12 +130,12 @@ class NetworkManager:
         try:
             # Check if interface exists and has an IP
             if self.INTERFACE not in netifaces.interfaces():
-                logger.warning(f"Interface {self.INTERFACE} not found")
+                logger.error(f"Interface {self.INTERFACE} not found")
                 return False
                 
             addrs = netifaces.ifaddresses(self.INTERFACE)
             if netifaces.AF_INET not in addrs:
-                logger.warning(f"No IPv4 address found for interface {self.INTERFACE}")
+                logger.error(f"No IPv4 address found for interface {self.INTERFACE}")
                 return False
             
             # Check if we have a WiFi connection
@@ -170,7 +166,7 @@ class NetworkManager:
             )
             
             # Find and delete the connection for our interface
-            logger.info(f"Current connection: {result.stdout}")
+            logger.debug(f"Current connection: {result.stdout}")
             for line in result.stdout.splitlines():
                 if f":{self.INTERFACE}" in line:
                     connection_name = line.split(':')[0]
@@ -179,6 +175,6 @@ class NetworkManager:
                                 stdout=subprocess.DEVNULL,
                                 stderr=subprocess.DEVNULL)
                     break
-            logger.info("Forgetting WiFi connection complete")
+            logger.debug("Forgetting WiFi connection complete")
         except Exception as e:
             logger.error(f"Error forgetting WiFi connection: {str(e)}")
