@@ -25,6 +25,7 @@ class NetworkMonitor:
         self.is_speed_testing = False
         self.speed_test_thread = None
 
+        logger.info(f"Using interface: {self.interface} ({self.interface_ip}), target host: {config_manager.get_setting('ping_target')}")
         print(f"Using interface: {self.interface} ({self.interface_ip}), target host: {config_manager.get_setting('ping_target')}")
     
     def run_speed_test(self):
