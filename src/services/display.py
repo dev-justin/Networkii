@@ -67,6 +67,11 @@ class Display:
         jitter_history = list(stats.jitter_history)[-RECENT_HISTORY_LENGTH:]
         loss_history = list(stats.packet_loss_history)[-RECENT_HISTORY_LENGTH:]
         
+        # Initialize scores
+        ping_score = 0
+        jitter_score = 0
+        loss_score = 0
+        
         if ping_history:
             ping_scores = [NetworkMetrics.calculate_metric_score(p, NetworkMetrics.PING) for p in ping_history]
             ping_score = statistics.mean(ping_scores) * NetworkMetrics.PING.weight
