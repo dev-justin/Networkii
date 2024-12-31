@@ -16,17 +16,17 @@ class NetworkiiApp:
         self.network_manager = NetworkManager()
         self.display = Display()
         self.network_monitor = None
-        self.current_mode = None  # Can be 'monitor', 'ap', or 'no_internet'
+        self.button_config = None  # Can be 'monitor', 'ap', or 'no_internet'
         self.button_handler = ButtonHandler(self.display, self.network_manager)
     
-    def set_button_config(self, new_mode):
+    def set_button_config(self, new_config):
         """Change the app mode and update handlers."""
-        if new_mode == self.current_mode:
+        if new_config == self.button_config:
             return
         
-        logger.info(f"Changing mode from {self.current_mode} to {new_mode}")
-        self.button_handler.set_button_config(new_mode)
-        self.current_mode = new_mode
+        logger.info(f"Changing mode from {self.button_config} to {new_config}")
+        self.button_handler.set_button_config(new_config)
+        self.button_config = new_config
 
     def run_monitor_mode(self):
         """Run the main monitoring interface"""

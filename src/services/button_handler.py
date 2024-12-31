@@ -75,7 +75,7 @@ class ButtonHandler:
             self._cleanup_gpio()
             return False
     
-    def set_mode(self, new_mode):
+    def set_button_config(self, new_mode):
         """Change the handler mode and update button handlers."""
         if new_mode == self.current_mode:
             logger.debug(f"Already in {new_mode} mode")
