@@ -33,11 +33,10 @@ class NetworkManager:
                 
             # Test internet connectivity
             result = subprocess.run(
-                ['ping', '-c', '1', '-W', '1', '1.1.1.1'],
+                ['ping', '-c', '1', '-W', '1', '1.1.1.1', '-I', preferred_interface],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
-            print(f"Ping result: {result}, {preferred_interface}")
             return result.returncode == 0
         except Exception as e:
             logger.error(f"Error checking connection: {str(e)}")
