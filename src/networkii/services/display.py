@@ -489,49 +489,30 @@ class Display:
         """Show the no internet screen"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
-        # Draw title with reduced top margin
-        title = "No Internet Connection"
-        title_bbox = self.draw.textbbox((0, 0), title, font=self.font_lg)
+        # Draw title
+        title = "No Internet"
+        title_bbox = self.draw.textbbox((0, 0), title, font=self.font_xl)
         title_width = title_bbox[2] - title_bbox[0]
         title_x = (SCREEN_WIDTH - title_width) // 2
-        title_y = 10
-        self.draw.text((title_x, title_y), title, font=self.font_lg, fill=COLORS['red'])
+        title_y = 20
+        self.draw.text((title_x, title_y), title, font=self.font_xl, fill=COLORS['red'])
         
-        # Draw smaller sad face
-        face = self.face_images['critical'].resize(((FACE_SIZE * 2) // 3, (FACE_SIZE * 2) // 3), Image.Resampling.LANCZOS)
-        face_x = (SCREEN_WIDTH - face.size[0]) // 2
-        face_y = title_y + 30
+        # Draw face
+        face = self.face_images['critical']
+        face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
+        face_y = (SCREEN_HEIGHT - FACE_SIZE) // 2 - 10
         self.image.paste(face, (face_x, face_y), face)
         
-        # Draw divider
-        divider_y = face_y + face.size[1] + 15
-        self.draw.line([(20, divider_y), (SCREEN_WIDTH - 20, divider_y)], fill=COLORS['gray'], width=1)
-        
-        # Draw messages
-        message = "Connected to WiFi but"
-        message2 = "can't reach the internet"
-        message_y = divider_y + 15
-        
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_md)
-        message_width = message_bbox[2] - message_bbox[0]
-        message_x = (SCREEN_WIDTH - message_width) // 2
-        self.draw.text((message_x, message_y), message, font=self.font_md, fill=COLORS['white'])
-        
-        message2_bbox = self.draw.textbbox((0, 0), message2, font=self.font_md)
-        message2_width = message2_bbox[2] - message2_bbox[0]
-        message2_x = (SCREEN_WIDTH - message2_width) // 2
-        self.draw.text((message2_x, message_y + 20), message2, font=self.font_md, fill=COLORS['white'])
-        
         # Draw instruction
-        instruction = "Press B to try new WiFi"
+        instruction = "New WiFi? Run networkii connect"
         instruction_bbox = self.draw.textbbox((0, 0), instruction, font=self.font_md)
         instruction_width = instruction_bbox[2] - instruction_bbox[0]
         instruction_x = (SCREEN_WIDTH - instruction_width) // 2
-        instruction_y = message_y + 55
-        self.draw.text((instruction_x, instruction_y), instruction, font=self.font_md, fill=COLORS['green'])
+        instruction_y = face_y + FACE_SIZE + 20
+        self.draw.text((instruction_x, instruction_y), instruction, font=self.font_md, fill=COLORS['white'])
 
         self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image) 
+        self.disp.st7789.display(self.image)
 
     def show_basic_stats_screen(self, stats: NetworkStats):
         """Show current network statistics with large text in a 2x2 grid"""

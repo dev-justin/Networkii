@@ -30,7 +30,6 @@ def has_wifi_saved(interface) -> bool:
         subprocess.run(['nmcli', 'device', 'show', interface],
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL)
-        print(f"WiFi connection found for {interface}")
         return True
     except Exception as e:
         logger.error(f"Error checking WiFi connection: {str(e)}")
