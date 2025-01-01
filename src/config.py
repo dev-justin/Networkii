@@ -19,11 +19,11 @@ RECENT_HISTORY_LENGTH = 20  # Number of samples for health calculation
 DEBOUNCE_TIME = 0.3  # seconds
 
 # Font sizes
-FONT_LARGE = 16
-FONT_MEDIUM = 14
-FONT_SMALL = 10
-FONT_MESSAGE = 14
-FONT_TITLE = 20
+FONT_XS = 10   # Extra small for tiny details
+FONT_SM = 14   # Small for medium-priority info
+FONT_MD = 16   # Medium for standard text
+FONT_LG = 24   # Large for important labels
+FONT_XL = 36   # Extra large for primary metrics
 
 # Display metrics
 METRIC_WIDTH = 18

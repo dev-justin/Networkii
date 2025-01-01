@@ -7,10 +7,10 @@ from ..models.network_stats import NetworkStats
 from ..utils.metrics import NetworkMetrics
 from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE, 
                      HEART_SPACING, HEART_GAP, HEALTH_THRESHOLDS,
-                     FONT_LARGE, FONT_MEDIUM, FONT_SMALL, FONT_MESSAGE, FONT_TITLE,
                      RECENT_HISTORY_LENGTH, METRIC_WIDTH, METRIC_SPACING, 
                      METRIC_RIGHT_MARGIN, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
-                     BAR_WIDTH, BAR_SPACING, BAR_START_X, COLORS)
+                     BAR_WIDTH, BAR_SPACING, BAR_START_X, COLORS,
+                     FONT_XS, FONT_SM, FONT_MD, FONT_LG, FONT_XL)
 import RPi.GPIO as GPIO
 import logging
 
@@ -24,18 +24,11 @@ class Display:
         self.disp = DisplayHATMini(self.image)  # Exposed for button handling by NetworkiiApp
         
         # Load fonts
-        try:
-            self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_TITLE)
-            self.tiny_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_SMALL)
-            self.number_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_LARGE)
-            self.medium_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_MEDIUM)
-            self.message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_MESSAGE)
-        except:
-            self.font = ImageFont.load_default()
-            self.tiny_font = ImageFont.load_default()
-            self.number_font = ImageFont.load_default()
-            self.medium_font = ImageFont.load_default()
-            self.message_font = ImageFont.load_default()
+        self.font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XS)
+        self.font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_SM)
+        self.font_md = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_MD)
+        self.font_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_LG)
+        self.font_xl = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XL)
 
         # Load face images
         self.face_images = {}
@@ -169,12 +162,12 @@ class Display:
         if not history:
             return
         
-        label_bbox = self.draw.textbbox((0, 0), label, font=self.tiny_font)
+        label_bbox = self.draw.textbbox((0, 0), label, font=self.font_xs)
         label_width = label_bbox[2] - label_bbox[0]
         self.draw.text(
             (x + (METRIC_WIDTH - label_width) // 2, y + METRIC_TOP_MARGIN),
             label,
-            font=self.tiny_font,
+            font=self.font_xs,
             fill=color
         )
         
@@ -186,12 +179,12 @@ class Display:
         value_spacing = (available_height - 45) // 9
         
         current_value = str(round(last_values[-1]))
-        current_bbox = self.draw.textbbox((0, 0), current_value, font=self.number_font)
+        current_bbox = self.draw.textbbox((0, 0), current_value, font=self.font_sm)
         current_width = current_bbox[2] - current_bbox[0]
         self.draw.text(
             (x + (METRIC_WIDTH - current_width) // 2, METRIC_TOP_MARGIN + 20),
             current_value,
-            font=self.number_font,
+            font=self.font_sm,
             fill=color
         )
         
@@ -200,7 +193,7 @@ class Display:
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
-            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.medium_font)
+            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_md)
             text_width = text_bbox[2] - text_bbox[0]
             
             text_x = x + (METRIC_WIDTH - text_width) // 2
@@ -209,7 +202,7 @@ class Display:
             self.draw.text(
                 (text_x, text_y),
                 value_text,
-                font=self.medium_font,
+                font=self.font_md,
                 fill=faded_color
             )
 
@@ -221,16 +214,16 @@ class Display:
         VALUE_WIDTH = SCREEN_WIDTH - LABEL_WIDTH - RIGHT_MARGIN
         
         # Draw label
-        self.draw.text((10, y), label, font=self.message_font, fill=color)
+        self.draw.text((10, y), label, font=self.font_sm, fill=color)
         
         # Draw current value
         current_text = str(round(current_value))
-        current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
+        current_bbox = self.draw.textbbox((0, 0), current_text, font=self.font_md)
         current_width = current_bbox[2] - current_bbox[0]
         self.draw.text(
             (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y),  
             current_text,
-            font=self.number_font,
+            font=self.font_md,
             fill=color
         )
         
@@ -252,7 +245,7 @@ class Display:
                     faded_color = tuple(int(c * fade_level) for c in color)
                     
                     value_text = str(round(value))
-                    text_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
+                    text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_md)
                     text_width = text_bbox[2] - text_bbox[0]
                     
                     # Position each value, starting from the right
@@ -263,7 +256,7 @@ class Display:
                     self.draw.text(
                         (x_pos, y),
                         value_text,
-                        font=self.number_font,
+                        font=self.font_md,
                         fill=faded_color
                     )
 
@@ -284,7 +277,7 @@ class Display:
         self.draw_metric_col(metrics_x + METRIC_WIDTH + METRIC_SPACING, 0, "J", stats.jitter_history, COLORS['red'])
         self.draw_metric_col(metrics_x + (METRIC_WIDTH + METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, COLORS['purple'])
         
-        message_bbox = self.draw.textbbox((0, 0), "Test", font=self.tiny_font)
+        message_bbox = self.draw.textbbox((0, 0), "Test", font=self.font_xs)
         message_height = message_bbox[3] - message_bbox[1]
         total_element_height = (
             message_height +
@@ -302,10 +295,10 @@ class Display:
         
         health_score, health_state = self.calculate_network_health(stats)
         message = HEALTH_THRESHOLDS[health_state]['message']
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_sm)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = face_x + (FACE_SIZE - message_width) // 2
-        self.draw.text((message_x, message_y), message, font=self.message_font, fill=(255, 255, 255))
+        self.draw.text((message_x, message_y), message, font=self.font_sm, fill=(255, 255, 255))
         
         self.image.paste(self.face_images[health_state], (face_x, face_y), self.face_images[health_state])
         
@@ -334,17 +327,17 @@ class Display:
         health_score, health_state = self.calculate_network_health(stats)
         
         SPACING = 20
-        SCORE_HEIGHT = self.message_font.size
-        MESSAGE_HEIGHT = self.message_font.size
+        SCORE_HEIGHT = self.font_sm.size
+        MESSAGE_HEIGHT = self.font_sm.size
         
         total_height = SCORE_HEIGHT + SPACING + FACE_SIZE + SPACING + MESSAGE_HEIGHT
         start_y = (SCREEN_HEIGHT - total_height) // 2
         
         score_text = f"Health: {health_score}%"
-        score_bbox = self.draw.textbbox((0, 0), score_text, font=self.message_font)
+        score_bbox = self.draw.textbbox((0, 0), score_text, font=self.font_sm)
         score_width = score_bbox[2] - score_bbox[0]
         score_x = (SCREEN_WIDTH - score_width) // 2
-        self.draw.text((score_x, start_y), score_text, font=self.message_font, fill=COLORS['white'])
+        self.draw.text((score_x, start_y), score_text, font=self.font_sm, fill=COLORS['white'])
         
         face = self.face_images[health_state]
         face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
@@ -352,11 +345,11 @@ class Display:
         self.image.paste(face, (face_x, face_y), face)
         
         message = HEALTH_THRESHOLDS[health_state]['message']
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.message_font)
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_sm)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
         message_y = face_y + FACE_SIZE + SPACING
-        self.draw.text((message_x, message_y), message, font=self.message_font, fill=COLORS['white'])
+        self.draw.text((message_x, message_y), message, font=self.font_sm, fill=COLORS['white'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
@@ -396,28 +389,28 @@ class Display:
         speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 10
         if stats.speed_test_status:
             status_text = f"Speed test in progress..."
-            self.draw.text((10, speed_y), status_text, font=self.message_font, fill=COLORS['white'])
+            self.draw.text((10, speed_y), status_text, font=self.font_sm, fill=COLORS['white'])
             
         elif stats.speed_test_timestamp > 0:
             time_since_test = (time.time() - stats.speed_test_timestamp) / 60
             
             down_text = f"↓ {stats.download_speed:.1f} Mbps"
-            self.draw.text((10, speed_y), down_text, font=self.message_font, fill=COLORS['green'])
+            self.draw.text((10, speed_y), down_text, font=self.font_sm, fill=COLORS['green'])
             
             up_text = f"↑ {stats.upload_speed:.1f} Mbps"
-            self.draw.text((10, speed_y + 30), up_text, font=self.message_font, fill=COLORS['red'])
+            self.draw.text((10, speed_y + 30), up_text, font=self.font_sm, fill=COLORS['red'])
             
             time_text = f"Updated {int(time_since_test)}m ago"
-            time_bbox = self.draw.textbbox((0, 0), time_text, font=self.tiny_font)
+            time_bbox = self.draw.textbbox((0, 0), time_text, font=self.font_xs)
             time_width = time_bbox[2] - time_bbox[0]
             self.draw.text(
                 (SCREEN_WIDTH - time_width - 10, speed_y + 15),
                 time_text,
-                font=self.tiny_font,
+                font=self.font_xs,
                 fill=COLORS['purple']
             )
         else:
-            self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=COLORS['white'])
+            self.draw.text((10, speed_y), "Speed test pending...", font=self.font_xs, fill=COLORS['white'])
 
         # Draw interface info at bottom with divider
         bottom_y = SCREEN_HEIGHT - 45
@@ -425,18 +418,18 @@ class Display:
         
         # Interface info with colored labels
         interface_y = bottom_y + 5
-        self.draw.text((10, interface_y), "Interface:", font=self.medium_font, fill=COLORS['purple'])
+        self.draw.text((10, interface_y), "Interface:", font=self.font_md, fill=COLORS['purple'])
         interface_text = f"{stats.interface} ({stats.interface_ip})"
-        interface_bbox = self.draw.textbbox((0, 0), "Interface:", font=self.medium_font)
+        interface_bbox = self.draw.textbbox((0, 0), "Interface:", font=self.font_md)
         interface_width = interface_bbox[2] - interface_bbox[0]
-        self.draw.text((20 + interface_width, interface_y), interface_text, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((20 + interface_width, interface_y), interface_text, font=self.font_md, fill=COLORS['white'])
         
         # Target info
         target_y = interface_y + 20
-        self.draw.text((10, target_y), "Target:", font=self.medium_font, fill=COLORS['green'])
-        target_bbox = self.draw.textbbox((0, 0), "Target:", font=self.medium_font)
+        self.draw.text((10, target_y), "Target:", font=self.font_md, fill=COLORS['green'])
+        target_bbox = self.draw.textbbox((0, 0), "Target:", font=self.font_md)
         target_width = target_bbox[2] - target_bbox[0]
-        self.draw.text((20 + target_width, target_y), stats.ping_target, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((20 + target_width, target_y), stats.ping_target, font=self.font_md, fill=COLORS['white'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
@@ -447,11 +440,11 @@ class Display:
         
         # Draw welcome message with larger font
         message = "Welcome! I'm Networkii"
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.font)  # Using title font
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_lg)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
         message_y = 15  # Slightly more top margin
-        self.draw.text((message_x, message_y), message, font=self.font, fill=COLORS['white'])
+        self.draw.text((message_x, message_y), message, font=self.font_lg, fill=COLORS['white'])
         
         # Calculate center position for smaller face (2/3 of original size)
         small_face_size = (FACE_SIZE * 2) // 3  # Integer division for 2/3 size
@@ -470,27 +463,27 @@ class Display:
         # Find the widest instruction to align both rows
         instructions1 = "1. Connect to WiFi:"
         instructions2 = "2. Then Visit:"
-        instructions1_bbox = self.draw.textbbox((0, 0), instructions1, font=self.medium_font)
-        instructions2_bbox = self.draw.textbbox((0, 0), instructions2, font=self.medium_font)
+        instructions1_bbox = self.draw.textbbox((0, 0), instructions1, font=self.font_md)
+        instructions2_bbox = self.draw.textbbox((0, 0), instructions2, font=self.font_md)
         instruction_width = max(instructions1_bbox[2], instructions2_bbox[2])
         
         # Calculate left margin to center the entire content block
         ssid = "Networkii"
         url = "networkii.local"
-        ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.message_font)
-        url_bbox = self.draw.textbbox((0, 0), url, font=self.message_font)
+        ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.font_sm)
+        url_bbox = self.draw.textbbox((0, 0), url, font=self.font_sm)
         max_value_width = max(ssid_bbox[2], url_bbox[2])
         total_width = instruction_width + 15 + max_value_width  # 15px spacing between text
         left_margin = (SCREEN_WIDTH - total_width) // 2
         
         # Draw first row
-        self.draw.text((left_margin, content_y), instructions1, font=self.medium_font, fill=COLORS['white'])
-        self.draw.text((left_margin + instruction_width + 15, content_y), ssid, font=self.message_font, fill=COLORS['green'])
+        self.draw.text((left_margin, content_y), instructions1, font=self.font_md, fill=COLORS['white'])
+        self.draw.text((left_margin + instruction_width + 15, content_y), ssid, font=self.font_sm, fill=COLORS['green'])
         
         # Draw second row
         web_instructions_y = content_y + 30  # Reduced spacing between rows
-        self.draw.text((left_margin, web_instructions_y), instructions2, font=self.medium_font, fill=COLORS['white'])
-        self.draw.text((left_margin + instruction_width + 15, web_instructions_y), url, font=self.message_font, fill=COLORS['red'])
+        self.draw.text((left_margin, web_instructions_y), instructions2, font=self.font_md, fill=COLORS['white'])
+        self.draw.text((left_margin + instruction_width + 15, web_instructions_y), url, font=self.font_sm, fill=COLORS['red'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
@@ -501,11 +494,11 @@ class Display:
         
         # Draw title with reduced top margin
         title = "No Internet Connection"
-        title_bbox = self.draw.textbbox((0, 0), title, font=self.font)
+        title_bbox = self.draw.textbbox((0, 0), title, font=self.font_lg)
         title_width = title_bbox[2] - title_bbox[0]
         title_x = (SCREEN_WIDTH - title_width) // 2
         title_y = 10
-        self.draw.text((title_x, title_y), title, font=self.font, fill=COLORS['red'])
+        self.draw.text((title_x, title_y), title, font=self.font_lg, fill=COLORS['red'])
         
         # Draw smaller sad face
         face = self.face_images['critical'].resize(((FACE_SIZE * 2) // 3, (FACE_SIZE * 2) // 3), Image.Resampling.LANCZOS)
@@ -522,23 +515,23 @@ class Display:
         message2 = "can't reach the internet"
         message_y = divider_y + 15
         
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.medium_font)
+        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_md)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
-        self.draw.text((message_x, message_y), message, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((message_x, message_y), message, font=self.font_md, fill=COLORS['white'])
         
-        message2_bbox = self.draw.textbbox((0, 0), message2, font=self.medium_font)
+        message2_bbox = self.draw.textbbox((0, 0), message2, font=self.font_md)
         message2_width = message2_bbox[2] - message2_bbox[0]
         message2_x = (SCREEN_WIDTH - message2_width) // 2
-        self.draw.text((message2_x, message_y + 20), message2, font=self.medium_font, fill=COLORS['white'])
+        self.draw.text((message2_x, message_y + 20), message2, font=self.font_md, fill=COLORS['white'])
         
         # Draw instruction
         instruction = "Press B to try new WiFi"
-        instruction_bbox = self.draw.textbbox((0, 0), instruction, font=self.medium_font)
+        instruction_bbox = self.draw.textbbox((0, 0), instruction, font=self.font_md)
         instruction_width = instruction_bbox[2] - instruction_bbox[0]
         instruction_x = (SCREEN_WIDTH - instruction_width) // 2
         instruction_y = message_y + 55
-        self.draw.text((instruction_x, instruction_y), instruction, font=self.medium_font, fill=COLORS['green'])
+        self.draw.text((instruction_x, instruction_y), instruction, font=self.font_md, fill=COLORS['green'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
@@ -554,8 +547,6 @@ class Display:
         GRID_MARGIN = 10
         GRID_WIDTH = SCREEN_WIDTH // 2
         GRID_HEIGHT = SCREEN_HEIGHT // 2
-        large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-        label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
         
         # Draw face in top-left
         face_size = min(GRID_WIDTH - GRID_MARGIN * 2, GRID_HEIGHT - GRID_MARGIN * 2)
@@ -573,17 +564,17 @@ class Display:
             cell_center_y = cell_y + GRID_HEIGHT // 2
             
             # Draw label
-            label_bbox = self.draw.textbbox((0, 0), label, font=label_font)
+            label_bbox = self.draw.textbbox((0, 0), label, font=self.font_lg)
             label_width = label_bbox[2] - label_bbox[0]
             label_x = cell_center_x - label_width // 2
-            self.draw.text((label_x, cell_center_y - 30), label, font=label_font, fill=color)
+            self.draw.text((label_x, cell_center_y - 30), label, font=self.font_lg, fill=color)
             
             # Draw value
             value_text = str(round(value))
-            value_bbox = self.draw.textbbox((0, 0), value_text, font=large_font)
+            value_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_xl)
             value_width = value_bbox[2] - value_bbox[0]
             value_x = cell_center_x - value_width // 2
-            self.draw.text((value_x, cell_center_y + 5), value_text, font=large_font, fill=color)
+            self.draw.text((value_x, cell_center_y + 5), value_text, font=self.font_xl, fill=color)
         
         # Draw metrics in other grid cells
         # Ping in top-right (1, 0)
