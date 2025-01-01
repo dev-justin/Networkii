@@ -52,11 +52,11 @@ class ConfigManager:
         """Update configuration with new values"""
         self.config.update(new_config)
         self.save_config()
-        self.load_config()  # Reload to ensure consistency
         logger.info(f"Configuration updated: {self.config}")
     
     def get_setting(self, key):
         """Get a configuration setting by key, falling back to default if not found"""
+        print(f"Getting setting: {key}, {self.config.get(key)}")
         return self.config.get(key, USER_DEFAULTS.get(key))
 
 # Create a singleton instance

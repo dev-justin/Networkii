@@ -105,5 +105,5 @@ class NetworkMonitor:
             upload_speed=self.upload_speed,
             interface=self.interface,
             interface_ip=self.interface_ip,
-            ping_target=config_manager.get_setting('ping_target')
+            ping_target=ping_target
         ) 
