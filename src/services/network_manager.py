@@ -1,12 +1,11 @@
 import subprocess
 import time
 import netifaces
-import logging
+from src.utils.logger import get_logger
 from ..utils.interface import get_preferred_interface
 from ..utils.config_manager import config_manager
 
-# Get logger for this module
-logger = logging.getLogger('network_manager')
+logger = get_logger('network_manager')
 
 class NetworkManager:
     AP_SSID = "networkii"

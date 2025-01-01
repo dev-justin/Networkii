@@ -8,7 +8,6 @@ from src.services.ap_server import APServer
 from src.services.button_handler import ButtonHandler
 from src.utils.logger import get_logger
 
-# Get logger for main module
 logger = get_logger('main')
 logger.info("Starting Networkii")
 

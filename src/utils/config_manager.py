@@ -47,7 +47,6 @@ class ConfigManager:
     
     def get_config(self):
         """Get the entire configuration"""
-        print(f"Getting config: {self.config}")
         return self.config.copy()
     
     def update_config(self, new_config):
@@ -59,7 +58,6 @@ class ConfigManager:
     def get_setting(self, key):
         """Get a configuration setting by key, falling back to default if not found"""
         value = self.config.get(key, USER_DEFAULTS.get(key))
-        logger.info(f"Getting setting: {key}, value: {value}")
         return value
 
 # Create a singleton instance
