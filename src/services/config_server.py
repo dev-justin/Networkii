@@ -216,36 +216,16 @@ class ConfigServer:
         self.server_thread = None
         self.cert_file = os.path.expanduser('~/.config/networkii/cert.pem')
         self.key_file = os.path.expanduser('~/.config/networkii/key.pem')
-    
-    def generate_self_signed_cert(self):
-        """Generate a self-signed certificate if it doesn't exist"""
+        
+        # Verify certificates exist
         if not os.path.exists(self.cert_file) or not os.path.exists(self.key_file):
-            logger.info("Generating self-signed certificate...")
-            config_dir = os.path.dirname(self.cert_file)
-            if not os.path.exists(config_dir):
-                os.makedirs(config_dir)
-            
-            # Generate private key and certificate
-            cmd = [
-                'openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-keyout', self.key_file,
-                '-out', self.cert_file, '-days', '365', '-nodes',
-                '-subj', '/CN=networkii.local'
-            ]
-            try:
-                import subprocess
-                subprocess.run(cmd, check=True, capture_output=True)
-                logger.info("Self-signed certificate generated successfully")
-            except Exception as e:
-                logger.error(f"Error generating certificate: {e}")
-                raise
+            logger.error("SSL certificates not found. Please run the installation script to generate them.")
+            raise FileNotFoundError("SSL certificates not found")
     
     def start(self):
         """Start the configuration web server in a background thread"""
         def run_server():
             try:
-                # Generate certificate if needed
-                self.generate_self_signed_cert()
-                
                 logger.info(f"Starting HTTPS configuration server on port {self.port}")
                 
                 # Get all network interfaces for debugging
@@ -274,15 +254,11 @@ class ConfigServer:
                 self.server.serve_forever()
             except Exception as e:
                 logger.error(f"Error starting HTTPS server: {e}", exc_info=True)
-                raise  # Re-raise to see full traceback
-        
-        try:
-            self.server_thread = threading.Thread(target=run_server)
-            self.server_thread.daemon = True
-            self.server_thread.start()
-            logger.info("Server thread started")
-        except Exception as e:
-            logger.error(f"Error starting server thread: {e}", exc_info=True)
+                raise
+
+        self.server_thread = threading.Thread(target=run_server)
+        self.server_thread.daemon = True
+        self.server_thread.start()
     
     def stop(self):
         """Stop the configuration web server"""
