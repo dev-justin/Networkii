@@ -48,12 +48,34 @@ def update_config(args):
     else:
         print("No changes specified. Use --help to see available options.")
 
+def connect_to_wifi(args):
+    """Connect to WiFi using provided credentials"""
+    if not args.ssid:
+        print("Error: SSID (--ssid) is required for WiFi connection")
+        return
+    if not args.password:
+        print("Error: Password (--password) is required for WiFi connection")
+        return
+
+    print(f"Attempting to connect to WiFi network: {args.ssid}")
+    # TODO: Implement actual WiFi connection logic here
+    config_manager.update_config({
+        'wifi_ssid': args.ssid,
+        'wifi_password': args.password
+    })
+    print("WiFi credentials saved successfully!")
+
 def main():
     parser = argparse.ArgumentParser(
         description='Networkii Configuration Tool'
     )
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
+    # "connect" command
+    connect_parser = subparsers.add_parser('connect', help='Connect to WiFi')
+    connect_parser.add_argument('--ssid', help="WiFi network name", required=True)
+    connect_parser.add_argument('--password', help="WiFi password", required=True)
+
     # "show" command
     subparsers.add_parser('show', help='Show current configuration')
     
@@ -69,6 +91,8 @@ def main():
         show_config()
     elif args.command == 'set':
         update_config(args)
+    elif args.command == 'connect':
+        connect_to_wifi(args);
     else:
         parser.print_help()
 

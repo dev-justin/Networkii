@@ -6,9 +6,8 @@ from networkii.utils.logger import get_logger
 logger = get_logger('button_handler')
 
 class ButtonHandler:
-    def __init__(self, display, network_manager):
+    def __init__(self, display):    
         self.display = display
-        self.network_manager = network_manager
         self.current_screen = 1
         self.last_button_press = 0
         self.current_mode = None
@@ -113,12 +112,6 @@ class ButtonHandler:
                 elif pin == self.display.disp.BUTTON_Y:
                     self.current_screen = min(TOTAL_SCREENS, self.current_screen + 1)
                     logger.debug(f"Button Y pressed - switching to screen {self.current_screen}")
-            
-            elif self.current_mode == 'no_internet':
-                # Handle no internet screen (reset WiFi)
-                if pin == self.display.disp.BUTTON_B:
-                    logger.info("Button B pressed - initiating WiFi reset")
-                    self.network_manager.forget_wifi_connection()
             
         except Exception as e:
             logger.error(f"Error handling button press on pin {pin}: {e}", exc_info=True)
