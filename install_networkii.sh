@@ -83,7 +83,6 @@ else
 fi
 
 print_success "USB OTG (RNDIS) is now enabled. A reboot is recommended to apply changes."
-print_info "To complete setup, run: ${BOLD}sudo reboot${NC}"
 
 
 #------------------------------
@@ -131,43 +130,13 @@ print_header "Installing Python Requirements"
 pushd "$PROJECT_DIR" > /dev/null
 
 # Install required packages
-echo "Installing required packages..."
+print_info "Installing required packages..."
 sudo apt-get update
-sudo apt-get install -y python3-pip python3-venv network-manager libnss3-tools mkcert
-
-# Create and activate virtual environment
-echo "Setting up Python virtual environment..."
-python3 -m venv /opt/networkii/venv
-source /opt/networkii/venv/bin/activate
-
-# Install Python dependencies
-echo "Installing Python dependencies..."
-pip install -r requirements.txt
+sudo apt-get install -y python3-pip python3-venv network-manager libnss3-tools python3-dev zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev libopenblas0
 
 # Create config directory
-echo "Setting up configuration directory..."
+print_info "Setting up configuration directory..."
 mkdir -p ~/.config/networkii
-
-# Generate certificates using mkcert
-echo "Generating trusted certificates..."
-mkcert -install
-# Create folder for certificates
-mkdir -p ~/.config/networkii
-# Create certificates
-mkcert -cert-file ~/.config/networkii/cert.pem -key-file ~/.config/networkii/key.pem networkii.local localhost 127.0.0.1 "*.local"
-
-# Set up systemd service
-echo "Setting up systemd service..."
-
-# Install python3-dev
-print_info "Installing python3-dev..."
-sudo apt-get install -y python3-dev
-print_success "python3-dev installed"
-
-# Install dependencies needed for PIL and NumPy
-print_info "Installing dependencies needed for PIL and NumPy..."
-sudo apt-get install -y zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev libopenblas0
-print_success "Dependencies installed"
 
 # Enable SPI interface so we can use DisplayHATMini
 print_info "Enabling SPI interface..."
