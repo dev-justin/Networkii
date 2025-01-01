@@ -16,7 +16,6 @@ class NetworkManager:
     def __init__(self):
         logger.info(f"NetworkManager initialized")
         
-    # Checks if we have a valid connection by checking if we have an IPv4 address and if we can ping 1.1.1.1
     def check_connection(self) -> bool:
         """Check if we have a working network connection"""
         

@@ -37,6 +37,7 @@ class NetworkiiApp:
         while self.monitor_running:
             try:
                 self.latest_stats = self.network_monitor.get_stats()
+                print(f"Latest stats: {self.latest_stats}")
                 time.sleep(2)  # Get new stats every 2 seconds
             except Exception as e:
                 logger.error(f"Error in monitor thread: {e}")
