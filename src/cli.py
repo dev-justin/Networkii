@@ -1,52 +1,12 @@
-#!/usr/bin/env python3
 import argparse
 import json
 import os
 import sys
-
-CONFIG_DIR = os.path.expanduser('~/.config/networkii')
-CONFIG_FILE = os.path.join(CONFIG_DIR, 'config.json')
-DEFAULT_CONFIG = {
-    'ping_target': '1.1.1.1',
-    'speed_test_interval': 30
-}
-
-def load_config():
-    """Load configuration from file"""
-    try:
-        if not os.path.exists(CONFIG_DIR):
-            os.makedirs(CONFIG_DIR, exist_ok=True)
-        
-        if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, 'r') as f:
-                loaded_config = json.load(f)
-                # Update config with loaded values while preserving defaults
-                config = DEFAULT_CONFIG.copy()
-                config.update(loaded_config)
-                return config
-        else:
-            # Save default config if no file exists
-            save_config(DEFAULT_CONFIG)
-            return DEFAULT_CONFIG
-    except Exception as e:
-        print(f"Error loading configuration: {e}")
-        return DEFAULT_CONFIG
-
-def save_config(config):
-    """Save configuration to file"""
-    try:
-        if not os.path.exists(CONFIG_DIR):
-            os.makedirs(CONFIG_DIR, exist_ok=True)
-        
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump(config, f, indent=4)
-    except Exception as e:
-        print(f"Error saving configuration: {e}")
-        sys.exit(1)
+from .utils.config_manager import config_manager
 
 def show_config():
     """Display current configuration"""
-    config = load_config()
+    config = config_manager.get_config()
     print("\nCurrent Configuration:")
     print("-" * 30)
     print(f"Ping Target: {config.get('ping_target', 'Not set')}")
@@ -55,7 +15,7 @@ def show_config():
 
 def update_config(args):
     """Update configuration with new values"""
-    current_config = load_config()
+    current_config = config_manager.get_config()
     changes_made = False
 
     if args.ping_target is not None:
@@ -71,7 +31,7 @@ def update_config(args):
             return
 
     if changes_made:
-        save_config(current_config)
+        config_manager.update_config(current_config)
         print("Configuration updated successfully!")
         show_config()
     else:
