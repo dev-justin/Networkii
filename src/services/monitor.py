@@ -58,13 +58,17 @@ class NetworkMonitor:
         self.speed_test_thread.start()
 
     def get_stats(self, count=5, ping_interval=0.2) -> NetworkStats:
-        """Execute ping command and return network statistics"""
-        speed_test_interval = config_manager.get_setting('speed_test_interval') * 60  # Convert minutes to seconds
-        if time.time() - self.last_speed_test > speed_test_interval and not self.is_speed_testing:
-            self.run_speed_test()
-            
+        """Get current network statistics"""
+        ping_target = config_manager.get_setting('ping_target')
+        
+        # Run ping test
+        packet_loss = 0
+        
         try:
-            ping_target = config_manager.get_setting('ping_target')
+            speed_test_interval = config_manager.get_setting('speed_test_interval') * 60  # Convert minutes to seconds
+            if time.time() - self.last_speed_test > speed_test_interval and not self.is_speed_testing:
+                self.run_speed_test()
+            
             cmd = ['ping', ping_target, '-c', str(count), '-i', str(ping_interval), '-I', self.interface]
             result = subprocess.run(cmd, capture_output=True, text=True)
             
