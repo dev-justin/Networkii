@@ -8,15 +8,20 @@ from networkii.utils.logger import get_logger
 logger = get_logger('config_manager')
 
 class ConfigManager:
+
+    CONFIG_DIR = Path.home() / '.config' / 'networkii'
+    CONFIG_FILE = CONFIG_DIR / 'config.json'
+
     def __init__(self):
-        logger.info("Initializing ConfigManager...")
-        # Use user's home directory for configuration
-        config_dir = Path.home() / '.config' / 'networkii'
-        config_dir.mkdir(parents=True, exist_ok=True)
-        self.config_file = str(config_dir / 'config.json')
+        logger.info("============ Initializing ConfigManager =============")
+
+        self.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        self.config_file = str(self.CONFIG_FILE)
         logger.info(f"Using config file: {self.config_file}")
+
         self.config = USER_DEFAULTS.copy()
         logger.info(f"Starting with defaults: {self.config}")
+        
         self.load_config()
     
     def load_config(self):
@@ -58,6 +63,8 @@ class ConfigManager:
     
     def get_setting(self, key):
         """Get a configuration setting by key, falling back to default if not found"""
+        # Reload config from file before getting setting
+        self.load_config()
         value = self.config.get(key, USER_DEFAULTS.get(key))
         return value
 
