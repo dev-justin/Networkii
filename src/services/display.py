@@ -210,20 +210,20 @@ class Display:
         """Draw metric row with historical values"""
         LABEL_WIDTH = 80
         CURRENT_VALUE_SPACING = 8
-        RIGHT_MARGIN = 10
+        RIGHT_MARGIN = 5
         VALUE_WIDTH = SCREEN_WIDTH - LABEL_WIDTH - RIGHT_MARGIN
         
         # Draw label
         self.draw.text((10, y), label, font=self.font_sm, fill=color)
         
-        # Draw current value
+        # Draw current value with larger font
         current_text = str(round(current_value))
-        current_bbox = self.draw.textbbox((0, 0), current_text, font=self.font_md)
+        current_bbox = self.draw.textbbox((0, 0), current_text, font=self.font_lg)
         current_width = current_bbox[2] - current_bbox[0]
         self.draw.text(
-            (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y),  
+            (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y - 5),  # Adjust y position for larger font
             current_text,
-            font=self.font_md,
+            font=self.font_lg,
             fill=color
         )
         
@@ -236,11 +236,12 @@ class Display:
             total_values = len(history_values)
             if total_values > 0:
                 # Calculate the space available for historical values
-                history_area_width = VALUE_WIDTH - LABEL_WIDTH
-                value_spacing = history_area_width // total_values
+                history_start_x = LABEL_WIDTH + 40  # Start after current value
+                history_area_width = SCREEN_WIDTH - history_start_x - RIGHT_MARGIN
+                value_spacing = min(40, history_area_width // total_values)  # Cap spacing at 40px
                 
                 # Start drawing from right to left
-                for i, value in enumerate(reversed(history_values), 1):
+                for i, value in enumerate(reversed(history_values)):
                     fade_level = 0.7 - (i * 0.08)
                     faded_color = tuple(int(c * fade_level) for c in color)
                     
@@ -248,10 +249,8 @@ class Display:
                     text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_md)
                     text_width = text_bbox[2] - text_bbox[0]
                     
-                    # Position each value, starting from the right
-                    x_pos = SCREEN_WIDTH - RIGHT_MARGIN - (i * value_spacing)
-                    # Center the text in its space
-                    x_pos -= text_width // 2
+                    # Position each value from right to left
+                    x_pos = SCREEN_WIDTH - RIGHT_MARGIN - (i * value_spacing) - text_width
                     
                     self.draw.text(
                         (x_pos, y),
