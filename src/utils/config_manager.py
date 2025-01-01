@@ -11,8 +11,8 @@ logger = logging.getLogger('config_manager')
 class ConfigManager:
     def __init__(self):
         logger.info("Initializing ConfigManager...")
-        # Use ~/.config/networkii for configuration
-        self.config_dir = os.path.expanduser('~/.config/networkii')
+        # Use project directory for configuration
+        self.config_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.config_file = os.path.join(self.config_dir, 'config.json')
         logger.info(f"Using config file: {self.config_file}")
         self.config = USER_DEFAULTS.copy()
@@ -22,10 +22,6 @@ class ConfigManager:
     def load_config(self):
         """Load configuration from file"""
         try:
-            if not os.path.exists(self.config_dir):
-                logger.info(f"Creating config directory: {self.config_dir}")
-                os.makedirs(self.config_dir, exist_ok=True)
-            
             if os.path.exists(self.config_file):
                 logger.info(f"Reading config from: {self.config_file}")
                 with open(self.config_file, 'r') as f:
@@ -43,10 +39,6 @@ class ConfigManager:
     def save_config(self):
         """Save current configuration to file"""
         try:
-            if not os.path.exists(self.config_dir):
-                logger.info(f"Creating config directory: {self.config_dir}")
-                os.makedirs(self.config_dir, exist_ok=True)
-            
             logger.info(f"Saving config to: {self.config_file}")
             with open(self.config_file, 'w') as f:
                 json.dump(self.config, f, indent=4)
