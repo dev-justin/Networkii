@@ -1,5 +1,6 @@
 import os
 import json
+from pathlib import Path
 from networkii.config import USER_DEFAULTS
 from networkii.utils.logger import get_logger
 
@@ -9,8 +10,10 @@ logger = get_logger('config_manager')
 class ConfigManager:
     def __init__(self):
         logger.info("Initializing ConfigManager...")
-        # Use ovvys's home directory for configuration
-        self.config_file = '/home/ovvys/Networkii/config.json'
+        # Use user's home directory for configuration
+        config_dir = Path.home() / '.config' / 'networkii'
+        config_dir.mkdir(parents=True, exist_ok=True)
+        self.config_file = str(config_dir / 'config.json')
         logger.info(f"Using config file: {self.config_file}")
         self.config = USER_DEFAULTS.copy()
         logger.info(f"Starting with defaults: {self.config}")
