@@ -19,10 +19,17 @@ class ConfigManager:
         self.config_file = str(self.CONFIG_FILE)
         logger.info(f"Using config file: {self.config_file}")
 
-        self.config = USER_DEFAULTS.copy()
-        logger.info(f"Starting with defaults: {self.config}")
+        # Start with defaults
+        self.config = {}
         
+        # Load config (this will merge defaults with saved values)
         self.load_config()
+        
+        # If no config existed, start with defaults
+        if not self.config:
+            self.config = USER_DEFAULTS.copy()
+            logger.info(f"No existing config, starting with defaults: {self.config}")
+            self.save_config()
     
     def load_config(self):
         """Load configuration from file"""
