@@ -251,6 +251,7 @@ class Display:
                     
                     # Position each value from left to right
                     x_pos = history_start_x + (i * value_spacing)
+                    x_pos = x_pos + (value_spacing - text_width) // 2  # Center in available space
                     
                     self.draw.text(
                         (x_pos, y),
