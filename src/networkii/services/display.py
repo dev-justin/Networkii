@@ -497,10 +497,11 @@ class Display:
         title_y = 20
         self.draw.text((title_x, title_y), title, font=self.font_xl, fill=COLORS['red'])
         
-        # Draw face
-        face = self.face_images['critical']
-        face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
-        face_y = (SCREEN_HEIGHT - FACE_SIZE) // 2 - 20  # Moved up slightly
+        # Draw face (75% of original size)
+        small_face_size = (FACE_SIZE * 3) // 4
+        face = self.face_images['critical'].resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
+        face_x = (SCREEN_WIDTH - small_face_size) // 2
+        face_y = (SCREEN_HEIGHT - small_face_size) // 2 - 20
         self.image.paste(face, (face_x, face_y), face)
         
         # Draw instructions (split into two lines)
@@ -508,22 +509,24 @@ class Display:
         question_bbox = self.draw.textbbox((0, 0), question, font=self.font_md)
         question_width = question_bbox[2] - question_bbox[0]
         question_x = (SCREEN_WIDTH - question_width) // 2
-        question_y = face_y + FACE_SIZE + 10
+        question_y = face_y + small_face_size + 10
         self.draw.text((question_x, question_y), question, font=self.font_md, fill=COLORS['white'])
         
-        instruction = "ssh ovvys@networkii.local"
-        instruction_bbox = self.draw.textbbox((0, 0), instruction, font=self.font_sm)
-        instruction_width = instruction_bbox[2] - instruction_bbox[0]
-        instruction_x = (SCREEN_WIDTH - instruction_width) // 2
-        instruction_y = question_y + 25
-        self.draw.text((instruction_x, instruction_y), instruction, font=self.font_sm, fill=COLORS['white'])
+        # SSH command in purple
+        ssh_command = "ssh ovvys@networkii.local"
+        ssh_bbox = self.draw.textbbox((0, 0), ssh_command, font=self.font_sm)
+        ssh_width = ssh_bbox[2] - ssh_bbox[0]
+        ssh_x = (SCREEN_WIDTH - ssh_width) // 2
+        ssh_y = question_y + 25
+        self.draw.text((ssh_x, ssh_y), ssh_command, font=self.font_sm, fill=COLORS['purple'])
         
-        command = "run networkii connect"
-        command_bbox = self.draw.textbbox((0, 0), command, font=self.font_sm)
-        command_width = command_bbox[2] - command_bbox[0]
-        command_x = (SCREEN_WIDTH - command_width) // 2
-        command_y = instruction_y + 20
-        self.draw.text((command_x, command_y), command, font=self.font_sm, fill=COLORS['white'])
+        # Networkii command in green
+        networkii_command = "run networkii connect"
+        networkii_bbox = self.draw.textbbox((0, 0), networkii_command, font=self.font_sm)
+        networkii_width = networkii_bbox[2] - networkii_bbox[0]
+        networkii_x = (SCREEN_WIDTH - networkii_width) // 2
+        networkii_y = ssh_y + 20
+        self.draw.text((networkii_x, networkii_y), networkii_command, font=self.font_sm, fill=COLORS['green'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
