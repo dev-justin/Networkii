@@ -350,17 +350,8 @@ class Display:
         ROW_SPACING = 2   
         ROW_HEIGHT = 30
         
-        # Draw interface info
-        interface_text = f"Interface: {stats.interface} ({stats.interface_ip})"
-        target_text = f"Target: {stats.ping_target}"
-        self.draw.text((10, 5), interface_text, font=self.tiny_font, fill=COLORS['white'])
-        self.draw.text((10, 20), target_text, font=self.tiny_font, fill=COLORS['white'])
-        
-        # Adjust top margin to account for new info
-        METRICS_START = 45
-        
         self.draw_metric_row(
-            METRICS_START,
+            TOP_MARGIN,
             "PING",
             stats.ping,
             stats.ping_history,
@@ -368,7 +359,7 @@ class Display:
         )
         
         self.draw_metric_row(
-            METRICS_START + ROW_HEIGHT + ROW_SPACING,
+            TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,
             "JITTER",
             stats.jitter,
             stats.jitter_history,
@@ -376,14 +367,14 @@ class Display:
         )
         
         self.draw_metric_row(
-            METRICS_START + (ROW_HEIGHT + ROW_SPACING) * 2,
+            TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,
             "LOSS",
             stats.packet_loss,
             stats.packet_loss_history,
             COLORS['purple']
         )
         
-        speed_y = METRICS_START + (ROW_HEIGHT + ROW_SPACING) * 3 + 20
+        speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 10
         if stats.speed_test_status:
             status_text = f"Speed test in progress..."
             self.draw.text((10, speed_y), status_text, font=self.message_font, fill=COLORS['white'])
@@ -408,6 +399,25 @@ class Display:
             )
         else:
             self.draw.text((10, speed_y), "Speed test pending...", font=self.tiny_font, fill=COLORS['white'])
+
+        # Draw interface info at bottom with divider
+        bottom_y = SCREEN_HEIGHT - 45
+        self.draw.line([(10, bottom_y), (SCREEN_WIDTH - 10, bottom_y)], fill=COLORS['gray'], width=1)
+        
+        # Interface info with colored labels
+        interface_y = bottom_y + 5
+        self.draw.text((10, interface_y), "Interface:", font=self.medium_font, fill=COLORS['purple'])
+        interface_text = f"{stats.interface} ({stats.interface_ip})"
+        interface_bbox = self.draw.textbbox((0, 0), "Interface:", font=self.medium_font)
+        interface_width = interface_bbox[2] - interface_bbox[0]
+        self.draw.text((20 + interface_width, interface_y), interface_text, font=self.medium_font, fill=COLORS['white'])
+        
+        # Target info
+        target_y = interface_y + 20
+        self.draw.text((10, target_y), "Target:", font=self.medium_font, fill=COLORS['green'])
+        target_bbox = self.draw.textbbox((0, 0), "Target:", font=self.medium_font)
+        target_width = target_bbox[2] - target_bbox[0]
+        self.draw.text((20 + target_width, target_y), stats.ping_target, font=self.medium_font, fill=COLORS['white'])
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
