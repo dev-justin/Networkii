@@ -1,10 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="networkii-cli",
     version="1.0.0",
-    py_modules=['src.cli'],
-    install_requires=[],
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'networkii=src.cli:main',
