@@ -1,12 +1,10 @@
 import os
 import json
-import logging
 from ..config import USER_DEFAULTS
-from ..utils.logger import init_logging
+from ..utils.logger import get_logger
 
-# Initialize logging first
-init_logging()
-logger = logging.getLogger('config_manager')
+# Get logger for this module
+logger = get_logger('config_manager')
 
 class ConfigManager:
     def __init__(self):

@@ -8,9 +8,10 @@ from ..models.network_stats import NetworkStats
 from ..utils.interface import get_preferred_interface, get_interface_ip
 from ..utils.config_manager import config_manager
 from ..config import DEFAULT_HISTORY_LENGTH
-import logging
+from ..utils.logger import get_logger
 
-logger = logging.getLogger('monitor')
+# Get logger for this module
+logger = get_logger('monitor')
 
 class NetworkMonitor:
     def __init__(self):
@@ -26,7 +27,6 @@ class NetworkMonitor:
         self.speed_test_thread = None
 
         logger.info(f"Using interface: {self.interface} ({self.interface_ip}), target host: {config_manager.get_setting('ping_target')}")
-        print(f"Using interface: {self.interface} ({self.interface_ip}), target host: {config_manager.get_setting('ping_target')}")
     
     def run_speed_test(self):
         """Start a speed test in a separate thread"""

@@ -1,10 +1,11 @@
 import subprocess
 import time
 import netifaces
-from src.utils.logger import get_logger
+from ..utils.logger import get_logger
 from ..utils.interface import get_preferred_interface
 from ..utils.config_manager import config_manager
 
+# Get logger for this module
 logger = get_logger('network_manager')
 
 class NetworkManager:
@@ -13,8 +14,7 @@ class NetworkManager:
     INTERFACE = "wlan0"
     
     def __init__(self):
-        print(f"NetworkManager initialized with interface: {self.INTERFACE}")
-        logger.debug(f"NetworkManager initialized with interface: {self.INTERFACE}")
+        logger.info(f"NetworkManager initialized with interface: {self.INTERFACE}")
         
     # Checks if we have a valid connection by checking if we have an IPv4 address and if we can ping 1.1.1.1
     def check_connection(self) -> bool:
