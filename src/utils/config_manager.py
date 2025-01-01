@@ -1,7 +1,7 @@
 import os
 import json
-from ..config import USER_DEFAULTS
-from ..utils.logger import get_logger
+from src.config import USER_DEFAULTS
+from src.utils.logger import get_logger
 
 # Get logger for this module
 logger = get_logger('config_manager')
