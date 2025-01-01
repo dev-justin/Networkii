@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from networkii.utils.config_manager import config_manager
+from utils.config_manager import config_manager
 
 def show_config():
     """Display current configuration"""
