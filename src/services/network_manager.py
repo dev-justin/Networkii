@@ -13,7 +13,7 @@ class NetworkManager:
     INTERFACE = "wlan0"
     
     def __init__(self):
-        logger.info("NetworkManager initialized")
+        print(f"NetworkManager initialized with interface: {self.INTERFACE}")
         logger.debug(f"NetworkManager initialized with interface: {self.INTERFACE}")
         
     # Checks if we have a valid connection by checking if we have an IPv4 address and if we can ping 1.1.1.1
