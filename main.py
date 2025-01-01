@@ -99,6 +99,8 @@ class NetworkiiApp:
                     if current_screen == 1:
                         self.display.show_home_screen(self.latest_stats)
                     elif current_screen == 2:
+                        self.display.show_basic_stats_screen(self.latest_stats)
+                    elif current_screen == 3:
                         self.display.show_basic_screen(self.latest_stats)
                     else:
                         self.display.show_detailed_screen(self.latest_stats)

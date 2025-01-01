@@ -6,7 +6,7 @@ USER_DEFAULTS = {
 }
 
 # Display settings
-TOTAL_SCREENS = 3
+TOTAL_SCREENS = 4  # Now includes: Home, Basic Stats, Basic, and Detailed
 DEFAULT_SCREEN = 1
 SCREEN_WIDTH = 320
 SCREEN_HEIGHT = 240
