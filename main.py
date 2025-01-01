@@ -23,7 +23,7 @@ class NetworkiiApp:
         self.monitor_thread = None
         self.monitor_running = False
         self.latest_stats = None
-        self.config_server = ConfigServer(port=8080)
+        self.config_server = ConfigServer()
     
     def set_button_config(self, new_config):
         """Change the app mode and update handlers."""
