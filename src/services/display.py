@@ -555,6 +555,7 @@ class Display:
         GRID_WIDTH = SCREEN_WIDTH // 2
         GRID_HEIGHT = SCREEN_HEIGHT // 2
         large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+        label_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
         
         # Draw face in top-left
         face_size = min(GRID_WIDTH - GRID_MARGIN * 2, GRID_HEIGHT - GRID_MARGIN * 2)
@@ -572,10 +573,10 @@ class Display:
             cell_center_y = cell_y + GRID_HEIGHT // 2
             
             # Draw label
-            label_bbox = self.draw.textbbox((0, 0), label, font=self.message_font)
+            label_bbox = self.draw.textbbox((0, 0), label, font=label_font)
             label_width = label_bbox[2] - label_bbox[0]
             label_x = cell_center_x - label_width // 2
-            self.draw.text((label_x, cell_center_y - 25), label, font=self.message_font, fill=color)
+            self.draw.text((label_x, cell_center_y - 30), label, font=label_font, fill=color)
             
             # Draw value
             value_text = str(round(value))
