@@ -59,10 +59,7 @@ class ConfigManager:
     
     def get_setting(self, key):
         """Get a configuration setting by key, falling back to default if not found"""
-        # Reload config from file before getting setting
-        self.load_config()
-        value = self.config.get(key, USER_DEFAULTS.get(key))
-        return value
+        return self.config.get(key, USER_DEFAULTS.get(key))
 
 # Create a singleton instance
 config_manager = ConfigManager() 
