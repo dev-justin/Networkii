@@ -1,12 +1,12 @@
 import time
 import argparse
 import threading
-from src.services.monitor import NetworkMonitor
-from src.services.display import Display
-from src.services.network_manager import NetworkManager
-from src.services.ap_server import APServer
-from src.services.button_handler import ButtonHandler
-from src.utils.logger import get_logger
+from networkii.services.monitor import NetworkMonitor
+from networkii.services.display import Display
+from networkii.services.network_manager import NetworkManager
+from networkii.services.ap_server import APServer
+from networkii.services.button_handler import ButtonHandler
+from networkii.utils.logger import get_logger
 
 logger = get_logger('main')
 logger.info("============ Starting Networkii =============")

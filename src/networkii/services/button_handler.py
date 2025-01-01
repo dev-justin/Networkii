@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import time
-from src.config import TOTAL_SCREENS, DEBOUNCE_TIME
-from src.utils.logger import get_logger
+from networkii.config import TOTAL_SCREENS, DEBOUNCE_TIME
+from networkii.utils.logger import get_logger
 
 logger = get_logger('button_handler')
 

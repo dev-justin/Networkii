@@ -1,7 +1,7 @@
 import os
 import json
-from src.config import USER_DEFAULTS
-from src.utils.logger import get_logger
+from networkii.config import USER_DEFAULTS
+from networkii.utils.logger import get_logger
 
 # Get logger for this module
 logger = get_logger('config_manager')
