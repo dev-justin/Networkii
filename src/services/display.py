@@ -179,12 +179,12 @@ class Display:
         value_spacing = (available_height - 45) // 9
         
         current_value = str(round(last_values[-1]))
-        current_bbox = self.draw.textbbox((0, 0), current_value, font=self.font_sm)
+        current_bbox = self.draw.textbbox((0, 0), current_value, font=self.font_md)
         current_width = current_bbox[2] - current_bbox[0]
         self.draw.text(
             (x + (METRIC_WIDTH - current_width) // 2, METRIC_TOP_MARGIN + 20),
             current_value,
-            font=self.font_sm,
+            font=self.font_md,
             fill=color
         )
         
@@ -193,7 +193,7 @@ class Display:
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
-            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_md)
+            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_sm)
             text_width = text_bbox[2] - text_bbox[0]
             
             text_x = x + (METRIC_WIDTH - text_width) // 2
@@ -202,7 +202,7 @@ class Display:
             self.draw.text(
                 (text_x, text_y),
                 value_text,
-                font=self.font_md,
+                font=self.font_sm,
                 fill=faded_color
             )
 
