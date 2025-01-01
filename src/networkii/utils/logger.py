@@ -1,5 +1,5 @@
-import os
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 def get_logger(name):
@@ -10,12 +10,17 @@ def get_logger(name):
         logger.setLevel(logging.DEBUG)
         
         # Create user-specific log directory
-        log_dir = Path.home() / '.local' / 'log' / 'networkii'
+        log_dir = Path.home() / '.networkii'
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file = str(log_dir / 'networkii.log')
         
-        # File handler
-        file_handler = logging.FileHandler(log_file)
+        # Rotating file handler (50MB max size, keep one backup)
+        max_bytes = 50 * 1024 * 1024  # 50MB
+        file_handler = RotatingFileHandler(
+            log_file,
+            maxBytes=max_bytes,
+            backupCount=1  # Keep one backup file
+        )
         file_handler.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(formatter)

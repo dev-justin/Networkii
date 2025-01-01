@@ -1,7 +1,7 @@
 import time
 import argparse
 import threading
-from networkii.services.monitor import NetworkMonitor
+from networkii.services.network_monitor import NetworkMonitor
 from networkii.services.display import Display
 from networkii.services.network_manager import NetworkManager
 from networkii.services.ap_server import APServer
@@ -37,7 +37,6 @@ class NetworkiiApp:
         while self.monitor_running:
             try:
                 self.latest_stats = self.network_monitor.get_stats()
-                print(f"Latest stats: {self.latest_stats}")
                 time.sleep(2)  # Get new stats every 2 seconds
             except Exception as e:
                 logger.error(f"Error in monitor thread: {e}")

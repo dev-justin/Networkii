@@ -9,7 +9,7 @@ logger = get_logger('config_manager')
 
 class ConfigManager:
 
-    CONFIG_DIR = Path.home() / '.config' / 'networkii'
+    CONFIG_DIR = Path.home() / '.networkii'
     CONFIG_FILE = CONFIG_DIR / 'config.json'
 
     def __init__(self):
@@ -19,13 +19,8 @@ class ConfigManager:
         self.config_file = str(self.CONFIG_FILE)
         logger.info(f"Using config file: {self.config_file}")
 
-        # Start with defaults
-        self.config = {}
+        self.config = self.load_config() or {}
         
-        # Load config (this will merge defaults with saved values)
-        self.load_config()
-        
-        # If no config existed, start with defaults
         if not self.config:
             self.config = USER_DEFAULTS.copy()
             logger.info(f"No existing config, starting with defaults: {self.config}")
