@@ -13,7 +13,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "networkii=cli:main",
+            "networkii=src.cli:main",
         ],
     }
 )
