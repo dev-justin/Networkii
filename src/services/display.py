@@ -162,12 +162,12 @@ class Display:
         if not history:
             return
         
-        label_bbox = self.draw.textbbox((0, 0), label, font=self.font_xs)
+        label_bbox = self.draw.textbbox((0, 0), label, font=self.font_sm)
         label_width = label_bbox[2] - label_bbox[0]
         self.draw.text(
             (x + (METRIC_WIDTH - label_width) // 2, y + METRIC_TOP_MARGIN),
             label,
-            font=self.font_xs,
+            font=self.font_sm,
             fill=color
         )
         
@@ -334,10 +334,10 @@ class Display:
         start_y = (SCREEN_HEIGHT - total_height) // 2
         
         score_text = f"Health: {health_score}%"
-        score_bbox = self.draw.textbbox((0, 0), score_text, font=self.font_sm)
+        score_bbox = self.draw.textbbox((0, 0), score_text, font=self.font_md)
         score_width = score_bbox[2] - score_bbox[0]
         score_x = (SCREEN_WIDTH - score_width) // 2
-        self.draw.text((score_x, start_y), score_text, font=self.font_sm, fill=COLORS['white'])
+        self.draw.text((score_x, start_y), score_text, font=self.font_md, fill=COLORS['white'])
         
         face = self.face_images[health_state]
         face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
