@@ -11,9 +11,8 @@ logger = logging.getLogger('config_manager')
 class ConfigManager:
     def __init__(self):
         logger.info("Initializing ConfigManager...")
-        # Use project directory for configuration
-        self.config_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.config_file = os.path.join(self.config_dir, 'config.json')
+        # Use ovvys's home directory for configuration
+        self.config_file = '/home/ovvys/Networkii/config.json'
         logger.info(f"Using config file: {self.config_file}")
         self.config = USER_DEFAULTS.copy()
         logger.info(f"Starting with defaults: {self.config}")
