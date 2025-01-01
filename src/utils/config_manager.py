@@ -7,11 +7,13 @@ logger = logging.getLogger('config_manager')
 
 class ConfigManager:
     def __init__(self):
+        logger.info("Initializing ConfigManager...")
         # Use ~/.config/networkii for configuration
         self.config_dir = os.path.expanduser('~/.config/networkii')
         self.config_file = os.path.join(self.config_dir, 'config.json')
         logger.info(f"Using config file: {self.config_file}")
         self.config = USER_DEFAULTS.copy()
+        logger.info(f"Starting with defaults: {self.config}")
         self.load_config()
     
     def load_config(self):
