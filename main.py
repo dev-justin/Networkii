@@ -9,14 +9,14 @@ from src.services.button_handler import ButtonHandler
 from src.utils.logger import get_logger
 
 logger = get_logger('main')
-logger.info("Starting Networkii")
+logger.info("============ Starting Networkii =============")
 
 class NetworkiiApp:
     def __init__(self):
         self.network_manager = NetworkManager()
         self.display = Display()
         self.network_monitor = None
-        self.button_config = None  # Can be 'monitor', 'ap', or 'no_internet'
+        self.button_config = None 
         self.button_handler = ButtonHandler(self.display, self.network_manager)
         self.monitor_thread = None
         self.monitor_running = False
@@ -130,10 +130,8 @@ class NetworkiiApp:
         try:
             # Start in AP mode if requested or if no WiFi connection
             if ap_mode or not self.network_manager.has_wifi_connection():
-                logger.info("Starting in AP mode (%s)", "CLI argument" if ap_mode else "No WiFi connection")
                 self.run_ap_mode()
             else:
-                logger.info("Starting in monitor mode")
                 self.run_monitor_mode()
         finally:
             self.monitor_running = False
