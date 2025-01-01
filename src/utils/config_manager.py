@@ -47,6 +47,7 @@ class ConfigManager:
     
     def get_config(self):
         """Get the entire configuration"""
+        print(f"Getting config: {self.config}")
         return self.config.copy()
     
     def update_config(self, new_config):
