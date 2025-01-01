@@ -17,14 +17,9 @@ class ConfigManager:
 
         self.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         self.config_file = str(self.CONFIG_FILE)
+        self.config = USER_DEFAULTS.copy()  # Initialize with defaults first
         logger.info(f"Using config file: {self.config_file}")
-
-        self.config = self.load_config() or {}
-        
-        if not self.config:
-            self.config = USER_DEFAULTS.copy()
-            logger.info(f"No existing config, starting with defaults: {self.config}")
-            self.save_config()
+        self.load_config()  # Then load from file if it exists
     
     def load_config(self):
         """Load configuration from file"""
@@ -38,7 +33,6 @@ class ConfigManager:
                     logger.info(f"Loaded configuration: {self.config}")
             else:
                 logger.info(f"No config file found at {self.config_file}, creating with defaults")
-                # Save default config if no file exists
                 self.save_config()
         except Exception as e:
             logger.error(f"Error loading configuration: {e}")
