@@ -10,7 +10,25 @@ Usage Examples:
      $ ./networkii set --ping-target 1.1.1.1 --speed-test-interval 60
 """
 
+import os
+import sys
 import argparse
+
+# ----------------------------------------------------------------------------
+# STEP 1: Fix import paths so that Python knows where to look for 'src' folder.
+# ----------------------------------------------------------------------------
+# We assume this script is located in:    /home/ovvys/Networkii/src/cli/networkii
+# and that your project root is likely:   /home/ovvys/Networkii/
+#
+# By jumping up two levels, we get the project root. Then we put it at the
+# front of sys.path so "from src.utils.config_manager import config_manager" works.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, '..', '..'))
+sys.path.insert(0, PROJECT_ROOT)
+
+# ----------------------------------------------------------------------------
+# STEP 2: Now we can safely import from src.*
+# ----------------------------------------------------------------------------
 from src.utils.config_manager import config_manager
 
 def show_config():
