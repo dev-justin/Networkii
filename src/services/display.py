@@ -208,10 +208,9 @@ class Display:
 
     def draw_metric_row(self, y: int, label: str, current_value: float, history: deque, color: tuple):
         """Draw metric row with historical values"""
-        LABEL_WIDTH = 80
-        CURRENT_VALUE_SPACING = 8
+        LABEL_WIDTH = 60  # Reduced to give more space
+        CURRENT_WIDTH = 50  # Fixed width for current value
         RIGHT_MARGIN = 5
-        VALUE_WIDTH = SCREEN_WIDTH - LABEL_WIDTH - RIGHT_MARGIN
         
         # Draw label
         self.draw.text((10, y), label, font=self.font_sm, fill=color)
@@ -220,8 +219,9 @@ class Display:
         current_text = str(round(current_value))
         current_bbox = self.draw.textbbox((0, 0), current_text, font=self.font_lg)
         current_width = current_bbox[2] - current_bbox[0]
+        current_x = LABEL_WIDTH + (CURRENT_WIDTH - current_width) // 2
         self.draw.text(
-            (LABEL_WIDTH - current_width + CURRENT_VALUE_SPACING, y - 5),  # Adjust y position for larger font
+            (current_x, y - 5),  # Adjust y position for larger font
             current_text,
             font=self.font_lg,
             fill=color
@@ -236,21 +236,21 @@ class Display:
             total_values = len(history_values)
             if total_values > 0:
                 # Calculate the space available for historical values
-                history_start_x = LABEL_WIDTH + 40  # Start after current value
+                history_start_x = LABEL_WIDTH + CURRENT_WIDTH + 10  # Start after current value
                 history_area_width = SCREEN_WIDTH - history_start_x - RIGHT_MARGIN
                 value_spacing = min(40, history_area_width // total_values)  # Cap spacing at 40px
                 
-                # Start drawing from right to left
-                for i, value in enumerate(reversed(history_values)):
-                    fade_level = 0.7 - (i * 0.08)
+                # Draw values left to right
+                for i, value in enumerate(history_values):
+                    fade_level = 0.7 - ((total_values - i - 1) * 0.08)  # Fade gets stronger towards the right
                     faded_color = tuple(int(c * fade_level) for c in color)
                     
                     value_text = str(round(value))
                     text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_md)
                     text_width = text_bbox[2] - text_bbox[0]
                     
-                    # Position each value from right to left
-                    x_pos = SCREEN_WIDTH - RIGHT_MARGIN - (i * value_spacing) - text_width
+                    # Position each value from left to right
+                    x_pos = history_start_x + (i * value_spacing)
                     
                     self.draw.text(
                         (x_pos, y),
