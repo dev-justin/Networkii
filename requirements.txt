@@ -5,5 +5,4 @@ netifaces
 numpy
 speedtest-cli
 rpi-lgpio
-textual
 flask
