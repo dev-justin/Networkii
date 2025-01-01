@@ -7,7 +7,7 @@ setup(
     package_dir={"": "src"},                 # "Root" of packages is src/
     entry_points={
         "console_scripts": [
-            "networkii = cli:main",         # We'll import cli.py as top-level
+            "networkii=src.cli:main",        # Use full path to cli.py
         ],
     },
 )
