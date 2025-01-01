@@ -227,38 +227,35 @@ class Display:
             fill=color
         )
         
-        # Get last 8 historical values
-        history_values = list(history)[-8:]
-        if len(history_values) > 1:  # Only draw history if we have values
-            history_values = history_values[:-1]  # Exclude current value
+        # Get last 8 historical values (excluding current)
+        last_values = list(history)[-9:-1]  # Get 8 values before the current
+        if not last_values:
+            return
             
-            # Calculate spacing between values
-            total_values = len(history_values)
-            if total_values > 0:
-                # Calculate the space available for historical values
-                history_start_x = LABEL_WIDTH + CURRENT_WIDTH + 10  # Start after current value
-                history_area_width = SCREEN_WIDTH - history_start_x - RIGHT_MARGIN
-                value_spacing = min(40, history_area_width // total_values)  # Cap spacing at 40px
-                
-                # Draw values left to right
-                for i, value in enumerate(history_values):
-                    fade_level = 0.7 - ((total_values - i - 1) * 0.08)  # Fade gets stronger towards the right
-                    faded_color = tuple(int(c * fade_level) for c in color)
-                    
-                    value_text = str(round(value))
-                    text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_md)
-                    text_width = text_bbox[2] - text_bbox[0]
-                    
-                    # Position each value from left to right
-                    x_pos = history_start_x + (i * value_spacing)
-                    x_pos = x_pos + (value_spacing - text_width) // 2  # Center in available space
-                    
-                    self.draw.text(
-                        (x_pos, y),
-                        value_text,
-                        font=self.font_md,
-                        fill=faded_color
-                    )
+        # Calculate spacing between values
+        history_start_x = LABEL_WIDTH + CURRENT_WIDTH + 10  # Start after current value
+        history_area_width = SCREEN_WIDTH - history_start_x - RIGHT_MARGIN
+        value_spacing = min(40, history_area_width // len(last_values))  # Cap spacing at 40px
+        
+        # Draw values from recent to old (left to right)
+        for i, value in enumerate(reversed(last_values)):  # Reverse to show recent first
+            fade_level = 0.7 - (i * 0.08)  # Fade gets stronger towards the right
+            faded_color = tuple(int(c * fade_level) for c in color)
+            
+            value_text = str(round(value))
+            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_md)
+            text_width = text_bbox[2] - text_bbox[0]
+            
+            # Position each value from left to right
+            x_pos = history_start_x + (i * value_spacing)
+            x_pos = x_pos + (value_spacing - text_width) // 2  # Center in available space
+            
+            self.draw.text(
+                (x_pos, y),
+                value_text,
+                font=self.font_md,
+                fill=faded_color
+            )
 
     def show_home_screen(self, stats: NetworkStats):
         """Update the home screen with network metrics"""
