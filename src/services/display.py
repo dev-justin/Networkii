@@ -240,11 +240,14 @@ class Display:
             faded_color = tuple(int(c * fade_level) for c in color)
             
             value_text = str(round(value))
-            x_pos = history_start_x + (i * value_spacing)
+            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
+            text_width = text_bbox[2] - text_bbox[0]
+            x_pos = history_start_x + (i * value_spacing) - (text_width // 2)
+            
             self.draw.text(
-                (x_pos, y + 5),
+                (x_pos, y),
                 value_text,
-                font=self.tiny_font,
+                font=self.number_font,
                 fill=faded_color
             )
 
