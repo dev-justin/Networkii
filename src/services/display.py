@@ -544,62 +544,55 @@ class Display:
         self.disp.st7789.display(self.image) 
 
     def show_basic_stats_screen(self, stats: NetworkStats):
-        """Show current network statistics with large text"""
+        """Show current network statistics with large text in a 2x2 grid"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
         # Calculate health score and get face
         health_score, health_state = self.calculate_network_health(stats)
         
-        # Draw face at the top
-        face_size = FACE_SIZE // 2  # Smaller face
+        # Setup grid
+        GRID_MARGIN = 10
+        GRID_WIDTH = SCREEN_WIDTH // 2
+        GRID_HEIGHT = SCREEN_HEIGHT // 2
+        large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+        
+        # Draw face in top-left
+        face_size = min(GRID_WIDTH - GRID_MARGIN * 2, GRID_HEIGHT - GRID_MARGIN * 2)
         face = self.face_images[health_state].resize((face_size, face_size), Image.Resampling.LANCZOS)
-        face_x = (SCREEN_WIDTH - face_size) // 2
-        face_y = 10
+        face_x = (GRID_WIDTH - face_size) // 2
+        face_y = (GRID_HEIGHT - face_size) // 2
         self.image.paste(face, (face_x, face_y), face)
         
-        # Setup for metrics
-        start_y = face_y + face_size + 20
-        spacing = 50  # Space between metrics
-        large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
+        # Function to draw metric in a grid cell
+        def draw_metric(label, value, color, grid_x, grid_y):
+            # Calculate cell center
+            cell_x = grid_x * GRID_WIDTH
+            cell_y = grid_y * GRID_HEIGHT
+            cell_center_x = cell_x + GRID_WIDTH // 2
+            cell_center_y = cell_y + GRID_HEIGHT // 2
+            
+            # Draw label
+            label_bbox = self.draw.textbbox((0, 0), label, font=self.message_font)
+            label_width = label_bbox[2] - label_bbox[0]
+            label_x = cell_center_x - label_width // 2
+            self.draw.text((label_x, cell_center_y - 25), label, font=self.message_font, fill=color)
+            
+            # Draw value
+            value_text = str(round(value))
+            value_bbox = self.draw.textbbox((0, 0), value_text, font=large_font)
+            value_width = value_bbox[2] - value_bbox[0]
+            value_x = cell_center_x - value_width // 2
+            self.draw.text((value_x, cell_center_y + 5), value_text, font=large_font, fill=color)
         
-        # Draw ping
-        ping_label = "PING"
-        ping_value = str(round(stats.ping))
-        label_bbox = self.draw.textbbox((0, 0), ping_label, font=self.message_font)
-        value_bbox = self.draw.textbbox((0, 0), ping_value, font=large_font)
+        # Draw metrics in other grid cells
+        # Ping in top-right (1, 0)
+        draw_metric("PING", stats.ping, COLORS['green'], 1, 0)
         
-        # Center both label and value
-        label_x = (SCREEN_WIDTH - label_bbox[2]) // 2
-        value_x = (SCREEN_WIDTH - value_bbox[2]) // 2
+        # Jitter in bottom-left (0, 1)
+        draw_metric("JITTER", stats.jitter, COLORS['red'], 0, 1)
         
-        self.draw.text((label_x, start_y), ping_label, font=self.message_font, fill=COLORS['green'])
-        self.draw.text((value_x, start_y + 20), ping_value, font=large_font, fill=COLORS['green'])
-        
-        # Draw jitter
-        jitter_y = start_y + spacing + 20
-        jitter_label = "JITTER"
-        jitter_value = str(round(stats.jitter))
-        label_bbox = self.draw.textbbox((0, 0), jitter_label, font=self.message_font)
-        value_bbox = self.draw.textbbox((0, 0), jitter_value, font=large_font)
-        
-        label_x = (SCREEN_WIDTH - label_bbox[2]) // 2
-        value_x = (SCREEN_WIDTH - value_bbox[2]) // 2
-        
-        self.draw.text((label_x, jitter_y), jitter_label, font=self.message_font, fill=COLORS['red'])
-        self.draw.text((value_x, jitter_y + 20), jitter_value, font=large_font, fill=COLORS['red'])
-        
-        # Draw packet loss
-        loss_y = jitter_y + spacing + 20
-        loss_label = "LOSS"
-        loss_value = str(round(stats.packet_loss))
-        label_bbox = self.draw.textbbox((0, 0), loss_label, font=self.message_font)
-        value_bbox = self.draw.textbbox((0, 0), loss_value, font=large_font)
-        
-        label_x = (SCREEN_WIDTH - label_bbox[2]) // 2
-        value_x = (SCREEN_WIDTH - value_bbox[2]) // 2
-        
-        self.draw.text((label_x, loss_y), loss_label, font=self.message_font, fill=COLORS['purple'])
-        self.draw.text((value_x, loss_y + 20), loss_value, font=large_font, fill=COLORS['purple'])
+        # Loss in bottom-right (1, 1)
+        draw_metric("LOSS", stats.packet_loss, COLORS['purple'], 1, 1)
 
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image) 
