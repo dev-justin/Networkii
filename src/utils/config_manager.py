@@ -14,6 +14,7 @@ class ConfigManager:
         logger.info(f"Using config file: {self.config_file}")
         self.config = USER_DEFAULTS.copy()
         logger.info(f"Starting with defaults: {self.config}")
+        print(f"Starting with defaults: {self.config}")
         self.load_config()
     
     def load_config(self):
