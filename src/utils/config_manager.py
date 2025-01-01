@@ -10,6 +10,7 @@ class ConfigManager:
         # Use ~/.config/networkii for configuration
         self.config_dir = os.path.expanduser('~/.config/networkii')
         self.config_file = os.path.join(self.config_dir, 'config.json')
+        logger.info(f"Using config file: {self.config_file}")
         self.config = USER_DEFAULTS.copy()
         self.load_config()
     
@@ -24,11 +25,11 @@ class ConfigManager:
                     loaded_config = json.load(f)
                     # Update config with loaded values while preserving defaults
                     self.config.update(loaded_config)
-                    logger.debug(f"Loaded configuration: {self.config}")
+                    logger.info(f"Loaded configuration from {self.config_file}: {self.config}")
             else:
                 # Save default config if no file exists
                 self.save_config()
-                logger.debug("Created default configuration file")
+                logger.info(f"Created default configuration at {self.config_file}")
         except Exception as e:
             logger.error(f"Error loading configuration: {e}")
     
