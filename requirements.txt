@@ -5,3 +5,4 @@ netifaces
 numpy
 speedtest-cli
 rpi-lgpio
+flask

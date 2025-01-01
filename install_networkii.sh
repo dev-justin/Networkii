@@ -151,6 +151,9 @@ mkdir -p ~/.config/networkii
 # Generate certificates using mkcert
 echo "Generating trusted certificates..."
 mkcert -install
+# Create folder for certificates
+mkdir -p ~/.config/networkii
+# Create certificates
 mkcert -cert-file ~/.config/networkii/cert.pem -key-file ~/.config/networkii/key.pem networkii.local localhost 127.0.0.1 "*.local"
 
 # Set up systemd service
