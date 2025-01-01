@@ -24,6 +24,17 @@ def check_connection(interface) -> bool:
         logger.error(f"Error checking connection: {str(e)}")
         return False
     
+def has_wifi_saved(interface) -> bool:
+    """Check if we have a WiFi connection present (regardless of Internet)"""
+    try:
+        subprocess.run(['nmcli', 'connection', 'show', interface],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+        return True
+    except Exception as e:
+        logger.error(f"Error checking WiFi connection: {str(e)}")
+        return False
+
 def remove_connection(interface) -> bool:
     """Remove NetworkManager connection for given interface"""
     try:

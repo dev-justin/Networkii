@@ -5,7 +5,7 @@ from networkii.services.network_monitor import NetworkMonitor
 from networkii.services.display import Display
 from networkii.services.button_handler import ButtonHandler
 from networkii.utils.logger import get_logger
-from networkii.utils.network import check_connection
+from networkii.utils.network import check_connection, has_wifi_saved
 
 logger = get_logger('main')
 logger.info("============ Starting Networkii =============")
@@ -58,13 +58,13 @@ class NetworkiiApp:
         try:
             while True:
                 # First check if we have WiFi connection
-                if not check_connection('wlan0'):
-                    logger.info("No WiFi connection, switching to AP mode")
+                if not has_wifi_saved('wlan0'):
+                    logger.info("No WiFi connection, switching to setup mode")
                     self.set_button_config(None)
                     self.monitor_running = False
                     if self.monitor_thread:
                         self.monitor_thread.join()
-                    self.no_wifi()
+                    self.no_wifi_mode()
                     return
                 
                 # Check if we have internet on preferred interface
@@ -110,14 +110,15 @@ class NetworkiiApp:
     def no_wifi_mode(self):
         """ No WiFi mode - show no connection screen """
         self.set_button_config(None)
-        self.display.show_no_connection_screen()
+        self.display.setup_screen()
     
     def run(self, setup_mode=False):
         """Main entry point for the application"""
+
         logger.debug("Networkii starting up...")
         
         try:
-            if setup_mode or not self.network_manager.has_wifi_connection():
+            if setup_mode or not has_wifi_saved('wlan0'):
                 self.no_wifi_mode()
             else:
                 self.run_monitor_mode()

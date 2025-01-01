@@ -12,6 +12,7 @@ Usage Examples:
 
 import argparse
 from networkii.utils.config_manager import config_manager
+from networkii.utils.network import connect_to_wifi
 
 def show_config():
     """Display current configuration"""
@@ -48,7 +49,7 @@ def update_config(args):
     else:
         print("No changes specified. Use --help to see available options.")
 
-def connect_to_wifi(args):
+def wifi_setup(args):
     """Connect to WiFi using provided credentials"""
     if not args.ssid:
         print("Error: SSID (--ssid) is required for WiFi connection")
@@ -58,12 +59,8 @@ def connect_to_wifi(args):
         return
 
     print(f"Attempting to connect to WiFi network: {args.ssid}")
-    # TODO: Implement actual WiFi connection logic here
-    config_manager.update_config({
-        'wifi_ssid': args.ssid,
-        'wifi_password': args.password
-    })
-    print("WiFi credentials saved successfully!")
+    connect_to_wifi(args.ssid, args.password)
+    print("Connected to WiFi")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -92,7 +89,7 @@ def main():
     elif args.command == 'set':
         update_config(args)
     elif args.command == 'connect':
-        connect_to_wifi(args);
+        wifi_setup(args);
     else:
         parser.print_help()
 

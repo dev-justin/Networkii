@@ -431,8 +431,8 @@ class Display:
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
 
-    def show_no_connection_screen(self):
-        """Show the no connection screen with AP mode instructions"""
+    def setup_screen(self):
+        """Show the setup screen with AP mode instructions"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
         # Draw welcome message with larger font
