@@ -30,6 +30,7 @@ def update_config(args):
             return
 
     if changes_made:
+        print("Calling config_manager.update_config")
         config_manager.update_config(current_config)
         print("Configuration updated successfully!")
         show_config()
