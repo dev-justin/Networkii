@@ -1,14 +1,4 @@
 #!/usr/bin/env python3
-"""
-Networkii Configuration CLI Tool
-
-Usage Examples:
-  1) Show current config:
-     $ networkii show
-
-  2) Update configuration:
-     $ networkii set --ping-target 1.1.1.1 --speed-test-interval 60
-"""
 
 import argparse
 from networkii.utils.config_manager import config_manager
@@ -59,8 +49,11 @@ def wifi_setup(args):
         return
 
     print(f"Attempting to connect to WiFi network: {args.ssid}")
-    connect_to_wifi(args.ssid, args.password)
-    print("Connected to WiFi")
+    connected = connect_to_wifi(args.ssid, args.password)
+    if connected:
+        print(f"Connected to WiFi ({args.ssid})")
+    else:
+        print(f"Failed to connect to WiFi ({args.ssid})")
 
 def main():
     parser = argparse.ArgumentParser(
