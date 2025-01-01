@@ -217,10 +217,13 @@ class Display:
         """Draw metric row with historical values"""
         LABEL_WIDTH = 80
         CURRENT_VALUE_SPACING = 8
-        VALUE_WIDTH = SCREEN_WIDTH - LABEL_WIDTH - 20
+        RIGHT_MARGIN = 10
+        VALUE_WIDTH = SCREEN_WIDTH - LABEL_WIDTH - RIGHT_MARGIN
         
+        # Draw label
         self.draw.text((10, y), label, font=self.message_font, fill=color)
         
+        # Draw current value
         current_text = str(round(current_value))
         current_bbox = self.draw.textbbox((0, 0), current_text, font=self.number_font)
         current_width = current_bbox[2] - current_bbox[0]
@@ -231,25 +234,38 @@ class Display:
             fill=color
         )
         
+        # Get last 8 historical values
         history_values = list(history)[-8:]
-        value_spacing = VALUE_WIDTH // 8
-        history_start_x = LABEL_WIDTH
-        
-        for i, value in enumerate(reversed(history_values[:-1]), 1):
-            fade_level = 0.7 - (i * 0.08)
-            faded_color = tuple(int(c * fade_level) for c in color)
+        if len(history_values) > 1:  # Only draw history if we have values
+            history_values = history_values[:-1]  # Exclude current value
             
-            value_text = str(round(value))
-            text_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
-            text_width = text_bbox[2] - text_bbox[0]
-            x_pos = history_start_x + (i * value_spacing) - (text_width // 2)
-            
-            self.draw.text(
-                (x_pos, y),
-                value_text,
-                font=self.number_font,
-                fill=faded_color
-            )
+            # Calculate spacing between values
+            total_values = len(history_values)
+            if total_values > 0:
+                # Calculate the space available for historical values
+                history_area_width = VALUE_WIDTH - LABEL_WIDTH
+                value_spacing = history_area_width // total_values
+                
+                # Start drawing from right to left
+                for i, value in enumerate(reversed(history_values), 1):
+                    fade_level = 0.7 - (i * 0.08)
+                    faded_color = tuple(int(c * fade_level) for c in color)
+                    
+                    value_text = str(round(value))
+                    text_bbox = self.draw.textbbox((0, 0), value_text, font=self.number_font)
+                    text_width = text_bbox[2] - text_bbox[0]
+                    
+                    # Position each value, starting from the right
+                    x_pos = SCREEN_WIDTH - RIGHT_MARGIN - (i * value_spacing)
+                    # Center the text in its space
+                    x_pos -= text_width // 2
+                    
+                    self.draw.text(
+                        (x_pos, y),
+                        value_text,
+                        font=self.number_font,
+                        fill=faded_color
+                    )
 
     def show_home_screen(self, stats: NetworkStats):
         """Update the home screen with network metrics"""
