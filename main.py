@@ -5,7 +5,6 @@ from src.services.monitor import NetworkMonitor
 from src.services.display import Display
 from src.services.network_manager import NetworkManager
 from src.services.ap_server import APServer
-from src.services.config_server import ConfigServer
 from src.services.button_handler import ButtonHandler
 from src.utils.logger import get_logger
 
@@ -23,7 +22,6 @@ class NetworkiiApp:
         self.monitor_thread = None
         self.monitor_running = False
         self.latest_stats = None
-        self.config_server = ConfigServer()
     
     def set_button_config(self, new_config):
         """Change the app mode and update handlers."""
@@ -51,10 +49,6 @@ class NetworkiiApp:
         self.network_monitor = NetworkMonitor()
         self.set_button_config('monitor')
         
-        # Start config server
-        logger.info("Starting configuration server")
-        self.config_server.start()
-        
         # Start monitor thread
         self.monitor_running = True
         self.monitor_thread = threading.Thread(target=self.monitor_loop)
@@ -73,7 +67,6 @@ class NetworkiiApp:
                     self.monitor_running = False
                     if self.monitor_thread:
                         self.monitor_thread.join()
-                    self.config_server.stop()
                     self.run_ap_mode()
                     return
                 
@@ -115,7 +108,6 @@ class NetworkiiApp:
             self.monitor_running = False
             if self.monitor_thread:
                 self.monitor_thread.join()
-            self.config_server.stop()
             self.set_button_config(None)  # Clean up handlers
 
     def run_ap_mode(self):
