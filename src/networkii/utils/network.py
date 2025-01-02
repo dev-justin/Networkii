@@ -34,6 +34,7 @@ def has_wifi_saved(interface) -> bool:
             text=True
         )
 
+        print(device_status.stdout)
         for line in device_status.stdout.splitlines():
             if line.strip().startswith("DEVICE") or not line.strip():
                 continue
