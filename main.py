@@ -152,7 +152,23 @@ class NetworkiiApp:
         start_ap()
         self.screen_manager.switch_screen('setup')
         self.screen_manager.draw_screen(None)
-    
+        
+        try:
+            while True:                
+                # Check if WiFi is now configured
+                if has_wifi_saved('wlan0'):
+                    logger.info("WiFi configured, switching to monitor mode")
+                    print("Switching to monitor mode")
+                    # return self.run_monitor_mode()
+                    
+                time.sleep(1)  # Update display every 100ms
+                
+        except KeyboardInterrupt:
+            logger.info("Program terminated by user")
+        except Exception as e:
+            logger.error(f"Error in no_wifi mode: {e}")
+            raise  # Re-raise to be handled by main error handler
+
     def run(self, setup_mode=False):
         """Main entry point for the application"""
         logger.debug("Networkii starting up...")
