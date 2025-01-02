@@ -38,6 +38,7 @@ def has_wifi_saved(interface) -> bool:
             if line.strip().startswith("DEVICE") or not line.strip():
                 continue
 
+            print(line)
             parts = line.split()
             if len(parts) == 3:
                 device, state, connection = parts
