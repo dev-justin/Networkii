@@ -21,6 +21,13 @@ class BaseScreen(ABC):
         # Quick access to images
         self.face_images = display.face_images
         self.heart_image = display.heart_image
+        
+        # Screen manager will be set after initialization
+        self.screen_manager = None
+    
+    def set_screen_manager(self, screen_manager):
+        """Set the screen manager for navigation."""
+        self.screen_manager = screen_manager
     
     @abstractmethod
     def draw_screen(self, stats: NetworkStats):
