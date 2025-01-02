@@ -56,3 +56,14 @@ def connect_to_wifi(ssid, password, interface="wlan0") -> bool:
     except Exception as e:
         logger.error(f"Error connecting to {ssid}: {str(e)}")
         return False
+
+def start_ap():
+    """Start AP mode"""
+    try:
+        subprocess.run(['nmcli', 'device', 'wifi', 'hotspot', 'ssid', 'networkii', 'password', 'networkii'],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+        return True
+    except Exception as e:
+        logger.error(f"Error starting AP mode: {str(e)}")
+        return False    

@@ -5,7 +5,7 @@ from networkii.services.network_monitor import NetworkMonitor
 from networkii.services.display import Display
 from networkii.services.button_handler import ButtonHandler
 from networkii.utils.logger import get_logger
-from networkii.utils.network import check_connection, has_wifi_saved
+from networkii.utils.network import check_connection, has_wifi_saved, start_ap
 
 logger = get_logger('main')
 logger.info("============ Starting Networkii =============")
@@ -110,6 +110,7 @@ class NetworkiiApp:
     def no_wifi_mode(self):
         """ No WiFi mode - show no connection screen """
         self.set_button_config(None)
+        start_ap()
         self.display.setup_screen()
     
     def run(self, setup_mode=False):
