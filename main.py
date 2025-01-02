@@ -26,7 +26,7 @@ class NetworkiiApp:
         
         # Setup button handlers
         display_hat = self.display.disp
-        display_hat.on_button_pressed(self.handle_button)
+        display_hat.on_button_pressed(self.button_pressed_callback)
         
         self.network_monitor = None
         self.monitor_thread = None
@@ -34,30 +34,27 @@ class NetworkiiApp:
         self.latest_stats = None
         self.current_mode = None
     
-    def handle_button(self, pin):
-        """Handle button presses based on current mode."""
-        try:
-            display_hat = self.display.disp
-            # Only handle button press events (not releases)
-            if not display_hat.read_button(pin):
-                return
-                
-            if self.current_mode == 'monitor':
-                if pin == display_hat.BUTTON_A:  # Home screen
-                    self.screen_manager.switch_screen('home')
-                elif pin == display_hat.BUTTON_B:  # Basic stats
-                    self.screen_manager.switch_screen('basic_stats')
-                elif pin == display_hat.BUTTON_X:  # Detailed stats
-                    self.screen_manager.switch_screen('detailed_stats')
-                elif pin == display_hat.BUTTON_Y:  # Speed test
-                    logger.info("Speed test button pressed")
-                    # TODO: Implement speed test trigger
-            elif self.current_mode == 'no_internet':
-                if pin == display_hat.BUTTON_B:  # Reset WiFi in no internet mode
-                    logger.info("Reset WiFi button pressed")
-                    # TODO: Implement WiFi reset
-        except Exception as e:
-            logger.error(f"Error handling button press: {e}")
+    def button_pressed_callback(self, pin):
+        """
+        Single callback for any button press on Display HAT Mini.
+        We'll just figure out which button (A/B/X/Y) was pressed and
+        then delegate to the ScreenManager, which in turn calls the
+        current screen’s handle_button().
+        """
+        # Confirm it's actually pressed, not released
+        if not self.display_hat.read_button(pin):
+            return
+
+        button_label = self.button_map.get(pin)
+        if button_label is None:
+            logger.warning(f"Unknown button pin {pin}")
+            return
+
+        logger.debug(f"[{self.current_mode}] Button {button_label} pressed")
+
+        # Delegate all button logic to the ScreenManager, which will
+        # call handle_button() on the *active* screen.
+        self.screen_manager.handle_button(button_label)
 
     def network_monitor_loop(self):
         """Background thread for network monitoring"""

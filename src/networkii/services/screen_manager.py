@@ -1,7 +1,8 @@
 class ScreenManager:
     def __init__(self):
         self.screens = {}
-        self.current_screen_name = None
+        # default to home screen
+        self.current_screen_name = 'home'
 
     def add_screen(self, name, screen):
         """Register a screen object by a string name."""
