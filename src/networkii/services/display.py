@@ -3,7 +3,10 @@ import os
 from pathlib import Path
 from displayhatmini import DisplayHATMini
 from PIL import Image, ImageDraw, ImageFont
-from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FONT_XS, FONT_SM, FONT_MD, FONT_LG, FONT_XL, HEALTH_THRESHOLDS, FACE_SIZE, HEART_SIZE, RECENT_HISTORY_LENGTH
+from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FONT_XS, FONT_SM, FONT_MD, 
+                     FONT_LG, FONT_XL, HEALTH_THRESHOLDS, FACE_SIZE, HEART_SIZE, 
+                     RECENT_HISTORY_LENGTH, COLORS, HEART_GAP, METRIC_TOP_MARGIN, 
+                     METRIC_BOTTOM_MARGIN, METRIC_WIDTH) 
 from ..models.network_stats import NetworkStats, NetworkMetrics
 from collections import deque
 import statistics
@@ -19,11 +22,7 @@ class Display:
         
         # Initialize display with buffer
         self.disp = DisplayHATMini(self.image)
-        
-        # Get package directory for assets
-        package_dir = Path(__file__).parent.parent
-        assets_dir = package_dir / 'assets'
-        
+                
         # Load fonts
         self.font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XS)
         self.font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_SM)
@@ -34,12 +33,12 @@ class Display:
         # Load face images
         self.face_images = {}
         for state, info in HEALTH_THRESHOLDS.items():
-            image_path = assets_dir / info['face']
+            image_path = '/assets/faces/' + info['face']
             image = Image.open(image_path).convert('RGBA')
             self.face_images[state] = image.resize((FACE_SIZE, FACE_SIZE), Image.Resampling.LANCZOS)
 
         # Load heart image
-        heart_path = assets_dir / 'heart.png'
+        heart_path = '/assets/heart.png'
         self.heart_image = Image.open(heart_path).convert('RGBA')
         self.heart_image = self.heart_image.resize((HEART_SIZE, HEART_SIZE))
 
