@@ -23,10 +23,15 @@ class NetworkiiApp:
         self.screen_manager.add_screen('no_internet', NoInternetScreen(self.display))
         self.screen_manager.add_screen('basic_stats', BasicStatsScreen(self.display))
         self.screen_manager.add_screen('detailed_stats', DetailedStatsScreen(self.display))
-        
+
         # Setup button handlers
-        display_hat = self.display.disp
-        display_hat.on_button_pressed(self.button_pressed_callback)
+        self.display.disp.on_button_pressed(self.button_pressed_callback)
+        self.button_map = {
+            self.display.disp.BUTTON_A: "A",
+            self.display.disp.BUTTON_B: "B",
+            self.display.disp.BUTTON_X: "X",
+            self.display.disp.BUTTON_Y: "Y",
+        }
         
         self.network_monitor = None
         self.monitor_thread = None
@@ -52,8 +57,6 @@ class NetworkiiApp:
 
         logger.debug(f"[{self.current_mode}] Button {button_label} pressed")
 
-        # Delegate all button logic to the ScreenManager, which will
-        # call handle_button() on the *active* screen.
         self.screen_manager.handle_button(button_label)
 
     def network_monitor_loop(self):
