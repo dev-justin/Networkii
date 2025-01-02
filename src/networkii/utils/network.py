@@ -73,6 +73,7 @@ def connect_to_wifi(ssid, password, interface="wlan0") -> bool:
 
 def start_ap():
     """Start AP mode"""
+    logger.info("Starting AP mode")
     try:
         subprocess.run(['nmcli', 'device', 'wifi', 'hotspot', 'ssid', 'networkii', 'password', 'networkii'],
                         stdout=subprocess.DEVNULL,
