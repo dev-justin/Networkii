@@ -443,20 +443,30 @@ class Display:
         message_y = 20
         self.draw.text((message_x, message_y), message, font=self.font_lg, fill=COLORS['white'])
         
-        # Draw face (centered)
+        # Draw face (centered, smaller size)
         face = self.face_images['excellent']
-        face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
-        face_y = (SCREEN_HEIGHT - FACE_SIZE) // 2 - 10
-        self.image.paste(face, (face_x, face_y), face)
+        small_face_size = FACE_SIZE // 2  # Make face 50% smaller
+        small_face = face.resize((small_face_size, small_face_size), Image.LANCZOS)
+        face_x = (SCREEN_WIDTH - small_face_size) // 2
+        face_y = (SCREEN_HEIGHT - small_face_size) // 2 - 20
+        self.image.paste(small_face, (face_x, face_y), small_face)
         
-        # Draw setup URL
-        url = "ovvys.com/networkii"
+        # Draw website URL with highlight color
+        url = "Go to ovvys.com/networkii"
         url_bbox = self.draw.textbbox((0, 0), url, font=self.font_md)
         url_width = url_bbox[2] - url_bbox[0]
         url_x = (SCREEN_WIDTH - url_width) // 2
-        url_y = face_y + FACE_SIZE + 20
-        self.draw.text((url_x, url_y), url, font=self.font_md, fill=COLORS['green'])
-
+        url_y = SCREEN_HEIGHT - 60
+        self.draw.text((url_x, url_y), url, font=self.font_md, fill=(64, 224, 208))  # Turquoise color
+        
+        # Draw setup text
+        setup_text = "to setup"
+        setup_bbox = self.draw.textbbox((0, 0), setup_text, font=self.font_md)
+        setup_width = setup_bbox[2] - setup_bbox[0]
+        setup_x = (SCREEN_WIDTH - setup_width) // 2
+        setup_y = SCREEN_HEIGHT - 35
+        self.draw.text((setup_x, setup_y), setup_text, font=self.font_md, fill=COLORS['white'])
+        
         self.disp.st7789.set_window()
         self.disp.st7789.display(self.image)
 
