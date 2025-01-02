@@ -27,10 +27,27 @@ def check_connection(interface) -> bool:
 def has_wifi_saved(interface) -> bool:
     """Check if we have a WiFi connection present (regardless of Internet)"""
     try:
-        subprocess.run(['nmcli', 'device', 'show', interface],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
-        return True
+        # get status and filter for interface and connected
+        device_status = subprocess.run(
+            ["nmcli", "-f", "DEVICE,STATE", "device", "status"],
+            capture_output=True,
+            text=True
+        )
+        if device_status.returncode != 0:
+            logger.error(f"Error checking WiFi connection: {device_status.stderr}")
+            return False
+
+        for line in device_status.stdout.splitlines():
+            if line.strip().startswith("DEVICE") or not line.strip():
+                continue
+
+            parts = line.split()
+            if len(parts) == 2:
+                device, state = parts
+                if device == interface:
+                    return (state.lower() == "connected")
+
+            return False
     except Exception as e:
         logger.error(f"Error checking WiFi connection: {str(e)}")
         return False
