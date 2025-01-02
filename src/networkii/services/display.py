@@ -1,4 +1,6 @@
 import logging
+import os
+from pathlib import Path
 from displayhatmini import DisplayHATMini
 from PIL import Image, ImageDraw, ImageFont
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FONT_XS, FONT_SM, FONT_MD, FONT_LG, FONT_XL, HEALTH_THRESHOLDS, FACE_SIZE, HEART_SIZE, RECENT_HISTORY_LENGTH
@@ -18,6 +20,10 @@ class Display:
         # Initialize display with buffer
         self.disp = DisplayHATMini(self.image)
         
+        # Get package directory for assets
+        package_dir = Path(__file__).parent.parent
+        assets_dir = package_dir / 'assets'
+        
         # Load fonts
         self.font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XS)
         self.font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_SM)
@@ -25,14 +31,16 @@ class Display:
         self.font_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_LG)
         self.font_xl = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XL)
 
-       # Load face images
+        # Load face images
         self.face_images = {}
         for state, info in HEALTH_THRESHOLDS.items():
-            image = Image.open(info['face']).convert('RGBA')
+            image_path = assets_dir / info['face']
+            image = Image.open(image_path).convert('RGBA')
             self.face_images[state] = image.resize((FACE_SIZE, FACE_SIZE), Image.Resampling.LANCZOS)
 
         # Load heart image
-        self.heart_image = Image.open('assets/heart.png').convert('RGBA')
+        heart_path = assets_dir / 'heart.png'
+        self.heart_image = Image.open(heart_path).convert('RGBA')
         self.heart_image = self.heart_image.resize((HEART_SIZE, HEART_SIZE))
 
     def calculate_network_health(self, stats: NetworkStats) -> tuple[int, str]:

@@ -1,3 +1,4 @@
+from PIL import Image
 from .base_screen import BaseScreen
 from ..models.network_stats import NetworkStats
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, COLORS
