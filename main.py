@@ -26,16 +26,38 @@ class NetworkiiApp:
         
         # Setup button handlers
         display_hat = self.display.disp
-        display_hat.on_button_a(lambda pin: self.screen_manager.handle_button("A"))
-        display_hat.on_button_b(lambda pin: self.screen_manager.handle_button("B"))
-        display_hat.on_button_x(lambda pin: self.screen_manager.handle_button("X"))
-        display_hat.on_button_y(lambda pin: self.screen_manager.handle_button("Y"))
+        display_hat.on_button_pressed(self.handle_button)
         
         self.network_monitor = None
         self.monitor_thread = None
         self.monitor_running = False
         self.latest_stats = None
         self.current_mode = None
+    
+    def handle_button(self, pin):
+        """Handle button presses based on current mode."""
+        try:
+            display_hat = self.display.disp
+            # Only handle button press events (not releases)
+            if not display_hat.read_button(pin):
+                return
+                
+            if self.current_mode == 'monitor':
+                if pin == display_hat.BUTTON_A:  # Home screen
+                    self.screen_manager.switch_screen('home')
+                elif pin == display_hat.BUTTON_B:  # Basic stats
+                    self.screen_manager.switch_screen('basic_stats')
+                elif pin == display_hat.BUTTON_X:  # Detailed stats
+                    self.screen_manager.switch_screen('detailed_stats')
+                elif pin == display_hat.BUTTON_Y:  # Speed test
+                    logger.info("Speed test button pressed")
+                    # TODO: Implement speed test trigger
+            elif self.current_mode == 'no_internet':
+                if pin == display_hat.BUTTON_B:  # Reset WiFi in no internet mode
+                    logger.info("Reset WiFi button pressed")
+                    # TODO: Implement WiFi reset
+        except Exception as e:
+            logger.error(f"Error handling button press: {e}")
 
     def network_monitor_loop(self):
         """Background thread for network monitoring"""
