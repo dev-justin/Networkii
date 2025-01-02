@@ -24,7 +24,7 @@ class ButtonHandler:
             # Remove all event detections first
             if hasattr(self.display, 'disp'):
                 button_pins = [
-                    self.display.disp.BUTTON_A,
+                    self.display.disp.BUTTON_A, 
                     self.display.disp.BUTTON_B,
                     self.display.disp.BUTTON_X,
                     self.display.disp.BUTTON_Y

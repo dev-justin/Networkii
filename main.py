@@ -116,7 +116,7 @@ class NetworkiiApp:
         self.monitor_running = False
         if self.monitor_thread:
             self.monitor_thread.join()
-        self.set_button_config('none')
+        # self.set_button_config('none')
         
         # Start AP mode
         start_ap()
