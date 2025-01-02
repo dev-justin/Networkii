@@ -4,7 +4,7 @@ from ..models.network_stats import NetworkStats
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, COLORS
 
 class DetailedStatsScreen(BaseScreen):
-    def draw(self, stats: NetworkStats):
+    def draw_screen(self, stats: NetworkStats):
         """Show detailed network statistics with history."""
         self.clear_screen()
         

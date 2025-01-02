@@ -111,9 +111,9 @@ class NetworkiiApp:
                 
                 # Update current screen with latest stats
                 if not has_internet:
-                    self.screen_manager.draw(None)  # No stats needed for no internet screen
+                    self.screen_manager.draw_screen(None)  # No stats needed for no internet screen
                 elif self.latest_stats:
-                    self.screen_manager.draw(self.latest_stats)  # Update current screen with latest stats
+                    self.screen_manager.draw_screen(self.latest_stats)  # Update current screen with latest stats
                 
                 time.sleep(0.1)  # Update display every 100ms
                 

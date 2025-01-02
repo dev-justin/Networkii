@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from PIL import Image, ImageDraw
 from ..models.network_stats import NetworkStats
 
 class BaseScreen(ABC):
@@ -21,7 +22,7 @@ class BaseScreen(ABC):
         self.heart_image = display.heart_image
     
     @abstractmethod
-    def draw(self, stats: NetworkStats):
+    def draw_screen(self, stats: NetworkStats):
         """Draw the screen content."""
         pass
     

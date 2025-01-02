@@ -4,7 +4,7 @@ from ..models.network_stats import NetworkStats
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, COLORS
 
 class BasicStatsScreen(BaseScreen):
-    def draw(self, stats: NetworkStats):
+    def draw_screen(self, stats: NetworkStats):
         """Show current network statistics with large text in a 2x2 grid."""
         self.clear_screen()
         

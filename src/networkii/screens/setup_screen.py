@@ -4,7 +4,7 @@ from ..models.network_stats import NetworkStats
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, COLORS
 
 class SetupScreen(BaseScreen):
-    def draw(self, stats: NetworkStats = None):
+    def draw_screen(self, stats: NetworkStats = None):
         """Show the setup screen with simple instructions."""
         self.clear_screen()
         

@@ -6,7 +6,7 @@ from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE,
                      COLORS, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN)
 
 class HomeScreen(BaseScreen):
-    def draw(self, stats: NetworkStats):
+    def draw_screen(self, stats: NetworkStats):
         """Draw the home screen with network metrics."""
         self.clear_screen()
         

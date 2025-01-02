@@ -4,7 +4,7 @@ from ..models.network_stats import NetworkStats
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, COLORS
 
 class NoInternetScreen(BaseScreen):
-    def draw(self, stats: NetworkStats = None):
+    def draw_screen(self, stats: NetworkStats = None):
         """Show the no internet screen."""
         self.clear_screen()
         
