@@ -15,25 +15,29 @@ class ButtonHandler:
     
     def _cleanup_gpio(self):
         """Clean up GPIO configuration."""
-        GPIO.setwarnings(False)
         try:
-            # Set mode before cleanup
-            GPIO.setmode(GPIO.BCM)
-            
             # Remove all event detections first
-            button_pins = [
-                self.display.disp.BUTTON_A,
-                self.display.disp.BUTTON_B,
-                self.display.disp.BUTTON_X,
-                self.display.disp.BUTTON_Y
-            ]
-            for pin in button_pins:
-                try:
-                    GPIO.remove_event_detect(pin)
-                except Exception as e:
-                    logger.debug(f"No event detection to remove for pin {pin}: {e}")
+            if hasattr(self.display, 'disp'):
+                button_pins = [
+                    self.display.disp.BUTTON_A,
+                    self.display.disp.BUTTON_B,
+                    self.display.disp.BUTTON_X,
+                    self.display.disp.BUTTON_Y
+                ]
+                for pin in button_pins:
+                    try:
+                        GPIO.remove_event_detect(pin)
+                    except Exception as e:
+                        logger.debug(f"No event detection to remove for pin {pin}: {e}")
             
-            GPIO.cleanup()
+            # Clean up PWM and GPIO
+            try:
+                GPIO.cleanup()
+            except Exception as e:
+                logger.debug(f"GPIO cleanup error: {e}")
+            
+            # Reset GPIO warnings
+            GPIO.setwarnings(False)
         except Exception as e:
             logger.error(f"Error during GPIO cleanup: {e}")
     
@@ -125,7 +129,8 @@ class ButtonHandler:
         logger.debug("Cleaning up button handler")
         if self._handler_registered:
             try:
-                self.display.disp.on_button_pressed(None)
+                if hasattr(self.display, 'disp'):
+                    self.display.disp.on_button_pressed(None)
             except:
                 pass
             self._handler_registered = False
