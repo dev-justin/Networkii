@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from PIL import Image, ImageDraw
 from ..models.network_stats import NetworkStats
+from ..config import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class BaseScreen(ABC):
     def __init__(self, display):
@@ -32,7 +33,7 @@ class BaseScreen(ABC):
     
     def clear_screen(self):
         """Clear the screen with black background."""
-        self.draw.rectangle((0, 0, self.display.SCREEN_WIDTH, self.display.SCREEN_HEIGHT), fill=(0, 0, 0))
+        self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
     
     def update_display(self):
         """Update the physical display."""
