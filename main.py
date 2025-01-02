@@ -158,8 +158,7 @@ class NetworkiiApp:
                 # Check if WiFi is now configured
                 if has_wifi_saved('wlan0'):
                     logger.info("WiFi configured, switching to monitor mode")
-                    print("Switching to monitor mode")
-                    # return self.run_monitor_mode()
+                    return self.run_monitor_mode()
                     
                 time.sleep(0.1)  # Update display every 100ms
                 

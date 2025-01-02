@@ -50,21 +50,34 @@ def has_wifi_saved(interface) -> bool:
         logger.error(f"Error checking WiFi connection: {str(e)}")
         return False
 
-def remove_connection(interface) -> bool:
+def remove_connection(connection_name) -> bool:
     """Remove NetworkManager connection for given interface"""
     try:
-        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', interface],
+        subprocess.run(['sudo', 'nmcli', 'connection', 'delete', connection_name],
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL)
         return True
     except Exception as e:
-        logger.error(f"Error removing {interface} connection: {str(e)}")
+        logger.error(f"Error removing {connection_name} connection: {str(e)}")
+        return False
+    
+
+def rescan_wifi() -> bool:
+    """Rescan WiFi for new networks"""
+    try:
+        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+        return True
+    except Exception as e:
+        logger.error(f"Error rescanning WiFi: {str(e)}")
         return False
 
-def connect_to_wifi(ssid, password, interface="wlan0") -> bool:
+def connect_to_wifi(ssid, password) -> bool:
     """Connect to WiFi using provided credentials"""
     try:
-        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password, 'ifname', interface],
+        rescan_wifi()
+        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password],
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL)
         return True
