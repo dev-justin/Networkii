@@ -54,5 +54,16 @@ class BasicStatsScreen(BaseScreen):
         self.draw.text((value_x, cell_center_y + 5), value_text, font=self.font_xl, fill=color)
     
     def handle_button(self, button_label):
-        # Basic stats screen might use buttons for navigation
-        pass 
+        """Handle button presses for basic stats screen."""
+        if button_label == "A":
+            # Go to previous screen
+            self.screen_manager.previous_screen()
+        elif button_label == "B":
+            # Go to next screen
+            self.screen_manager.next_screen()
+        elif button_label == "X":
+            # Switch directly to detailed stats
+            self.screen_manager.switch_screen('detailed_stats')
+        elif button_label == "Y":
+            # Return to home screen
+            self.screen_manager.switch_screen('home') 

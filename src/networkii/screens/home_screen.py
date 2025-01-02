@@ -5,7 +5,6 @@ from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE,
                      METRIC_RIGHT_MARGIN, BAR_WIDTH, BAR_SPACING, BAR_START_X,
                      COLORS, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
                      HEALTH_THRESHOLDS)
-from ..services.screen_manager import switch_screen
 
 class HomeScreen(BaseScreen):
     def draw_screen(self, stats: NetworkStats):
@@ -183,12 +182,18 @@ class HomeScreen(BaseScreen):
                 )
 
     def handle_button(self, button_label):
-        print(f"HomeScreen: Button {button_label} pressed")
+        """Handle button presses for home screen."""
+        logger.debug(f"HomeScreen: Button {button_label} pressed")
+        
         if button_label == "A":
-            # Possibly switch to another screen, or do something
-            print("HomeScreen: Button A pressed")
-            switch_screen("basic_stats")
-
+            # Go to previous screen
+            self.screen_manager.previous_screen()
         elif button_label == "B":
-            print("HomeScreen: Button B pressed")
-        # etc.
+            # Go to next screen
+            self.screen_manager.next_screen()
+        elif button_label == "X":
+            # Switch directly to detailed stats
+            self.screen_manager.switch_screen('detailed_stats')
+        elif button_label == "Y":
+            # Trigger speed test (TODO)
+            logger.info("Speed test requested")
