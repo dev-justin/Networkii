@@ -55,15 +55,7 @@ class BasicStatsScreen(BaseScreen):
     
     def handle_button(self, button_label):
         """Handle button presses for basic stats screen."""
-        if button_label == "A":
-            # Go to previous screen
+        if button_label == "B":
             self.screen_manager.previous_screen()
-        elif button_label == "B":
-            # Go to next screen
-            self.screen_manager.next_screen()
-        elif button_label == "X":
-            # Switch directly to detailed stats
-            self.screen_manager.switch_screen('detailed_stats')
         elif button_label == "Y":
-            # Return to home screen
-            self.screen_manager.switch_screen('home') 
+            self.screen_manager.next_screen()
