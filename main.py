@@ -161,7 +161,7 @@ class NetworkiiApp:
                     print("Switching to monitor mode")
                     # return self.run_monitor_mode()
                     
-                time.sleep(1)  # Update display every 100ms
+                time.sleep(0.1)  # Update display every 100ms
                 
         except KeyboardInterrupt:
             logger.info("Program terminated by user")

@@ -29,7 +29,7 @@ def has_wifi_saved(interface) -> bool:
     try:
         # get status and filter for interface and connected
         device_status = subprocess.run(
-            ["nmcli", "-f", "DEVICE,STATE", "device", "status"],
+            ["sudo", "nmcli", "-f", "DEVICE,STATE,CONNECTION", "device", "status"],
             capture_output=True,
             text=True
         )
@@ -39,9 +39,10 @@ def has_wifi_saved(interface) -> bool:
                 continue
 
             parts = line.split()
-            if len(parts) == 2:
-                device, state = parts
-                if device == interface:
+            if len(parts) == 3:
+                device, state, connection = parts
+                logger.info(f"Device: {device}, State: {state}, Connection: {connection}")
+                if device == interface and connection != "Hotspot":
                     return (state.lower() == "connected")
 
             return False
