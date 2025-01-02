@@ -19,10 +19,12 @@ class NetworkiiApp:
         
         # Initialize all screens
         self.screen_manager.add_screen('home', HomeScreen(self.display))
-        self.screen_manager.add_screen('setup', SetupScreen(self.display))
-        self.screen_manager.add_screen('no_internet', NoInternetScreen(self.display))
         self.screen_manager.add_screen('basic_stats', BasicStatsScreen(self.display))
         self.screen_manager.add_screen('detailed_stats', DetailedStatsScreen(self.display))
+        
+        # Setup screens
+        self.screen_manager.add_screen('setup', SetupScreen(self.display))
+        self.screen_manager.add_screen('no_internet', NoInternetScreen(self.display))
         
         # Setup button handlers
         self.display.disp.on_button_pressed(self.handle_button)
