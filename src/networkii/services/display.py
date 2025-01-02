@@ -1,5 +1,5 @@
 import logging
-from displayhatmini import DisplayHatMini
+from displayhatmini import DisplayHATMini
 from PIL import Image, ImageDraw, ImageFont
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FONT_XS, FONT_SM, FONT_MD, FONT_LG, FONT_XL, HEALTH_THRESHOLDS, FACE_SIZE, HEART_SIZE, RECENT_HISTORY_LENGTH
 from ..models.network_stats import NetworkStats, NetworkMetrics
@@ -13,7 +13,7 @@ class Display:
     def __init__(self):
 
         # Initialize display
-        self.disp = DisplayHatMini()
+        self.disp = DisplayHATMini()
         self.image = Image.new('RGB', (SCREEN_WIDTH, SCREEN_HEIGHT), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
 
