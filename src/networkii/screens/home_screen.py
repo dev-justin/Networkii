@@ -182,6 +182,7 @@ class HomeScreen(BaseScreen):
                 )
 
     def handle_button(self, button_label):
+        print(f"HomeScreen: Button {button_label} pressed")
         if button_label == "A":
             # Possibly switch to another screen, or do something
             print("HomeScreen: Button A pressed")
