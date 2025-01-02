@@ -432,58 +432,33 @@ class Display:
         self.disp.st7789.display(self.image)
 
     def setup_screen(self):
-        """Show the setup screen with AP mode instructions"""
+        """Show the setup screen with simple instructions"""
         self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
         
-        # Draw welcome message with larger font
-        message = "Welcome! I'm Networkii"
+        # Draw welcome message
+        message = "Hey! I'm Networkii"
         message_bbox = self.draw.textbbox((0, 0), message, font=self.font_lg)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = (SCREEN_WIDTH - message_width) // 2
-        message_y = 15  # Slightly more top margin
+        message_y = 20
         self.draw.text((message_x, message_y), message, font=self.font_lg, fill=COLORS['white'])
         
-        # Calculate center position for smaller face (2/3 of original size)
-        small_face_size = (FACE_SIZE * 2) // 3  # Integer division for 2/3 size
-        face = self.face_images['excellent'].resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
-        face_x = (SCREEN_WIDTH - small_face_size) // 2
-        face_y = message_y + 35  # More space after larger title
+        # Draw face (centered)
+        face = self.face_images['excellent']
+        face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
+        face_y = (SCREEN_HEIGHT - FACE_SIZE) // 2 - 10
         self.image.paste(face, (face_x, face_y), face)
         
-        # Draw divider line
-        divider_y = face_y + small_face_size + 20  # More space before divider
-        self.draw.line([(20, divider_y), (SCREEN_WIDTH - 20, divider_y)], fill=COLORS['gray'], width=1)
-        
-        # Start content after divider
-        content_y = divider_y + 25
-        
-        # Find the widest instruction to align both rows
-        instructions1 = "1. Connect to WiFi:"
-        instructions2 = "2. Then Visit:"
-        instructions1_bbox = self.draw.textbbox((0, 0), instructions1, font=self.font_md)
-        instructions2_bbox = self.draw.textbbox((0, 0), instructions2, font=self.font_md)
-        instruction_width = max(instructions1_bbox[2], instructions2_bbox[2])
-        
-        # Calculate left margin to center the entire content block
-        ssid = "Networkii"
-        url = "networkii.local"
-        ssid_bbox = self.draw.textbbox((0, 0), ssid, font=self.font_sm)
-        url_bbox = self.draw.textbbox((0, 0), url, font=self.font_sm)
-        max_value_width = max(ssid_bbox[2], url_bbox[2])
-        total_width = instruction_width + 15 + max_value_width  # 15px spacing between text
-        left_margin = (SCREEN_WIDTH - total_width) // 2
-        
-        # Draw first row
-        self.draw.text((left_margin, content_y), instructions1, font=self.font_md, fill=COLORS['white'])
-        self.draw.text((left_margin + instruction_width + 15, content_y), ssid, font=self.font_sm, fill=COLORS['green'])
-        
-        # Draw second row
-        web_instructions_y = content_y + 30  # Reduced spacing between rows
-        self.draw.text((left_margin, web_instructions_y), instructions2, font=self.font_md, fill=COLORS['white'])
-        self.draw.text((left_margin + instruction_width + 15, web_instructions_y), url, font=self.font_sm, fill=COLORS['red'])
+        # Draw setup URL
+        url = "ovvys.com/networkii"
+        url_bbox = self.draw.textbbox((0, 0), url, font=self.font_md)
+        url_width = url_bbox[2] - url_bbox[0]
+        url_x = (SCREEN_WIDTH - url_width) // 2
+        url_y = face_y + FACE_SIZE + 20
+        self.draw.text((url_x, url_y), url, font=self.font_md, fill=COLORS['green'])
 
         self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image) 
+        self.disp.st7789.display(self.image)
 
     def show_no_internet_screen(self):
         """Show the no internet screen"""
