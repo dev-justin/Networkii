@@ -11,12 +11,13 @@ logger = logging.getLogger('display')
 # Display class for shared resources and methods
 class Display:
     def __init__(self):
-
-        # Initialize display
-        self.disp = DisplayHATMini()
+        # Initialize display buffer
         self.image = Image.new('RGB', (SCREEN_WIDTH, SCREEN_HEIGHT), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
-
+        
+        # Initialize display with buffer
+        self.disp = DisplayHATMini(self.image)
+        
         # Load fonts
         self.font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XS)
         self.font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_SM)
