@@ -185,15 +185,7 @@ class HomeScreen(BaseScreen):
         """Handle button presses for home screen."""
         logger.debug(f"HomeScreen: Button {button_label} pressed")
         
-        if button_label == "A":
-            # Go to previous screen
+        if button_label == "B":
             self.screen_manager.previous_screen()
-        elif button_label == "B":
-            # Go to next screen
-            self.screen_manager.next_screen()
-        elif button_label == "X":
-            # Switch directly to detailed stats
-            self.screen_manager.switch_screen('detailed_stats')
         elif button_label == "Y":
-            # Trigger speed test (TODO)
-            logger.info("Speed test requested")
+            self.screen_manager.next_screen()
