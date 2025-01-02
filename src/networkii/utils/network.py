@@ -33,21 +33,19 @@ def has_wifi_saved(interface) -> bool:
             capture_output=True,
             text=True
         )
-
-        print(device_status.stdout)
+        
         for line in device_status.stdout.splitlines():
             if line.strip().startswith("DEVICE") or not line.strip():
                 continue
 
-            print(line)
             parts = line.split()
-            if len(parts) == 3:
-                device, state, connection = parts
-                logger.info(f"Device: {device}, State: {state}, Connection: {connection}")
+            if len(parts) >= 3:  # Changed to >= 3 in case there are spaces in connection names
+                device, state, connection = parts[0], parts[1], ' '.join(parts[2:])
+                logger.debug(f"Device: {device}, State: {state}, Connection: {connection}")
                 if device == interface and connection != "Hotspot":
                     return (state.lower() == "connected")
-
-            return False
+        
+        return False  # Only return False after checking all lines
     except Exception as e:
         logger.error(f"Error checking WiFi connection: {str(e)}")
         return False
