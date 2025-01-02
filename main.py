@@ -37,7 +37,7 @@ class NetworkiiApp:
         
         # Button debouncing
         self.last_press_time = 0
-        self.debounce_delay = 0.3  # seconds
+        self.debounce_delay = 0.5  # seconds
         
         self.network_monitor = None
         self.monitor_thread = None

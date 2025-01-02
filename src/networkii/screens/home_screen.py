@@ -186,6 +186,9 @@ class HomeScreen(BaseScreen):
         if button_label == "A":
             # Possibly switch to another screen, or do something
             print("HomeScreen: Button A pressed")
+
+            self.screen_manager.switch_screen("basic_stats")
+
         elif button_label == "B":
             print("HomeScreen: Button B pressed")
         # etc.
