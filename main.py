@@ -35,6 +35,10 @@ class NetworkiiApp:
             self.display.disp.BUTTON_Y: 'Y'
         }
         
+        # Button debouncing
+        self.last_press_time = 0
+        self.debounce_delay = 0.3  # seconds
+        
         self.network_monitor = None
         self.monitor_thread = None
         self.monitor_running = False
@@ -45,11 +49,19 @@ class NetworkiiApp:
         """
         Single callback for any button press on Display HAT Mini.
         Maps the pin to a button label and delegates to the screen manager.
+        Includes debouncing to prevent double clicks.
         """
         try:
             # Only handle button press events (not releases)
             if not self.display.disp.read_button(pin):
                 return
+
+            # Debounce check
+            current_time = time.time()
+            if current_time - self.last_press_time < self.debounce_delay:
+                logger.debug("Button press ignored (debounce)")
+                return
+            self.last_press_time = current_time
 
             button_label = self.button_map.get(pin)
             if button_label is None:
