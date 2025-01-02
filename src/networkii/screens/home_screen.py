@@ -3,7 +3,8 @@ from ..models.network_stats import NetworkStats
 from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE, 
                      HEART_SPACING, HEART_GAP, METRIC_WIDTH, METRIC_SPACING,
                      METRIC_RIGHT_MARGIN, BAR_WIDTH, BAR_SPACING, BAR_START_X,
-                     COLORS, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN)
+                     COLORS, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
+                     HEALTH_THRESHOLDS)
 
 class HomeScreen(BaseScreen):
     def draw_screen(self, stats: NetworkStats):
@@ -35,7 +36,7 @@ class HomeScreen(BaseScreen):
         
         # Draw health status
         health_score, health_state = self.display.calculate_network_health(stats)
-        message = self.display.HEALTH_THRESHOLDS[health_state]['message']
+        message = HEALTH_THRESHOLDS[health_state]['message']
         message_bbox = self.draw.textbbox((0, 0), message, font=self.font_sm)
         message_width = message_bbox[2] - message_bbox[0]
         message_x = face_x + (FACE_SIZE - message_width) // 2
@@ -117,7 +118,7 @@ class HomeScreen(BaseScreen):
     def draw_hearts(self, x: int, y: int, health_state: str):
         """Draw hearts based on network state."""
         total_hearts = 5
-        filled_hearts = self.display.HEALTH_THRESHOLDS[health_state]['hearts']
+        filled_hearts = HEALTH_THRESHOLDS[health_state]['hearts']
         
         for i in range(total_hearts):
             heart_x = x + (i * (HEART_SIZE + HEART_GAP))
