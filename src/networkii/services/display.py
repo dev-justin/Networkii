@@ -33,6 +33,7 @@ class Display:
         # Load face images
         self.face_images = {}
         for state, info in HEALTH_THRESHOLDS.items():
+            print(info['face'], Path.home() / 'Networkii' / info['face'])
             image_path = Path.home() / 'Networkii' / info['face']
             image = Image.open(image_path).convert('RGBA')
             self.face_images[state] = image.resize((FACE_SIZE, FACE_SIZE), Image.Resampling.LANCZOS)
