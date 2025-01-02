@@ -1,28 +1,22 @@
-import time
-import statistics
-from collections import deque
-from PIL import Image, ImageDraw, ImageFont
-from displayhatmini import DisplayHATMini
-from ..models.network_stats import NetworkStats
-from ..utils.metrics import NetworkMetrics
-from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE, 
-                     HEART_SPACING, HEART_GAP, HEALTH_THRESHOLDS,
-                     RECENT_HISTORY_LENGTH, METRIC_WIDTH, METRIC_SPACING, 
-                     METRIC_RIGHT_MARGIN, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
-                     BAR_WIDTH, BAR_SPACING, BAR_START_X, COLORS,
-                     FONT_XS, FONT_SM, FONT_MD, FONT_LG, FONT_XL)
-import RPi.GPIO as GPIO
 import logging
+from displayhatmini import DisplayHatMini
+from PIL import Image, ImageDraw, ImageFont
+from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FONT_XS, FONT_SM, FONT_MD, FONT_LG, FONT_XL, HEALTH_THRESHOLDS, FACE_SIZE, HEART_SIZE, RECENT_HISTORY_LENGTH
+from ..models.network_stats import NetworkStats, NetworkMetrics
+from collections import deque
+import statistics
 
 logger = logging.getLogger('display')
 
+# Display class for shared resources and methods
 class Display:
     def __init__(self):
+
         # Initialize display
+        self.disp = DisplayHatMini()
         self.image = Image.new('RGB', (SCREEN_WIDTH, SCREEN_HEIGHT), (0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
-        self.disp = DisplayHATMini(self.image)  # Exposed for button handling by NetworkiiApp
-        
+
         # Load fonts
         self.font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XS)
         self.font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_SM)
@@ -30,30 +24,16 @@ class Display:
         self.font_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_LG)
         self.font_xl = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", FONT_XL)
 
-        # Load face images
+       # Load face images
         self.face_images = {}
         for state, info in HEALTH_THRESHOLDS.items():
-            try:
-                image = Image.open(info['face']).convert('RGBA')
-                self.face_images[state] = image.resize((FACE_SIZE, FACE_SIZE), Image.Resampling.LANCZOS)
-            except Exception as e:
-                print(f"Error loading face {info['face']}: {e}")
-                img = Image.new('RGBA', (FACE_SIZE, FACE_SIZE), (0, 0, 0, 0))
-                draw = ImageDraw.Draw(img)
-                draw.text((FACE_SIZE//2, FACE_SIZE//2), "?", fill=(255, 255, 255, 255))
-                self.face_images[state] = img
+            image = Image.open(info['face']).convert('RGBA')
+            self.face_images[state] = image.resize((FACE_SIZE, FACE_SIZE), Image.Resampling.LANCZOS)
 
         # Load heart image
-        try:
-            self.heart_image = Image.open('assets/heart.png').convert('RGBA')
-            self.heart_image = self.heart_image.resize((HEART_SIZE, HEART_SIZE))
-        except Exception as e:
-            print(f"Error loading heart image: {e}")
-            self.heart_image = Image.new('RGBA', (HEART_SIZE, HEART_SIZE), (0, 0, 0, 0))
-            draw = ImageDraw.Draw(self.heart_image)
-            draw.text((HEART_SIZE//2, HEART_SIZE//2), "♥", fill=(255, 0, 0, 255))
+        self.heart_image = Image.open('assets/heart.png').convert('RGBA')
+        self.heart_image = self.heart_image.resize((HEART_SIZE, HEART_SIZE))
 
-    # Calculate network health. [Used for: Face and Hearts] [Uses recent history]
     def calculate_network_health(self, stats: NetworkStats) -> tuple[int, str]:
         """Calculate network health based on recent history"""
         ping_history = list(stats.ping_history)[-RECENT_HISTORY_LENGTH:]
@@ -256,315 +236,3 @@ class Display:
                 font=self.font_md,
                 fill=faded_color
             )
-
-    def show_home_screen(self, stats: NetworkStats):
-        """Update the home screen with network metrics"""
-        self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
-        
-        health_bars_width = BAR_START_X + (BAR_WIDTH * 3) + (BAR_SPACING * 2)
-        metrics_width = (3 * (METRIC_WIDTH + METRIC_SPACING)) + METRIC_RIGHT_MARGIN
-        remaining_width = SCREEN_WIDTH - health_bars_width - metrics_width
-        
-        face_x = health_bars_width + (remaining_width - FACE_SIZE) // 2
-        face_y = (SCREEN_HEIGHT - (FACE_SIZE + HEART_SIZE + HEART_SPACING)) // 2
-        
-        metrics_x = SCREEN_WIDTH - metrics_width
-        
-        self.draw_metric_col(metrics_x, 0, "P", stats.ping_history, COLORS['green'])
-        self.draw_metric_col(metrics_x + METRIC_WIDTH + METRIC_SPACING, 0, "J", stats.jitter_history, COLORS['red'])
-        self.draw_metric_col(metrics_x + (METRIC_WIDTH + METRIC_SPACING) * 2, 0, "L", stats.packet_loss_history, COLORS['purple'])
-        
-        message_bbox = self.draw.textbbox((0, 0), "Test", font=self.font_xs)
-        message_height = message_bbox[3] - message_bbox[1]
-        total_element_height = (
-            message_height +
-            20 +
-            FACE_SIZE +
-            HEART_SPACING +
-            HEART_SIZE
-        )
-        
-        start_y = (SCREEN_HEIGHT - total_element_height) // 2
-        
-        message_y = start_y
-        face_y = message_y + message_height + 20
-        hearts_y = face_y + FACE_SIZE + HEART_SPACING
-        
-        health_score, health_state = self.calculate_network_health(stats)
-        message = HEALTH_THRESHOLDS[health_state]['message']
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_sm)
-        message_width = message_bbox[2] - message_bbox[0]
-        message_x = face_x + (FACE_SIZE - message_width) // 2
-        self.draw.text((message_x, message_y), message, font=self.font_sm, fill=(255, 255, 255))
-        
-        self.image.paste(self.face_images[health_state], (face_x, face_y), self.face_images[health_state])
-        
-        hearts_total_width = (5 * HEART_SIZE) + (4 * HEART_GAP)
-        hearts_x = face_x + (FACE_SIZE - hearts_total_width) // 2
-        self.draw_hearts(hearts_x, hearts_y, health_state)
-        
-        ping_health = self.calculate_bar_height(
-            stats.ping_history, 'ping')
-        jitter_health = self.calculate_bar_height(
-            stats.jitter_history, 'jitter')
-        loss_health = self.calculate_bar_height(
-            stats.packet_loss_history, 'packet_loss')
-        
-        self.draw_health_bar(BAR_START_X, 0, BAR_WIDTH, SCREEN_HEIGHT, ping_health, 'ping')
-        self.draw_health_bar(BAR_START_X + BAR_WIDTH + BAR_SPACING, 0, BAR_WIDTH, SCREEN_HEIGHT, jitter_health, 'jitter')
-        self.draw_health_bar(BAR_START_X + (BAR_WIDTH + BAR_SPACING) * 2, 0, BAR_WIDTH, SCREEN_HEIGHT, loss_health, 'packet_loss')
-
-        self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image)
-
-    def show_basic_screen(self, stats: NetworkStats):
-        """Show the status screen with face and network state"""
-        self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
-        
-        health_score, health_state = self.calculate_network_health(stats)
-        
-        SPACING = 20
-        SCORE_HEIGHT = self.font_sm.size
-        MESSAGE_HEIGHT = self.font_sm.size
-        
-        total_height = SCORE_HEIGHT + SPACING + FACE_SIZE + SPACING + MESSAGE_HEIGHT
-        start_y = (SCREEN_HEIGHT - total_height) // 2
-        
-        score_text = f"Health: {health_score}%"
-        score_bbox = self.draw.textbbox((0, 0), score_text, font=self.font_md)
-        score_width = score_bbox[2] - score_bbox[0]
-        score_x = (SCREEN_WIDTH - score_width) // 2
-        self.draw.text((score_x, start_y), score_text, font=self.font_md, fill=COLORS['white'])
-        
-        face = self.face_images[health_state]
-        face_x = (SCREEN_WIDTH - FACE_SIZE) // 2
-        face_y = start_y + SCORE_HEIGHT + SPACING
-        self.image.paste(face, (face_x, face_y), face)
-        
-        message = HEALTH_THRESHOLDS[health_state]['message']
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_sm)
-        message_width = message_bbox[2] - message_bbox[0]
-        message_x = (SCREEN_WIDTH - message_width) // 2
-        message_y = face_y + FACE_SIZE + SPACING
-        self.draw.text((message_x, message_y), message, font=self.font_sm, fill=COLORS['white'])
-
-        self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image)
-
-    def show_detailed_screen(self, stats: NetworkStats):
-        """Show detailed network statistics with history"""
-        self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
-        
-        TOP_MARGIN = 10
-        ROW_SPACING = 2   
-        ROW_HEIGHT = 30
-        
-        self.draw_metric_row(
-            TOP_MARGIN,
-            "PING",
-            stats.ping,
-            stats.ping_history,
-            COLORS['green']
-        )
-        
-        self.draw_metric_row(
-            TOP_MARGIN + ROW_HEIGHT + ROW_SPACING,
-            "JITTER",
-            stats.jitter,
-            stats.jitter_history,
-            COLORS['red']
-        )
-        
-        self.draw_metric_row(
-            TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 2,
-            "LOSS",
-            stats.packet_loss,
-            stats.packet_loss_history,
-            COLORS['purple']
-        )
-        
-        speed_y = TOP_MARGIN + (ROW_HEIGHT + ROW_SPACING) * 3 + 10
-        if stats.speed_test_status:
-            status_text = f"Speed test in progress..."
-            self.draw.text((10, speed_y), status_text, font=self.font_sm, fill=COLORS['white'])
-            
-        elif stats.speed_test_timestamp > 0:
-            time_since_test = (time.time() - stats.speed_test_timestamp) / 60
-            
-            down_text = f"↓ {stats.download_speed:.1f} Mbps"
-            self.draw.text((10, speed_y), down_text, font=self.font_sm, fill=COLORS['green'])
-            
-            up_text = f"↑ {stats.upload_speed:.1f} Mbps"
-            self.draw.text((10, speed_y + 30), up_text, font=self.font_sm, fill=COLORS['red'])
-            
-            time_text = f"Updated {int(time_since_test)}m ago"
-            time_bbox = self.draw.textbbox((0, 0), time_text, font=self.font_xs)
-            time_width = time_bbox[2] - time_bbox[0]
-            self.draw.text(
-                (SCREEN_WIDTH - time_width - 10, speed_y + 15),
-                time_text,
-                font=self.font_xs,
-                fill=COLORS['purple']
-            )
-        else:
-            self.draw.text((10, speed_y), "Speed test pending...", font=self.font_xs, fill=COLORS['white'])
-
-        # Draw interface info at bottom with divider
-        bottom_y = SCREEN_HEIGHT - 45
-        self.draw.line([(10, bottom_y), (SCREEN_WIDTH - 10, bottom_y)], fill=COLORS['gray'], width=1)
-        
-        # Interface info with colored labels
-        interface_y = bottom_y + 5
-        self.draw.text((10, interface_y), "Interface:", font=self.font_md, fill=COLORS['purple'])
-        interface_text = f"{stats.interface} ({stats.interface_ip})"
-        interface_bbox = self.draw.textbbox((0, 0), "Interface:", font=self.font_md)
-        interface_width = interface_bbox[2] - interface_bbox[0]
-        self.draw.text((20 + interface_width, interface_y), interface_text, font=self.font_md, fill=COLORS['white'])
-        
-        # Target info
-        target_y = interface_y + 20
-        self.draw.text((10, target_y), "Target:", font=self.font_md, fill=COLORS['green'])
-        target_bbox = self.draw.textbbox((0, 0), "Target:", font=self.font_md)
-        target_width = target_bbox[2] - target_bbox[0]
-        self.draw.text((20 + target_width, target_y), stats.ping_target, font=self.font_md, fill=COLORS['white'])
-
-        self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image)
-
-    def setup_screen(self):
-        """Show the setup screen with simple instructions"""
-        self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
-        
-        # Draw welcome message
-        message = "Hey! I'm Networkii"
-        message_bbox = self.draw.textbbox((0, 0), message, font=self.font_lg)
-        message_width = message_bbox[2] - message_bbox[0]
-        message_x = (SCREEN_WIDTH - message_width) // 2
-        message_y = 20
-        self.draw.text((message_x, message_y), message, font=self.font_lg, fill=COLORS['white'])
-        
-        # Draw face (centered, smaller size)
-        face = self.face_images['excellent']
-        small_face_size = FACE_SIZE // 2  # Make face 50% smaller
-        small_face = face.resize((small_face_size, small_face_size), Image.LANCZOS)
-        face_x = (SCREEN_WIDTH - small_face_size) // 2
-        face_y = (SCREEN_HEIGHT - small_face_size) // 2 - 20
-        self.image.paste(small_face, (face_x, face_y), small_face)
-        
-        # Draw website URL with highlight color
-        url = "Go to ovvys.com/networkii"
-        url_bbox = self.draw.textbbox((0, 0), url, font=self.font_md)
-        url_width = url_bbox[2] - url_bbox[0]
-        url_x = (SCREEN_WIDTH - url_width) // 2
-        url_y = SCREEN_HEIGHT - 60
-        self.draw.text((url_x, url_y), url, font=self.font_md, fill=(64, 224, 208))  # Turquoise color
-        
-        # Draw setup text
-        setup_text = "to setup"
-        setup_bbox = self.draw.textbbox((0, 0), setup_text, font=self.font_md)
-        setup_width = setup_bbox[2] - setup_bbox[0]
-        setup_x = (SCREEN_WIDTH - setup_width) // 2
-        setup_y = SCREEN_HEIGHT - 35
-        self.draw.text((setup_x, setup_y), setup_text, font=self.font_md, fill=COLORS['white'])
-        
-        self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image)
-
-    def show_no_internet_screen(self):
-        """Show the no internet screen"""
-        self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
-        
-        # Draw title
-        title = "No Internet"
-        title_bbox = self.draw.textbbox((0, 0), title, font=self.font_xl)
-        title_width = title_bbox[2] - title_bbox[0]
-        title_x = (SCREEN_WIDTH - title_width) // 2
-        title_y = 20
-        self.draw.text((title_x, title_y), title, font=self.font_xl, fill=COLORS['red'])
-        
-        # Draw face (75% of original size)
-        small_face_size = (FACE_SIZE * 3) // 4
-        face = self.face_images['critical'].resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
-        face_x = (SCREEN_WIDTH - small_face_size) // 2
-        face_y = (SCREEN_HEIGHT - small_face_size) // 2 - 20
-        self.image.paste(face, (face_x, face_y), face)
-        
-        # Draw instructions (split into two lines)
-        question = "New WiFi?"
-        question_bbox = self.draw.textbbox((0, 0), question, font=self.font_md)
-        question_width = question_bbox[2] - question_bbox[0]
-        question_x = (SCREEN_WIDTH - question_width) // 2
-        question_y = face_y + small_face_size + 10
-        self.draw.text((question_x, question_y), question, font=self.font_md, fill=COLORS['white'])
-        
-        # SSH command in purple
-        ssh_command = "ssh ovvys@networkii.local"
-        ssh_bbox = self.draw.textbbox((0, 0), ssh_command, font=self.font_sm)
-        ssh_width = ssh_bbox[2] - ssh_bbox[0]
-        ssh_x = (SCREEN_WIDTH - ssh_width) // 2
-        ssh_y = question_y + 25
-        self.draw.text((ssh_x, ssh_y), ssh_command, font=self.font_sm, fill=COLORS['purple'])
-        
-        # Networkii command in green
-        networkii_command = "run networkii connect"
-        networkii_bbox = self.draw.textbbox((0, 0), networkii_command, font=self.font_sm)
-        networkii_width = networkii_bbox[2] - networkii_bbox[0]
-        networkii_x = (SCREEN_WIDTH - networkii_width) // 2
-        networkii_y = ssh_y + 20
-        self.draw.text((networkii_x, networkii_y), networkii_command, font=self.font_sm, fill=COLORS['green'])
-
-        self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image)
-
-    def show_basic_stats_screen(self, stats: NetworkStats):
-        """Show current network statistics with large text in a 2x2 grid"""
-        self.draw.rectangle((0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), fill=(0, 0, 0))
-        
-        # Calculate health score and get face
-        health_score, health_state = self.calculate_network_health(stats)
-        
-        # Setup grid
-        GRID_MARGIN = 10
-        GRID_WIDTH = SCREEN_WIDTH // 2
-        GRID_HEIGHT = SCREEN_HEIGHT // 2
-        
-        # Draw face in top-left
-        face_size = min(GRID_WIDTH - GRID_MARGIN * 2, GRID_HEIGHT - GRID_MARGIN * 2)
-        face = self.face_images[health_state].resize((face_size, face_size), Image.Resampling.LANCZOS)
-        face_x = (GRID_WIDTH - face_size) // 2
-        face_y = (GRID_HEIGHT - face_size) // 2
-        self.image.paste(face, (face_x, face_y), face)
-        
-        # Function to draw metric in a grid cell
-        def draw_metric(label, value, color, grid_x, grid_y):
-            # Calculate cell center
-            cell_x = grid_x * GRID_WIDTH
-            cell_y = grid_y * GRID_HEIGHT
-            cell_center_x = cell_x + GRID_WIDTH // 2
-            cell_center_y = cell_y + GRID_HEIGHT // 2
-            
-            # Draw label
-            label_bbox = self.draw.textbbox((0, 0), label, font=self.font_lg)
-            label_width = label_bbox[2] - label_bbox[0]
-            label_x = cell_center_x - label_width // 2
-            self.draw.text((label_x, cell_center_y - 30), label, font=self.font_lg, fill=color)
-            
-            # Draw value
-            value_text = str(round(value))
-            value_bbox = self.draw.textbbox((0, 0), value_text, font=self.font_xl)
-            value_width = value_bbox[2] - value_bbox[0]
-            value_x = cell_center_x - value_width // 2
-            self.draw.text((value_x, cell_center_y + 5), value_text, font=self.font_xl, fill=color)
-        
-        # Draw metrics in other grid cells
-        # Ping in top-right (1, 0)
-        draw_metric("PING", stats.ping, COLORS['green'], 1, 0)
-        
-        # Jitter in bottom-left (0, 1)
-        draw_metric("JITTER", stats.jitter, COLORS['red'], 0, 1)
-        
-        # Loss in bottom-right (1, 1)
-        draw_metric("LOSS", stats.packet_loss, COLORS['purple'], 1, 1)
-
-        self.disp.st7789.set_window()
-        self.disp.st7789.display(self.image) 

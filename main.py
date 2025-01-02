@@ -3,7 +3,8 @@ import argparse
 import threading
 from networkii.services.network_monitor import NetworkMonitor
 from networkii.services.display import Display
-from networkii.services.button_handler import ButtonHandler
+from networkii.services.screen_manager import ScreenManager
+from networkii.screens import HomeScreen, SetupScreen, NoInternetScreen, BasicStatsScreen, DetailedStatsScreen
 from networkii.utils.logger import get_logger
 from networkii.utils.network import check_connection, has_wifi_saved, start_ap
 import RPi.GPIO as GPIO
@@ -14,21 +15,27 @@ logger.info("============ Starting Networkii =============")
 class NetworkiiApp:
     def __init__(self):
         self.display = Display()
-        self.button_handler = ButtonHandler(self.display)
+        self.screen_manager = ScreenManager()
+        
+        # Initialize all screens
+        self.screen_manager.add_screen('home', HomeScreen(self.display))
+        self.screen_manager.add_screen('setup', SetupScreen(self.display))
+        self.screen_manager.add_screen('no_internet', NoInternetScreen(self.display))
+        self.screen_manager.add_screen('basic_stats', BasicStatsScreen(self.display))
+        self.screen_manager.add_screen('detailed_stats', DetailedStatsScreen(self.display))
+        
+        # Setup button handlers
+        display_hat = self.display.disp
+        display_hat.on_button_a(lambda pin: self.screen_manager.handle_button("A"))
+        display_hat.on_button_b(lambda pin: self.screen_manager.handle_button("B"))
+        display_hat.on_button_x(lambda pin: self.screen_manager.handle_button("X"))
+        display_hat.on_button_y(lambda pin: self.screen_manager.handle_button("Y"))
+        
         self.network_monitor = None
-        self.button_config = None 
         self.monitor_thread = None
         self.monitor_running = False
         self.latest_stats = None
-    
-    def set_button_config(self, new_config):
-        """Change the app mode and update handlers."""
-        if new_config == self.button_config:
-            return
-        
-        logger.debug(f"Changing mode from {self.button_config} to {new_config}")
-        self.button_handler.set_button_config(new_config)
-        self.button_config = new_config
+        self.current_mode = None
 
     def network_monitor_loop(self):
         """Background thread for network monitoring"""
@@ -45,7 +52,7 @@ class NetworkiiApp:
         """Run the main monitoring interface"""
         logger.info("Starting monitor mode")
         self.network_monitor = NetworkMonitor()
-        self.set_button_config('monitor')
+        self.current_mode = 'monitor'
         
         # Start monitor thread
         self.monitor_running = True
@@ -61,7 +68,7 @@ class NetworkiiApp:
                 # First check if we have WiFi connection
                 if not has_wifi_saved('wlan0'):
                     logger.info("No WiFi connection, switching to setup mode")
-                    self.set_button_config(None)
+                    self.current_mode = None
                     self.monitor_running = False
                     if self.monitor_thread:
                         self.monitor_thread.join()
@@ -74,27 +81,20 @@ class NetworkiiApp:
                 # Handle mode transitions only when status changes
                 if has_internet and not in_internet_mode:
                     logger.info("Internet connection restored")
-                    self.set_button_config('monitor')
+                    self.current_mode = 'monitor'
                     in_internet_mode = True
+                    self.screen_manager.switch_screen('home')  # Return to home screen when internet is restored
                 elif not has_internet and in_internet_mode:
                     logger.info("Internet connection lost")
-                    self.set_button_config(None)
+                    self.current_mode = 'no_internet'
                     in_internet_mode = False
+                    self.screen_manager.switch_screen('no_internet')  # Show no internet screen
                 
-                # Show appropriate screen based on internet status
+                # Update current screen with latest stats
                 if not has_internet:
-                    logger.debug("WiFi connected but no internet, showing no internet screen")
-                    self.display.show_no_internet_screen()
-                elif self.latest_stats:  # Only update if we have stats
-                    current_screen = self.button_handler.get_current_screen()
-                    if current_screen == 1:
-                        self.display.show_home_screen(self.latest_stats)
-                    elif current_screen == 2:
-                        self.display.show_basic_stats_screen(self.latest_stats)
-                    elif current_screen == 3:
-                        self.display.show_basic_screen(self.latest_stats)
-                    else:
-                        self.display.show_detailed_screen(self.latest_stats)
+                    self.screen_manager.draw(None)  # No stats needed for no internet screen
+                elif self.latest_stats:
+                    self.screen_manager.draw(self.latest_stats)  # Update current screen with latest stats
                 
                 time.sleep(0.1)  # Update display every 100ms
                 
@@ -106,7 +106,7 @@ class NetworkiiApp:
             self.monitor_running = False
             if self.monitor_thread:
                 self.monitor_thread.join()
-            self.set_button_config(None)  # Clean up handlers
+            self.current_mode = None
 
     def no_wifi_mode(self):
         """ No WiFi mode - show no connection screen """
@@ -116,11 +116,12 @@ class NetworkiiApp:
         self.monitor_running = False
         if self.monitor_thread:
             self.monitor_thread.join()
-        # self.set_button_config('none')
         
-        # Start AP mode
+        # Start AP mode and show setup screen
         start_ap()
-        self.display.setup_screen()
+        self.current_mode = 'no_internet'
+        self.screen_manager.switch_screen('setup')
+        self.screen_manager.draw(None)
     
     def run(self, setup_mode=False):
         """Main entry point for the application"""
@@ -138,7 +139,6 @@ class NetworkiiApp:
             self.monitor_running = False
             if self.monitor_thread:
                 self.monitor_thread.join()
-            self.button_handler.cleanup()
             GPIO.cleanup()  # Final GPIO cleanup
 
 def main():
