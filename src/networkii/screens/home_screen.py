@@ -5,6 +5,7 @@ from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE,
                      METRIC_RIGHT_MARGIN, BAR_WIDTH, BAR_SPACING, BAR_START_X,
                      COLORS, METRIC_TOP_MARGIN, METRIC_BOTTOM_MARGIN,
                      HEALTH_THRESHOLDS)
+from ..services.screen_manager import switch_screen
 
 class HomeScreen(BaseScreen):
     def draw_screen(self, stats: NetworkStats):
@@ -186,8 +187,7 @@ class HomeScreen(BaseScreen):
         if button_label == "A":
             # Possibly switch to another screen, or do something
             print("HomeScreen: Button A pressed")
-
-            self.screen_manager.switch_screen("basic_stats")
+            switch_screen("basic_stats")
 
         elif button_label == "B":
             print("HomeScreen: Button B pressed")
