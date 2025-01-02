@@ -33,9 +33,6 @@ def has_wifi_saved(interface) -> bool:
             capture_output=True,
             text=True
         )
-        if device_status.returncode != 0:
-            logger.error(f"Error checking WiFi connection: {device_status.stderr}")
-            return False
 
         for line in device_status.stdout.splitlines():
             if line.strip().startswith("DEVICE") or not line.strip():

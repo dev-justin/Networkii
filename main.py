@@ -109,6 +109,7 @@ class NetworkiiApp:
 
     def no_wifi_mode(self):
         """ No WiFi mode - show no connection screen """
+        logger.info("No WiFi connection, starting AP and showing setup screen")
         self.set_button_config(None)
         start_ap()
         self.display.setup_screen()
