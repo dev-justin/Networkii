@@ -12,10 +12,15 @@ class ButtonHandler:
         self.last_button_press = 0
         self.current_mode = None
         self._handler_registered = False
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)  # Set mode at initialization
     
     def _cleanup_gpio(self):
         """Clean up GPIO configuration."""
         try:
+            # Ensure mode is set before any operations
+            GPIO.setmode(GPIO.BCM)
+            
             # Remove all event detections first
             if hasattr(self.display, 'disp'):
                 button_pins = [
@@ -33,13 +38,15 @@ class ButtonHandler:
             # Clean up PWM and GPIO
             try:
                 GPIO.cleanup()
+                # Reset mode after cleanup for next operations
+                GPIO.setmode(GPIO.BCM)
             except Exception as e:
                 logger.debug(f"GPIO cleanup error: {e}")
-            
-            # Reset GPIO warnings
-            GPIO.setwarnings(False)
+                
         except Exception as e:
             logger.error(f"Error during GPIO cleanup: {e}")
+            # Ensure mode is set even after errors
+            GPIO.setmode(GPIO.BCM)
     
     def setup_gpio(self):
         """Initialize GPIO for button handling."""
@@ -47,7 +54,7 @@ class ButtonHandler:
             # Clean up first to ensure clean state
             self._cleanup_gpio()
             
-            GPIO.setmode(GPIO.BCM)
+            # Mode is already set in cleanup, but set warnings again
             GPIO.setwarnings(False)
             
             # Set up all button pins as inputs with pull-ups
@@ -59,7 +66,6 @@ class ButtonHandler:
             ]
             for pin in button_pins:
                 GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                # Remove any existing event detection before adding new one
                 try:
                     GPIO.remove_event_detect(pin)
                 except:
