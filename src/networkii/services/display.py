@@ -33,12 +33,12 @@ class Display:
         # Load face images
         self.face_images = {}
         for state, info in HEALTH_THRESHOLDS.items():
-            image_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'faces', info['face'])
+            image_path = Path.home() / 'Networkii' / 'assets' / 'faces' / info['face']
             image = Image.open(image_path).convert('RGBA')
             self.face_images[state] = image.resize((FACE_SIZE, FACE_SIZE), Image.Resampling.LANCZOS)
 
         # Load heart image
-        heart_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'heart.png')
+        heart_path = Path.home() / 'Networkii' / 'assets' / 'heart.png'
         self.heart_image = Image.open(heart_path).convert('RGBA')
         self.heart_image = self.heart_image.resize((HEART_SIZE, HEART_SIZE))
 
