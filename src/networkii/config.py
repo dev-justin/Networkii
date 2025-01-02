@@ -79,31 +79,31 @@ METRIC_THRESHOLDS = {
 HEALTH_THRESHOLDS = {
     'excellent': {
         'message': "Network is Purring!",
-        'face': 'assets/faces/excellent.png',
+        'face': 'faces/excellent.png',
         'threshold': 90,
         'hearts': 5
     },
     'good': {
         'message': "All Systems Go!",
-        'face': 'assets/faces/good.png',
+        'face': 'faces/good.png',
         'threshold': 70,
         'hearts': 4
     },
     'fair': {
         'message': "Hanging in There!",
-        'face': 'assets/faces/fair.png',
+        'face': 'faces/fair.png',
         'threshold': 60,
         'hearts': 3
     },
     'poor': {
         'message': "Having Hiccups... ",
-        'face': 'assets/faces/poor.png',
+        'face': 'faces/poor.png',
         'threshold': 50,
         'hearts': 2
     },
     'critical': {
         'message': "Help, I'm Sick!",
-        'face': 'assets/faces/critical.png',
+        'face': 'faces/critical.png',
         'threshold': 0,
         'hearts': 1
     }
