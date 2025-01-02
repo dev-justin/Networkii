@@ -182,9 +182,7 @@ class HomeScreen(BaseScreen):
                 )
 
     def handle_button(self, button_label):
-        """Handle button presses for home screen."""
-        logger.debug(f"HomeScreen: Button {button_label} pressed")
-        
+        """Handle button presses for home screen."""        
         if button_label == "B":
             self.screen_manager.previous_screen()
         elif button_label == "Y":

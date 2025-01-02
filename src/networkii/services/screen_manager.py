@@ -1,3 +1,7 @@
+from ..utils.logger import get_logger
+
+logger = get_logger('screen_manager')
+
 class ScreenManager:
     def __init__(self):
         self.screens = {}
@@ -47,4 +51,6 @@ class ScreenManager:
         """Handle button press on current screen."""
         if self.current_screen is None:
             return
+        
+        logger.debug(f"Button {button_label} pressed on {self.current_screen} screen")
         self.screens[self.current_screen].handle_button(button_label)

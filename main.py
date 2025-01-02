@@ -7,7 +7,6 @@ from networkii.services.screen_manager import ScreenManager
 from networkii.screens import HomeScreen, SetupScreen, NoInternetScreen, BasicStatsScreen, DetailedStatsScreen
 from networkii.utils.logger import get_logger
 from networkii.utils.network import check_connection, has_wifi_saved, start_ap
-import RPi.GPIO as GPIO
 
 logger = get_logger('main')
 logger.info("============ Starting Networkii =============")
@@ -45,7 +44,6 @@ class NetworkiiApp:
         self.monitor_thread = None
         self.monitor_running = False
         self.latest_stats = None
-        self.current_mode = None
     
     def handle_button(self, pin):
         """
@@ -70,7 +68,6 @@ class NetworkiiApp:
                 logger.warning(f"Unknown button pin {pin}")
                 return
 
-            logger.debug(f"[{self.current_mode}] Button {button_label} pressed")
             self.screen_manager.handle_button(button_label)
             
         except Exception as e:
@@ -91,7 +88,6 @@ class NetworkiiApp:
         """Run the main monitoring interface"""
         logger.info("Starting monitor mode")
         self.network_monitor = NetworkMonitor()
-        self.current_mode = 'monitor'
         
         # Start monitor thread
         self.monitor_running = True
@@ -107,7 +103,6 @@ class NetworkiiApp:
                 # First check if we have WiFi connection
                 if not has_wifi_saved('wlan0'):
                     logger.info("No WiFi connection, switching to setup mode")
-                    self.current_mode = None
                     self.monitor_running = False
                     if self.monitor_thread:
                         self.monitor_thread.join()
@@ -120,12 +115,10 @@ class NetworkiiApp:
                 # Handle mode transitions only when status changes
                 if has_internet and not in_internet_mode:
                     logger.info("Internet connection restored")
-                    self.current_mode = 'monitor'
                     in_internet_mode = True
                     self.screen_manager.switch_screen('home')  # Return to home screen when internet is restored
                 elif not has_internet and in_internet_mode:
                     logger.info("Internet connection lost")
-                    self.current_mode = 'no_internet'
                     in_internet_mode = False
                     self.screen_manager.switch_screen('no_internet')  # Show no internet screen
                 
@@ -145,7 +138,6 @@ class NetworkiiApp:
             self.monitor_running = False
             if self.monitor_thread:
                 self.monitor_thread.join()
-            self.current_mode = None
 
     def no_wifi_mode(self):
         """ No WiFi mode - show no connection screen """
@@ -158,9 +150,8 @@ class NetworkiiApp:
         
         # Start AP mode and show setup screen
         start_ap()
-        self.current_mode = 'no_internet'
         self.screen_manager.switch_screen('setup')
-        self.screen_manager.draw(None)
+        self.screen_manager.draw_screen(None)
     
     def run(self, setup_mode=False):
         """Main entry point for the application"""
@@ -178,7 +169,6 @@ class NetworkiiApp:
             self.monitor_running = False
             if self.monitor_thread:
                 self.monitor_thread.join()
-            GPIO.cleanup()  # Final GPIO cleanup
 
 def main():
     # Parse command line arguments
