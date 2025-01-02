@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 from PIL import Image, ImageDraw
 from ..models.network_stats import NetworkStats
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT
+from ..utils.logger import get_logger
+
+logger = get_logger('screen')
 
 class BaseScreen(ABC):
     def __init__(self, display):

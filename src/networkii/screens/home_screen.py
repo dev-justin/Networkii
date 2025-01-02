@@ -1,4 +1,4 @@
-from .base_screen import BaseScreen
+from .base_screen import BaseScreen, logger
 from ..models.network_stats import NetworkStats
 from ..config import (SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, HEART_SIZE, 
                      HEART_SPACING, HEART_GAP, METRIC_WIDTH, METRIC_SPACING,
