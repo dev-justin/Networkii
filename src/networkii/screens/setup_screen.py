@@ -52,7 +52,7 @@ class SetupScreen(BaseScreen):
         self.draw.text(
             ((SCREEN_WIDTH - line2_width) // 2, start_y + line_spacing),
             line2,
-            font=self.font_md,
+            font=self.font_lg,
             fill=COLORS['green'] 
         )
         
