@@ -176,8 +176,11 @@ class NetworkiiApp:
         """Main entry point for the application"""
         logger.debug("Networkii starting up...")
         
-        self.screen_manager.switch_screen('setup')
-        self.screen_manager.draw_screen(None)
+        while True:
+            self.screen_manager.switch_screen('setup')
+            self.screen_manager.draw_screen(None)
+            time.sleep(0.1)
+
 
         # try:
         #     if setup_mode or not has_wifi_saved('wlan0'):
