@@ -1,9 +1,16 @@
 from PIL import Image
+import time
 from .base_screen import BaseScreen
 from ..models.network_stats import NetworkStats
 from ..config import SCREEN_WIDTH, SCREEN_HEIGHT, FACE_SIZE, COLORS
 
 class SetupScreen(BaseScreen):
+    def __init__(self, display):
+        super().__init__(display)
+        self.last_face_change = time.time()
+        self.face_types = ['excellent', 'good', 'fair', 'poor', 'critical']
+        self.current_face_index = 0
+        
     def draw_screen(self, stats: NetworkStats = None):
         """Show the setup screen with simple instructions."""
         self.clear_screen()
@@ -16,8 +23,15 @@ class SetupScreen(BaseScreen):
         message_y = 20
         self.draw.text((message_x, message_y), message, font=self.font_lg, fill=COLORS['white'])
         
-        # Draw face (centered, smaller size)
-        face = self.face_images['excellent']
+        # Check if it's time to change face
+        current_time = time.time()
+        if current_time - self.last_face_change >= 1.0:  # Change face every second
+            self.current_face_index = (self.current_face_index + 1) % len(self.face_types)
+            self.last_face_change = current_time
+        
+        # Draw current face (centered, smaller size)
+        face_type = self.face_types[self.current_face_index]
+        face = self.face_images[face_type]
         small_face_size = FACE_SIZE // 2  # Make face 50% smaller
         small_face = face.resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
         face_x = (SCREEN_WIDTH - small_face_size) // 2
