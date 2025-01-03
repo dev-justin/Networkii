@@ -31,15 +31,22 @@ class SetupScreen(BaseScreen):
         
         # Calculate positions for all lines to be centered
         line1_bbox = self.draw.textbbox((0, 0), line1, font=self.font_md)
-        line2_bbox = self.draw.textbbox((0, 0), line2, font=self.font_md)
+        line2_bbox = self.draw.textbbox((0, 0), line2, font=self.font_lg)  # Note larger font
         line3_bbox = self.draw.textbbox((0, 0), line3, font=self.font_md)
         
         line1_width = line1_bbox[2] - line1_bbox[0]
         line2_width = line2_bbox[2] - line2_bbox[0]
         line3_width = line3_bbox[2] - line3_bbox[0]
         
-        line_spacing = 25  # Space between lines
-        start_y = SCREEN_HEIGHT - 80  # Start position for first line
+        # Calculate heights for vertical centering
+        line1_height = line1_bbox[3] - line1_bbox[1]
+        line2_height = line2_bbox[3] - line2_bbox[1]
+        line3_height = line3_bbox[3] - line3_bbox[1]
+        
+        # Adjust spacing and positioning
+        line_spacing = 30  # Increased spacing for larger font
+        total_height = line1_height + line2_height + line3_height + (line_spacing * 2)
+        start_y = SCREEN_HEIGHT - total_height - 40  # Start higher to accommodate larger text
         
         # Draw each line centered
         self.draw.text(
@@ -50,14 +57,14 @@ class SetupScreen(BaseScreen):
         )
         
         self.draw.text(
-            ((SCREEN_WIDTH - line2_width) // 2, start_y + line_spacing),
+            ((SCREEN_WIDTH - line2_width) // 2, start_y + line1_height + line_spacing),
             line2,
             font=self.font_lg,
-            fill=COLORS['green'] 
+            fill=COLORS['green']
         )
         
         self.draw.text(
-            ((SCREEN_WIDTH - line3_width) // 2, start_y + line_spacing * 2),
+            ((SCREEN_WIDTH - line3_width) // 2, start_y + line1_height + line2_height + (line_spacing * 2)),
             line3,
             font=self.font_md,
             fill=COLORS['white']
