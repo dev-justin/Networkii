@@ -99,34 +99,29 @@ def main():
         description='Networkii - Network monitoring and configuration tool'
     )
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
-
-    # "start" command
+    
+    # Basic commands (no arguments needed)
+    subparsers.add_parser('show', help='Display current configuration')
     subparsers.add_parser('start', help='Start the networkii service')
-
-    # "stop" command
     subparsers.add_parser('stop', help='Stop the networkii service')
-
-    # "restart" command
     subparsers.add_parser('restart', help='Restart the networkii service')
     
-    # "show" command
-    subparsers.add_parser('show', help='Display current configuration')
-    
-    # "set" command
+    # "set" command with options
     set_parser = subparsers.add_parser('set', help='Update configuration values')
-    set_parser.add_argument('ping', help='Set the ping target (e.g., 1.1.1.1)')
-    set_parser.add_argument('speedtest-interval', type=int, 
+    set_parser.add_argument('--ping', help='Set the ping target (e.g., 1.1.1.1)')
+    set_parser.add_argument('--speedtest-interval', type=int, 
                            help='Set speed test interval in minutes (5-1440)')
     
-    # "connect" command
+    # "connect" command with required arguments
     connect_parser = subparsers.add_parser('connect', help='Connect to a WiFi network')
-    connect_parser.add_argument('connect', help='WiFi network name', required=True)
-    connect_parser.add_argument('password', help='WiFi password', required=True)
+    connect_parser.add_argument('ssid', help='WiFi network name')
+    connect_parser.add_argument('password', help='WiFi password')
 
-    # "ics" command
+    # "ics" command with subcommands
     ics_parser = subparsers.add_parser('ics', help='Manage Internet Connection Sharing')
-    ics_parser.add_argument('on', action='store_true', help='Enable and start ICS')
-    ics_parser.add_argument('off', action='store_true', help='Stop and disable ICS')
+    ics_subparser = ics_parser.add_mutually_exclusive_group()
+    ics_subparser.add_argument('on', action='store_true', help='Enable and start ICS')
+    ics_subparser.add_argument('off', action='store_true', help='Stop and disable ICS')
 
     args = parser.parse_args()
 
@@ -143,9 +138,9 @@ def main():
     elif args.command == 'restart':
         restart_service()
     elif args.command == 'ics':
-        if args.enable:
+        if args.on:
             enable_ics()
-        elif args.disable:
+        elif args.off:
             disable_ics()
         else:
             show_ics_status()
