@@ -91,6 +91,7 @@ def disable_ics():
     console.print("[yellow]Disabling ICS...[/yellow]")
     subprocess.run(["sudo", "systemctl", "disable", "ics"])
     subprocess.run(["sudo", "systemctl", "stop", "ics"])
+    subprocess.run(["sudo", "nmcli", "connection", "down", "usb0"])
     console.print("[green]ICS stopped and disabled successfully![/green]")
 
 def main():
@@ -98,21 +99,7 @@ def main():
         description='Networkii - Network monitoring and configuration tool'
     )
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
-    # "show" command
-    subparsers.add_parser('show', help='Display current configuration')
-    
-    # "set" command
-    set_parser = subparsers.add_parser('set', help='Update configuration values')
-    set_parser.add_argument('--ping-target', help='Set the ping target (e.g., 1.1.1.1)')
-    set_parser.add_argument('--speed-test-interval', type=int, 
-                           help='Set speed test interval in minutes (5-1440)')
-    
-    # "connect" command
-    connect_parser = subparsers.add_parser('connect', help='Connect to a WiFi network')
-    connect_parser.add_argument('--ssid', help='WiFi network name', required=True)
-    connect_parser.add_argument('--password', help='WiFi password', required=True)
-    
+
     # "start" command
     subparsers.add_parser('start', help='Start the networkii service')
 
@@ -121,11 +108,25 @@ def main():
 
     # "restart" command
     subparsers.add_parser('restart', help='Restart the networkii service')
+    
+    # "show" command
+    subparsers.add_parser('show', help='Display current configuration')
+    
+    # "set" command
+    set_parser = subparsers.add_parser('set', help='Update configuration values')
+    set_parser.add_argument('ping', help='Set the ping target (e.g., 1.1.1.1)')
+    set_parser.add_argument('speedtest-interval', type=int, 
+                           help='Set speed test interval in minutes (5-1440)')
+    
+    # "connect" command
+    connect_parser = subparsers.add_parser('connect', help='Connect to a WiFi network')
+    connect_parser.add_argument('connect', help='WiFi network name', required=True)
+    connect_parser.add_argument('password', help='WiFi password', required=True)
 
     # "ics" command
     ics_parser = subparsers.add_parser('ics', help='Manage Internet Connection Sharing')
-    ics_parser.add_argument('--enable', action='store_true', help='Enable and start ICS')
-    ics_parser.add_argument('--disable', action='store_true', help='Stop and disable ICS')
+    ics_parser.add_argument('on', action='store_true', help='Enable and start ICS')
+    ics_parser.add_argument('off', action='store_true', help='Stop and disable ICS')
 
     args = parser.parse_args()
 
