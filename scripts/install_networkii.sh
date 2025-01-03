@@ -126,17 +126,12 @@ print_success "System packages upgraded"
 #------------------------------
 # 4. INSTALL AND SETUP APP REQUIREMENTS    
 #------------------------------
-print_header "Installing App Requirements"
+print_header "Installing Python Requirements"
 
 # Install required system packages
 print_info "Installing required packages..."
 sudo apt-get update
-sudo apt-get install -y python3-pip python3-dev zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev libopenblas0 network-manager libnss3-tools
-
-# Install pipx if not already installed
-print_info "Installing pipx..."
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+sudo apt-get install -y python3-venv python3-pip python3-dev zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev libopenblas0 network-manager libnss3-tools
 
 # Create config directory
 print_info "Setting up configuration directory..."
@@ -147,9 +142,15 @@ print_info "Enabling SPI interface..."
 sudo raspi-config nonint do_spi 0
 print_success "SPI interface enabled"
 
+# Create a temporary venv for pipx installation
+print_info "Setting up pipx..."
+python3 -m venv ~/.local/pipx/venv
+~/.local/pipx/venv/bin/pip install pipx
+~/.local/pipx/venv/bin/pipx ensurepath
+
 # Install networkii using pipx
-print_info "Installing networkii using pipx..."
-pipx install .
+print_info "Installing networkii..."
+~/.local/pipx/venv/bin/pipx install --force .
 print_success "Networkii installed successfully"
 
 print_header "Setup Complete!"
