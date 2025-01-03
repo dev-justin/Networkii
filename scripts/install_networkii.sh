@@ -144,9 +144,15 @@ print_success "SPI interface enabled"
 
 # Create a temporary venv for pipx installation
 print_info "Setting up pipx..."
+mkdir -p ~/.local/pipx
 python3 -m venv ~/.local/pipx/venv
 ~/.local/pipx/venv/bin/pip install pipx
-~/.local/pipx/venv/bin/pipx ensurepath
+
+# Add pipx to PATH for current user
+print_info "Adding pipx to PATH..."
+echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
+echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.zshrc
+export PATH="$PATH:$HOME/.local/bin"
 
 # Install networkii using pipx
 print_info "Installing networkii..."
