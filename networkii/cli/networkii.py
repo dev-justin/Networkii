@@ -114,10 +114,10 @@ def main():
     connect_parser.add_argument('--password', help='WiFi password', required=True)
     
     # "start" command
-    start_parser = subparsers.add_parser('start', help='Start the networkii service')
+    subparsers.add_parser('start', help='Start the networkii service')
 
     # "stop" command
-    stop_parser = subparsers.add_parser('stop', help='Stop the networkii service')
+    subparsers.add_parser('stop', help='Stop the networkii service')
 
     # "restart" command
     subparsers.add_parser('restart', help='Restart the networkii service')
