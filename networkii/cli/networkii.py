@@ -117,11 +117,10 @@ def main():
     connect_parser.add_argument('ssid', help='WiFi network name')
     connect_parser.add_argument('password', help='WiFi password')
 
-    # "ics" command with subcommands
+    # "ics" command
     ics_parser = subparsers.add_parser('ics', help='Manage Internet Connection Sharing')
-    ics_subparser = ics_parser.add_mutually_exclusive_group()
-    ics_subparser.add_argument('on', action='store_true', help='Enable and start ICS')
-    ics_subparser.add_argument('off', action='store_true', help='Stop and disable ICS')
+    ics_parser.add_argument('action', nargs='?', choices=['on', 'off'], 
+                           help='Turn ICS on or off (leave empty to show status)')
 
     args = parser.parse_args()
 
@@ -138,9 +137,9 @@ def main():
     elif args.command == 'restart':
         restart_service()
     elif args.command == 'ics':
-        if args.on:
+        if args.action == 'on':
             enable_ics()
-        elif args.off:
+        elif args.action == 'off':
             disable_ics()
         else:
             show_ics_status()
