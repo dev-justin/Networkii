@@ -59,7 +59,7 @@ def wifi_setup(args):
 def restart_service():
     """Restart the networkii service"""
     print("Restarting networkii service...")
-    subprocess.run(["systemctl", "restart", "networkii"])
+    subprocess.run(["sudo", "systemctl", "restart", "networkii"])
     print("Networkii service restarted successfully!")
 
 def main():
