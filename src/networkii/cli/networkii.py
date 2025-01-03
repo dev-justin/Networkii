@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import subprocess
 from networkii.utils.config_manager import config_manager
 from networkii.utils.network import connect_to_wifi
 
@@ -55,6 +56,12 @@ def wifi_setup(args):
     else:
         print(f"Failed to connect to WiFi ({args.ssid})")
 
+def restart_service():
+    """Restart the networkii service"""
+    print("Restarting networkii service...")
+    subprocess.run(["systemctl", "restart", "networkii"])
+    print("Networkii service restarted successfully!")
+
 def main():
     parser = argparse.ArgumentParser(
         description='Networkii Configuration Tool'
@@ -72,8 +79,10 @@ def main():
     # "set" command
     set_parser = subparsers.add_parser('set', help='Set configuration values')
     set_parser.add_argument('--ping-target', help='Set the ping target (e.g., 1.1.1.1)')
-    set_parser.add_argument('--speed-test-interval', type=int,
-                           help='Set speed test interval in minutes (5-1440)')
+    set_parser.add_argument('--speed-test-interval', type=int, help='Set speed test interval in minutes (5-1440)')
+    
+    # "restart" command
+    subparsers.add_parser('restart', help='Restart the networkii service')
 
     args = parser.parse_args()
 
@@ -83,6 +92,8 @@ def main():
         update_config(args)
     elif args.command == 'connect':
         wifi_setup(args);
+    elif args.command == 'restart':
+        restart_service()
     else:
         parser.print_help()
 
