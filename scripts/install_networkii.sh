@@ -153,15 +153,11 @@ print_info "Activating virtual environment..."
 source venv/bin/activate
 print_success "Virtual environment activated"
 
-# Now install dependencies from requirements.txt
-if [ -f requirements.txt ]; then
-    print_info "Installing pip dependencies in virtual environment..."
-    python3 -m pip install --upgrade pip
-    python3 -m pip install -r requirements.txt
-    print_success "Dependencies installed successfully in virtual environment"
-else
-    print_info "No requirements.txt found in '$PROJECT_DIR'. Skipping pip install."
-fi
+# Now install dependencies (used pyproject.toml)
+print_info "Installing dependencies..."
+python3 -m pip install --upgrade pip
+python3 -m pip install .
+print_success "Dependencies installed successfully"
 
 popd > /dev/null
 

@@ -22,4 +22,4 @@ dependencies = [
 networkii = "networkii.cli.networkii:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/networkii"] 
+packages = ["networkii"] 
