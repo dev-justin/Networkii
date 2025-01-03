@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # install_usb0_setup.sh
-# Installs a script (setup_usb0.sh) to configure the 'usb0' interface 
+# Installs a script (ics.sh) to configure the 'usb0' interface 
 # and sets up a systemd service to run it on boot.
 
 set -e
@@ -11,9 +11,9 @@ INTERFACE="usb0"
 CON_NAME="usb0"
 STATIC_IP="192.168.137.10/24"
 GATEWAY="192.168.137.1"
-DNS="8.8.8.8"
-SETUP_SCRIPT_PATH="/usr/local/bin/setup_usb0.sh"
-SERVICE_FILE_PATH="/etc/systemd/system/setup-usb0.service"
+DNS="1.1.1.1"
+SETUP_SCRIPT_PATH="/usr/local/bin/ics.sh"
+SERVICE_FILE_PATH="/etc/systemd/system/ics.service"
 
 # Define colors and formatting
 GREEN='\033[0;32m'
@@ -43,7 +43,7 @@ print_header "Creating $SETUP_SCRIPT_PATH ..."
 sudo tee "$SETUP_SCRIPT_PATH" >/dev/null << EOF
 #!/usr/bin/env bash
 #
-# setup_usb0.sh
+# ics.sh
 # Configures the usb0 interface with static IP and gateway for Windows ICS.
 # Once this script is run, NetworkManager should remember the settings persistently.
 
@@ -104,12 +104,4 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 
-# 3. Enable and start the service
-print_info "Enabling setup-usb0.service on boot..."
-sudo systemctl enable setup-usb0.service
-
-print_info "Starting setup-usb0.service now..."
-sudo systemctl start setup-usb0.service
-
-print_success "All done! The service has been installed and started."
-print_info "On next reboot, '$SERVICE_FILE_PATH' will run automatically to configure '$INTERFACE'."
+print_success "All done! The service has been installed."

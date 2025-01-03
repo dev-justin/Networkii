@@ -140,6 +140,23 @@ def restart_service():
     subprocess.run(["sudo", "systemctl", "restart", "networkii"])
     console.print("[green]Networkii service restarted successfully![/green]")
 
+def show_ics_status():
+    """Show ICS status"""
+    console.print("[yellow]Showing ICS status...[/yellow]")
+    subprocess.run(["sudo", "systemctl", "status", "ics"])
+
+def enable_ics():
+    """Enable ICS"""
+    console.print("[yellow]Enabling ICS...[/yellow]")
+    subprocess.run(["sudo", "systemctl", "enable", "ics"])
+    console.print("[green]ICS enabled successfully![/green]")
+
+def disable_ics():
+    """Disable ICS"""
+    console.print("[yellow]Disabling ICS...[/yellow]")
+    subprocess.run(["sudo", "systemctl", "disable", "ics"])
+    console.print("[green]ICS disabled successfully![/green]")
+
 def main():
     parser = argparse.ArgumentParser(
         description='Networkii Configuration Tool',
@@ -163,6 +180,11 @@ def main():
     # "restart" command
     subparsers.add_parser('restart', help='Restart the networkii service')
 
+    # Enable ICS
+    ics_parser = subparsers.add_parser('ics', help='Show ICS status')
+    ics_parser.add_argument('--enable', action='store_true', help='Enable ICS')
+    ics_parser.add_argument('--disable', action='store_true', help='Disable ICS')
+
     args = parser.parse_args()
 
     if args.command == 'show':
@@ -173,6 +195,13 @@ def main():
         wifi_setup(args)
     elif args.command == 'restart':
         restart_service()
+    elif args.command == 'ics':
+        if args.enable:
+            enable_ics()
+        elif args.disable:
+            disable_ics()
+        else:
+            show_ics_status()
     else:
         print_beautiful_help()
 
