@@ -126,43 +126,33 @@ print_success "System packages upgraded"
 #------------------------------
 # 4. INSTALL AND SETUP APP REQUIREMENTS    
 #------------------------------
-print_header "Installing Python Requirements"
-pushd "$PROJECT_DIR" > /dev/null
+print_header "Installing App Requirements"
 
-# Install required packages
+# Install required system packages
 print_info "Installing required packages..."
 sudo apt-get update
-sudo apt-get install -y python3-pip python3-venv network-manager libnss3-tools python3-dev zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev libopenblas0
+sudo apt-get install -y python3-pip python3-dev zlib1g-dev libjpeg-dev libpng-dev libfreetype6-dev libtiff5-dev libopenblas0 network-manager libnss3-tools
+
+# Install pipx if not already installed
+print_info "Installing pipx..."
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
 
 # Create config directory
 print_info "Setting up configuration directory..."
 mkdir -p ~/.config/networkii
 
-# Enable SPI interface so we can use DisplayHATMini
+# Enable SPI interface for DisplayHATMini
 print_info "Enabling SPI interface..."
 sudo raspi-config nonint do_spi 0
 print_success "SPI interface enabled"
 
-# Create virtual environment
-print_info "Creating virtual environment..."
-python3 -m venv venv
-print_success "Virtual environment created"
-
-# Activate virtual environment
-print_info "Activating virtual environment..."
-source venv/bin/activate
-print_success "Virtual environment activated"
-
-# Now install dependencies (used pyproject.toml)
-print_info "Installing dependencies..."
-python3 -m pip install --upgrade pip
-python3 -m pip install .
-print_success "Dependencies installed successfully"
-
-popd > /dev/null
+# Install networkii using pipx
+print_info "Installing networkii using pipx..."
+pipx install .
+print_success "Networkii installed successfully"
 
 print_header "Setup Complete!"
 print_success "All installation steps completed successfully"
 print_info "You may need to reboot for the OTG (RNDIS) changes to take effect."
 print_info "To complete setup, run: ${BOLD}sudo reboot${NC}"
-print_info "To use the virtual environment later, run: ${BOLD}source ${PROJECT_DIR}/venv/bin/activate${NC}"
