@@ -100,7 +100,7 @@ def main():
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
     # "show" command
-    subparsers.add_parser('show', help='Display current configuration')
+    parser.add_parser('show', help='Display current configuration')
     
     # "set" command
     set_parser = subparsers.add_parser('set', help='Update configuration values')
@@ -114,13 +114,13 @@ def main():
     connect_parser.add_argument('--password', help='WiFi password', required=True)
     
     # "start" command
-    subparsers.add_parser('start', help='Start the networkii service')
+    parser.add_parser('start', help='Start the networkii service')
 
     # "stop" command
-    subparsers.add_parser('stop', help='Stop the networkii service')
+    parser.add_parser('stop', help='Stop the networkii service')
 
     # "restart" command
-    subparsers.add_parser('restart', help='Restart the networkii service')
+    parser.add_parser('restart', help='Restart the networkii service')
 
     # "ics" command
     ics_parser = subparsers.add_parser('ics', help='Manage Internet Connection Sharing')
