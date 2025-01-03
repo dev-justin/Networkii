@@ -56,19 +56,19 @@ def wifi_setup(args):
     else:
         console.print(f"[red]Failed to connect to WiFi ({args.ssid})[/red]")
 
-def start_service(args):
+def start_service():
     """Start the networkii service"""
     console.print("[yellow]Starting networkii service...[/yellow]")
     subprocess.run(["sudo", "systemctl", "start", "networkii"])
     console.print("[green]Networkii service started successfully![/green]")
 
-def stop_service(args):
+def stop_service():
     """Stop the networkii service"""
     console.print("[yellow]Stopping networkii service...[/yellow]")
     subprocess.run(["sudo", "systemctl", "restart", "networkii"])
     console.print("[green]Networkii service restarted successfully![/green]")
 
-def restart_service(args):
+def restart_service():
     """Restart the networkii service"""
     console.print("[yellow]Restarting networkii service...[/yellow]")
     subprocess.run(["sudo", "systemctl", "restart", "networkii"])
@@ -115,11 +115,9 @@ def main():
     
     # "start" command
     start_parser = subparsers.add_parser('start', help='Start the networkii service')
-    start_parser.add_argument('--enable', action='store_true', help='Enable and start ICS')
 
     # "stop" command
     stop_parser = subparsers.add_parser('stop', help='Stop the networkii service')
-    stop_parser.add_argument('--disable', action='store_true', help='Disable and stop ICS')
 
     # "restart" command
     subparsers.add_parser('restart', help='Restart the networkii service')
@@ -138,9 +136,9 @@ def main():
     elif args.command == 'connect':
         wifi_setup(args)
     elif args.command == 'start':
-        start_service(args)
+        start_service()
     elif args.command == 'stop':
-        stop_service(args)
+        stop_service()
     elif args.command == 'restart':
         restart_service()
     elif args.command == 'ics':
