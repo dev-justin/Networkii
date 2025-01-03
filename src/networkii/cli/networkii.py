@@ -104,7 +104,7 @@ def print_beautiful_help():
         "Disable ICS",
         "networkii ics --disable"
     )
-    
+
     console.print(options_table)
     console.print()
 
@@ -164,13 +164,15 @@ def enable_ics():
     """Enable ICS"""
     console.print("[yellow]Enabling ICS...[/yellow]")
     subprocess.run(["sudo", "systemctl", "enable", "ics"])
+    subprocess.run(["sudo", "systemctl", "start", "ics"])
     console.print("[green]ICS enabled successfully![/green]")
 
 def disable_ics():
     """Disable ICS"""
     console.print("[yellow]Disabling ICS...[/yellow]")
     subprocess.run(["sudo", "systemctl", "disable", "ics"])
-    console.print("[green]ICS disabled successfully![/green]")
+    subprocess.run(["sudo", "systemctl", "stop", "ics"])
+    console.print("[green]ICS stopped and disabled successfully![/green]")
 
 def main():
     parser = argparse.ArgumentParser(
