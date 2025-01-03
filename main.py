@@ -176,18 +176,21 @@ class NetworkiiApp:
         """Main entry point for the application"""
         logger.debug("Networkii starting up...")
         
-        try:
-            if setup_mode or not has_wifi_saved('wlan0'):
-                self.no_wifi_mode()
-            else:
-                self.run_monitor_mode()
-        except Exception as e:
-            logger.error(f"Error in main loop: {e}")
-        finally:
-            # Ensure proper cleanup
-            self.monitor_running = False
-            if self.monitor_thread:
-                self.monitor_thread.join()
+        self.screen_manager.switch_screen('setup')
+        self.screen_manager.draw_screen(None)
+
+        # try:
+        #     if setup_mode or not has_wifi_saved('wlan0'):
+        #         self.no_wifi_mode()
+        #     else:
+        #         self.run_monitor_mode()
+        # except Exception as e:
+        #     logger.error(f"Error in main loop: {e}")
+        # finally:
+        #     # Ensure proper cleanup
+        #     self.monitor_running = False
+        #     if self.monitor_thread:
+        #         self.monitor_thread.join()
 
 def main():
     # Parse command line arguments
