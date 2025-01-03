@@ -44,9 +44,9 @@ class SetupScreen(BaseScreen):
         line3_height = line3_bbox[3] - line3_bbox[1]
         
         # Adjust spacing and positioning
-        line_spacing = 30  # Increased spacing for larger font
+        line_spacing = 15  # Reduced spacing between lines
         total_height = line1_height + line2_height + line3_height + (line_spacing * 2)
-        start_y = SCREEN_HEIGHT - total_height - 40  # Start higher to accommodate larger text
+        start_y = SCREEN_HEIGHT - total_height - 20  # Start closer to bottom
         
         # Draw each line centered
         self.draw.text(
