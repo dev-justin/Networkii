@@ -126,6 +126,7 @@ class NetworkiiApp:
                 if not has_internet:
                     self.screen_manager.draw_screen(None)  # No stats needed for no internet screen
                 elif self.latest_stats:
+                    self.screen_manager.switch_screen('home')
                     self.screen_manager.draw_screen(self.latest_stats)  # Update current screen with latest stats
                 
                 time.sleep(0.1)  # Update display every 100ms
@@ -151,13 +152,16 @@ class NetworkiiApp:
         # Start AP mode and show setup screen
         start_ap()
         self.screen_manager.switch_screen('setup')
-        self.screen_manager.draw_screen(None)
         
         try:
-            while True:                
+            while True:
+                # Keep updating the screen
+                self.screen_manager.draw_screen(None)
+                
                 # Check if WiFi is now configured
                 if has_wifi_saved('wlan0'):
                     logger.info("WiFi configured, switching to monitor mode")
+                    self.screen_manager.switch_screen('home')  # Switch to home screen before monitor mode
                     return self.run_monitor_mode()
                     
                 time.sleep(0.1)  # Update display every 100ms
