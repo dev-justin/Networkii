@@ -59,6 +59,11 @@ def print_beautiful_help():
         "Restart the networkii service",
         "networkii restart"
     )
+    table.add_row(
+        "ics",
+        "Show ICS status",
+        "networkii ics"
+    )
     
     console.print(table)
     console.print()
@@ -88,6 +93,16 @@ def print_beautiful_help():
         "--password",
         "WiFi password",
         "Your network password"
+    )
+    options_table.add_row(
+        "--enable",
+        "Enable ICS",
+        "networkii ics --enable"
+    )
+    options_table.add_row(
+        "--disable",
+        "Disable ICS",
+        "networkii ics --disable"
     )
     
     console.print(options_table)
