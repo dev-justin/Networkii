@@ -53,7 +53,7 @@ class SetupScreen(BaseScreen):
             ((SCREEN_WIDTH - line2_width) // 2, start_y + line_spacing),
             line2,
             font=self.font_md,
-            fill=(64, 224, 208)  # Turquoise color for website
+            fill=COLORS['green'] 
         )
         
         self.draw.text(
