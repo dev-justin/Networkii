@@ -65,9 +65,12 @@ def remove_connection(connection_name) -> bool:
 def rescan_wifi() -> bool:
     """Rescan WiFi for new networks"""
     try:
-        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
+        result = subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'rescan'],
+                              capture_output=True,
+                              text=True)
+        if result.returncode != 0:
+            logger.error(f"WiFi rescan failed: {result.stderr}")
+            return False
         return True
     except Exception as e:
         logger.error(f"Error rescanning WiFi: {str(e)}")
@@ -77,22 +80,50 @@ def connect_to_wifi(ssid, password) -> bool:
     """Connect to WiFi using provided credentials"""
     try:
         rescan_wifi()
-        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
-        return True
+        result = subprocess.run(
+            ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', password],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or result.stdout.strip()
+            logger.error(f"Failed to connect to {ssid}: {error_msg}")
+            return False
+            
+        if "successfully activated" in result.stdout:
+            logger.info(f"Successfully connected to {ssid}")
+            return True
+            
+        logger.error(f"Unexpected output when connecting to {ssid}: {result.stdout}")
+        return False
+        
     except Exception as e:
         logger.error(f"Error connecting to {ssid}: {str(e)}")
         return False
 
-def start_ap():
+def start_ap() -> bool:
     """Start AP mode"""
     logger.info("Starting AP")
     try:
-        subprocess.run(['sudo', 'nmcli', 'device', 'wifi', 'hotspot', 'ssid', 'networkii', 'password', 'networkii'],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
-        return True
+        result = subprocess.run(
+            ['sudo', 'nmcli', 'device', 'wifi', 'hotspot', 'ssid', 'networkii', 'password', 'networkii'],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or result.stdout.strip()
+            logger.error(f"Failed to start AP mode: {error_msg}")
+            return False
+            
+        if "successfully activated" in result.stdout:
+            logger.info("AP mode started successfully")
+            return True
+            
+        logger.error(f"Unexpected output when starting AP mode: {result.stdout}")
+        return False
+        
     except Exception as e:
         logger.error(f"Error starting AP mode: {str(e)}")
         return False    
