@@ -65,8 +65,8 @@ def start_service():
 def stop_service():
     """Stop the networkii service"""
     console.print("[yellow]Stopping networkii service...[/yellow]")
-    subprocess.run(["sudo", "systemctl", "restart", "networkii"])
-    console.print("[green]Networkii service restarted successfully![/green]")
+    subprocess.run(["sudo", "systemctl", "stop", "networkii"])
+    console.print("[green]Networkii service stopped successfully![/green]")
 
 def restart_service():
     """Restart the networkii service"""
@@ -100,7 +100,7 @@ def main():
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
     # "show" command
-    parser.add_parser('show', help='Display current configuration')
+    subparsers.add_parser('show', help='Display current configuration')
     
     # "set" command
     set_parser = subparsers.add_parser('set', help='Update configuration values')
@@ -114,13 +114,13 @@ def main():
     connect_parser.add_argument('--password', help='WiFi password', required=True)
     
     # "start" command
-    parser.add_parser('start', help='Start the networkii service')
+    subparsers.add_parser('start', help='Start the networkii service')
 
     # "stop" command
-    parser.add_parser('stop', help='Stop the networkii service')
+    subparsers.add_parser('stop', help='Stop the networkii service')
 
     # "restart" command
-    parser.add_parser('restart', help='Restart the networkii service')
+    subparsers.add_parser('restart', help='Restart the networkii service')
 
     # "ics" command
     ics_parser = subparsers.add_parser('ics', help='Manage Internet Connection Sharing')
