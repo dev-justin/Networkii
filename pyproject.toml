@@ -15,6 +15,7 @@ dependencies = [
     "numpy",
     "speedtest-cli",
     "rpi-lgpio",
+    "rich",
 ]
 
 [project.scripts]
