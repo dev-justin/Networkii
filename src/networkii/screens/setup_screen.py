@@ -19,26 +19,49 @@ class SetupScreen(BaseScreen):
         # Draw face (centered, smaller size)
         face = self.face_images['excellent']
         small_face_size = FACE_SIZE // 2  # Make face 50% smaller
-        small_face = face.resize((small_face_size, small_face_size), Image.LANCZOS)
+        small_face = face.resize((small_face_size, small_face_size), Image.Resampling.LANCZOS)
         face_x = (SCREEN_WIDTH - small_face_size) // 2
         face_y = (SCREEN_HEIGHT - small_face_size) // 2 - 20
         self.image.paste(small_face, (face_x, face_y), small_face)
         
-        # Draw website URL with highlight color
-        url = "Go to ovvys.com/networkii"
-        url_bbox = self.draw.textbbox((0, 0), url, font=self.font_md)
-        url_width = url_bbox[2] - url_bbox[0]
-        url_x = (SCREEN_WIDTH - url_width) // 2
-        url_y = SCREEN_HEIGHT - 60
-        self.draw.text((url_x, url_y), url, font=self.font_md, fill=(64, 224, 208))  # Turquoise color
+        # Draw setup instructions on three lines
+        line1 = "Go to"
+        line2 = "ovvys.com/networkii"
+        line3 = "to setup!"
         
-        # Draw setup text
-        setup_text = "to setup"
-        setup_bbox = self.draw.textbbox((0, 0), setup_text, font=self.font_md)
-        setup_width = setup_bbox[2] - setup_bbox[0]
-        setup_x = (SCREEN_WIDTH - setup_width) // 2
-        setup_y = SCREEN_HEIGHT - 35
-        self.draw.text((setup_x, setup_y), setup_text, font=self.font_md, fill=COLORS['white'])
+        # Calculate positions for all lines to be centered
+        line1_bbox = self.draw.textbbox((0, 0), line1, font=self.font_md)
+        line2_bbox = self.draw.textbbox((0, 0), line2, font=self.font_md)
+        line3_bbox = self.draw.textbbox((0, 0), line3, font=self.font_md)
+        
+        line1_width = line1_bbox[2] - line1_bbox[0]
+        line2_width = line2_bbox[2] - line2_bbox[0]
+        line3_width = line3_bbox[2] - line3_bbox[0]
+        
+        line_spacing = 25  # Space between lines
+        start_y = SCREEN_HEIGHT - 80  # Start position for first line
+        
+        # Draw each line centered
+        self.draw.text(
+            ((SCREEN_WIDTH - line1_width) // 2, start_y),
+            line1,
+            font=self.font_md,
+            fill=COLORS['white']
+        )
+        
+        self.draw.text(
+            ((SCREEN_WIDTH - line2_width) // 2, start_y + line_spacing),
+            line2,
+            font=self.font_md,
+            fill=(64, 224, 208)  # Turquoise color for website
+        )
+        
+        self.draw.text(
+            ((SCREEN_WIDTH - line3_width) // 2, start_y + line_spacing * 2),
+            line3,
+            font=self.font_md,
+            fill=COLORS['white']
+        )
         
         self.update_display()
     
