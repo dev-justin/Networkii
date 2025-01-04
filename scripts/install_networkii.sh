@@ -150,16 +150,29 @@ python3 -m venv ~/.local/pipx/venv
 
 # Add pipx to PATH for current user
 print_info "Adding pipx to PATH..."
-echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
-echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.zshrc
-export PATH="$PATH:$HOME/.local/bin"
+PATHLINE='export PATH="$PATH:$HOME/.local/bin"'
+if ! grep -q "$PATHLINE" ~/.bashrc; then
+    echo "$PATHLINE" >> ~/.bashrc
+fi
+if [ -f ~/.zshrc ] && ! grep -q "$PATHLINE" ~/.zshrc; then
+    echo "$PATHLINE" >> ~/.zshrc
+fi
+
+# Update PATH in current session
+eval "$PATHLINE"
 
 # Install networkii using pipx
 print_info "Installing networkii..."
 ~/.local/pipx/venv/bin/pipx install --force .
 print_success "Networkii installed successfully"
 
+# Ensure PATH is updated in current shell
+print_info "Updating current shell PATH..."
+export PATH="$PATH:$HOME/.local/bin"
+hash -r
+
 print_header "Setup Complete!"
 print_success "All installation steps completed successfully"
 print_info "You may need to reboot for the OTG (RNDIS) changes to take effect."
 print_info "To complete setup, run: ${BOLD}sudo reboot${NC}"
+print_info "To use networkii in this session, run: ${BOLD}source ~/.bashrc${NC} (or start a new terminal)"
